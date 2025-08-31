@@ -23,10 +23,30 @@
     }
     .btn {
       width: 60px; height: 60px;
-      border-radius: 50%;
       font-size: 24px;
       border: none;
       background: none;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    #left {
+      background-image: url("img/button_left.png");
+    }
+    #left:active {
+      background-image: url("img/button_left_click.png");
+    }
+    #right {
+      background-image: url("img/button_right.png");
+    }
+    #right:active {
+      background-image: url("img/button_right_click.png");
+    }
+    #jump {
+      background-image: url("img/button_top.png");
+    }
+    #jump:active {
+      background-image: url("img/button_top_click.png");
     }
     /* модальное окно */
     #modal {
@@ -68,9 +88,9 @@
   <canvas id="game" width="480" height="320"></canvas>
 
   <div class="controls">
-    <button class="btn" id="left"><img src="img/button_left.png" id="left_img" alt="left"></button>
-    <button class="btn" id="jump"><img src="img/button_top.png" id="top_img" alt="top"></button>
-    <button class="btn" id="right"><img src="img/button_right.png" id="right_img" alt="right"></button>
+    <button class="btn" id="left"></button>
+    <button class="btn" id="jump"></button>
+    <button class="btn" id="right"></button>
   </div>
 
   <!-- модальное окно -->

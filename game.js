@@ -57,19 +57,15 @@ modalBtn.onclick = ()=>{
 // управление
 document.getElementById("left").ontouchstart = ()=>{
     keys.left=true
-    document.getElementById("left_img").src = "img/button_left_click.png";
 };
 document.getElementById("left").ontouchend = ()=>{
     keys.left=false;
-    document.getElementById("left_img").src = "img/button_left.png";
 };
 document.getElementById("right").ontouchstart = ()=>{
     keys.right=true;
-    document.getElementById("right_img").src = "img/button_right_click.png";
 };
 document.getElementById("right").ontouchend = ()=>{
     keys.right=false;
-    document.getElementById("right_img").src = "img/button_right.png";
 };
 document.getElementById("jump").ontouchstart = ()=>{ 
     if(player.onGround && !gameOver) {
@@ -77,10 +73,9 @@ document.getElementById("jump").ontouchstart = ()=>{
         companion.dy=-4.5;
         player.idleTimer = 0; // сбрасываем таймер при прыжке
     }
-    document.getElementById("top_img").src = "img/button_top_click.png";
 };
 document.getElementById("jump").ontouchend = ()=>{
-    document.getElementById("top_img").src = "img/button_top.png";
+    // Кнопка отпущена - ничего не делаем
 };
 
 function resetPlayer(){
