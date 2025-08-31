@@ -10,18 +10,24 @@
       display: block;
       width: 100vw;
       height: 100vh;
-      background: #87ceeb;
+      background: transparent;
+      position: relative;
+      z-index: 1;
     }
     .controls {
       position: fixed;
       bottom: 20px;
       width: 100%;
       display: flex;
-      justify-content: center;
+      justify-content: space-around;
       gap: 20px;
       z-index: 10;
     }
     .btn {
+      -webkit-user-select: none; /* Safari */
+      -moz-user-select: none; /* Firefox */
+      -ms-user-select: none; /* IE10+/Edge */
+      user-select: none; /* Standard */
       width: 60px; height: 60px;
       font-size: 24px;
       border: none;
@@ -47,6 +53,12 @@
     }
     #jump:active {
       background-image: url("img/button_top_click.png");
+    }
+    #switch {
+      background-image: url("img/button_switch.png");
+    }
+    #switch:active {
+      background-image: url("img/button_switch_click.png");
     }
     /* модальное окно */
     #modal {
@@ -85,12 +97,18 @@
   
 </head>
 <body>
+
   <canvas id="game" width="480" height="320"></canvas>
 
   <div class="controls">
-    <button class="btn" id="left"></button>
-    <button class="btn" id="jump"></button>
-    <button class="btn" id="right"></button>
+    <div class="btn-group">
+      <button class="btn" id="left"></button>
+      <button class="btn" id="right"></button>
+    </div>
+    <div class="btn-group">
+      <button class="btn" id="switch"></button>
+      <button class="btn" id="jump" style="margin-left: 20px;"></button>
+    </div>
   </div>
 
   <!-- модальное окно -->
