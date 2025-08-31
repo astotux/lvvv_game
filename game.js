@@ -442,6 +442,9 @@ imgPlatformGrass.src = "img/platform_grass.png";
 const imgPlatformStone = new Image();
 imgPlatformStone.src = "img/platform_stone.png";
 
+const imgPlatformStone2 = new Image();
+imgPlatformStone2.src = "img/platform_stone2.png";
+
 const imgPlatformWood = new Image();
 imgPlatformWood.src = "img/platform_wood.png";
 
@@ -479,8 +482,8 @@ imgFinish.src = "img/finish.png";
 const imgRock1 = new Image();
 imgRock1.src = "img/rock1.png";
 
-// const imgRock2 = new Image();
-// imgRock2.src = "img/rock2.png";
+const imgGrass1 = new Image();
+imgGrass1.src = "img/grass1.png";
 
 // загрузка фоновых картинок
 const bgLayer0 = new Image(); // дальний фон
@@ -533,7 +536,63 @@ function drawDecorations() {
         // case "bush3": img = imgBush3; break;
         // case "bush4": img = imgBush4; break;
         case "rock1": img = imgRock1; break;
-        // case "rock2": img = imgRock2; break;
+        case "grass1": img = imgGrass1; break;
+        // default: img = imgFlower1; // изображение по умолчанию
+      }
+      
+      // Рисуем декорацию с учетом камеры
+      ctx.drawImage(img, dec.x - cameraX, dec.y, dec.w, dec.h);
+    });
+  }
+}
+
+function drawDecorationsUndo() {
+  let lvl = levels[currentLevel];
+  
+  if (lvl.decorationsUndo) {
+    lvl.decorationsUndo.forEach(dec => {
+      let img;
+      
+      // Выбираем изображение в зависимости от типа декорации
+      switch(dec.image) {
+        // case "flower1": img = imgFlower1; break;
+        // case "flower2": img = imgFlower2; break;
+        // case "flower3": img = imgFlower3; break;
+        // case "flower4": img = imgFlower4; break;
+        // case "bush1": img = imgBush1; break;
+        // case "bush2": img = imgBush2; break;
+        // case "bush3": img = imgBush3; break;
+        // case "bush4": img = imgBush4; break;
+        case "rock1": img = imgRock1; break;
+        case "grass1": img = imgGrass1; break;
+        // default: img = imgFlower1; // изображение по умолчанию
+      }
+      
+      // Рисуем декорацию с учетом камеры
+      ctx.drawImage(img, dec.x - cameraX, dec.y, dec.w, dec.h);
+    });
+  }
+}
+
+function drawDecorationsUndoPlatform() {
+  let lvl = levels[currentLevel];
+  
+  if (lvl.decorationsUndo) {
+    lvl.decorationsUndo.forEach(dec => {
+      let img;
+      
+      // Выбираем изображение в зависимости от типа декорации
+      switch(dec.image) {
+        // case "flower1": img = imgFlower1; break;
+        // case "flower2": img = imgFlower2; break;
+        // case "flower3": img = imgFlower3; break;
+        // case "flower4": img = imgFlower4; break;
+        // case "bush1": img = imgBush1; break;
+        // case "bush2": img = imgBush2; break;
+        // case "bush3": img = imgBush3; break;
+        // case "bush4": img = imgBush4; break;
+        case "rock1": img = imgRock1; break;
+        case "grass1": img = imgGrass1; break;
         // default: img = imgFlower1; // изображение по умолчанию
       }
       
@@ -546,7 +605,7 @@ function drawDecorations() {
 // функция отрисовки фона с параллаксом
 function drawBackground() {
   const w = canvas.width;
-  const groundY = getGroundY(); // позиция низа фона по платформам
+  const groundY = getGroundY()+10; // позиция низа фона по платформам
 
   // 🔹 Дальний слой
   let x0 = -(cameraX * 0.2) % bgLayer1.width;
@@ -685,7 +744,8 @@ function drawBackground() {
     ctx.imageSmoothingEnabled = false;
     
     drawBackground();
-
+    // декорации (рисуем под платформами, но над фоном)
+    drawDecorationsUndoPlatform();
     let lvl = levels[currentLevel];
   
     // платформы (с повторяющейся текстурой)
@@ -699,6 +759,7 @@ function drawBackground() {
       let textureImg = imgPlatformGrass; // по умолчанию
       if (p.texture === "grass") textureImg = imgPlatformGrass;
       else if (p.texture === "stone") textureImg = imgPlatformStone;
+      else if (p.texture === "stone2") textureImg = imgPlatformStone2;
       else if (p.texture === "wood") textureImg = imgPlatformWood;
       
       // Получаем размеры текстуры платформы
@@ -720,9 +781,9 @@ function drawBackground() {
         }
       }
     });
-    
     // декорации (рисуем под платформами, но над фоном)
-    drawDecorations();
+    drawDecorationsUndo();
+
 
   
     // ловушки
@@ -739,7 +800,8 @@ function drawBackground() {
     
     // компаньон
     drawCompanion();
-    
+    // декорации (рисуем под платформами, но над фоном)
+    drawDecorations();
     // 🔹 Отладочная информация - границы коллизии
     if (false) { // измените на true для включения отладки
       ctx.strokeStyle = "red";
@@ -778,7 +840,7 @@ function loop(currentTime) {
 // ждём загрузки всех картинок
 let loaded = 0;
 const bgImages = [bgLayer0, bgLayer1, bgLayer2, bgLayer3, bgLayer4, bgLayer5, bgLayer6];
-const decorationImages = [imgRock1];
+const decorationImages = [imgRock1, imgGrass1];
 const platformImages = [imgPlatformGrass, imgPlatformStone, imgPlatformWood];
 const allImages = [...bgImages, ...decorationImages, ...platformImages, imgPlayerIdle, imgPlayerWalk, imgCompanionIdle, imgCompanionWalk, imgTrap, imgFinish];
 
