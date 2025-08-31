@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Подарочный платформер</title>
+  <style>
+    body { margin: 0; background: #222; overflow: hidden; font-family: sans-serif; }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background: #87ceeb;
+    }
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      z-index: 10;
+    }
+    .btn {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      font-size: 24px;
+      border: none;
+      background: none;
+    }
+    /* модальное окно */
+    #modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+    #modalContent {
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      max-width: 300px;
+      text-align: center;
+      animation: fadeIn 0.3s;
+    }
+    #modalContent h2 { margin: 0 0 10px; color: orange; }
+    #modalContent p { margin: 0 0 15px; }
+    #modalContent button {
+      padding: 10px 20px;
+      background: orange;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    @keyframes fadeIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  </style>
+  
+</head>
+<body>
+  <canvas id="game" width="480" height="320"></canvas>
+
+  <div class="controls">
+    <button class="btn" id="left"><img src="img/button_left.png" id="left_img" alt="left"></button>
+    <button class="btn" id="jump"><img src="img/button_top.png" id="top_img" alt="top"></button>
+    <button class="btn" id="right"><img src="img/button_right.png" id="right_img" alt="right"></button>
+  </div>
+
+  <!-- модальное окно -->
+  <div id="modal">
+    <div id="modalContent">
+      <h2 id="modalTitle"></h2>
+      <p id="modalText"></p>
+      <button id="modalBtn">OK</button>
+    </div>
+  </div>
+
+  <script src="levels.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
