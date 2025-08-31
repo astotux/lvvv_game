@@ -8,6 +8,9 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
+// Добавляем переменные для delta time
+let lastTime = 0;
+let deltaTime = 0;
 
 let currentLevel = 0;
 let player = {
@@ -103,9 +106,9 @@ function update() {
   if (activeCharacter === "player") {
     // Управляем игроком
     player.dx = 0;
-    if (keys.left) player.dx = -2;
-    if (keys.right) player.dx = 2;
-    player.dy += 0.1;
+    if (keys.left) player.dx = -2 * (deltaTime / 7); // нормализуем скорость движения
+    if (keys.right) player.dx = 2 * (deltaTime / 7);
+    player.dy += 0.1 * (deltaTime / 7); // нормализуем гравитацию
 
     player.x += player.dx;
     player.y += player.dy;
@@ -162,8 +165,8 @@ function update() {
     }
     
     // обновляем кадры игрока
-    player.frameTick++;
-    if (player.frameTick > 80) { // чем больше число, тем медленнее анимация
+    player.frameTick += deltaTime; // используем delta time для анимации
+    if (player.frameTick > 180) { // чем больше число, тем медленнее анимация
         
         if (player.state === "idle") {
         player.frameTick = 0;
@@ -176,7 +179,7 @@ function update() {
                 player.frame = 0; // всегда первый кадр до 10 секунд
             }
         } else {
-        player.frameTick = 70;
+          player.frameTick = 110;
 
           // Анимация ходьбы работает всегда
           player.frame++;
@@ -197,9 +200,9 @@ function update() {
   } else {
     // Управляем компаньоном
     companion.dx = 0;
-    if (keys.left) companion.dx = -2;
-    if (keys.right) companion.dx = 2;
-    companion.dy += 0.1;
+    if (keys.left) companion.dx = -2 * (deltaTime / 7); // нормализуем скорость движения
+    if (keys.right) companion.dx = 2 * (deltaTime / 7);
+    companion.dy += 0.1 * (deltaTime / 7); // нормализуем гравитацию
 
     companion.x += companion.dx;
     companion.y += companion.dy;
@@ -255,8 +258,8 @@ function update() {
     }
     
     // обновляем кадры компаньона
-    companion.frameTick++;
-    if (companion.frameTick > 80) {
+    companion.frameTick += deltaTime; // используем delta time для анимации
+    if (companion.frameTick > 180) {
         if (companion.state === "idle") {
         companion.frameTick = 0;
             if (companion.idleTimer > 1800) {
@@ -266,7 +269,7 @@ function update() {
                 companion.frame = 0;
             }
         } else {
-        companion.frameTick = 70;
+        companion.frameTick = 110;
           companion.frame++;
           if (companion.frame > 10) companion.frame = 0;
         }
@@ -319,7 +322,7 @@ function update() {
     companion.y += (companion.targetY - companion.y + 15) * companion.followDelay;
     
     // Гравитация для компаньона
-    companion.dy += 0.14;
+    companion.dy += 0.15 * (deltaTime / 7); // нормализуем гравитацию
     companion.y += companion.dy;
     companion.onGround = false;
     
@@ -355,8 +358,8 @@ function update() {
     }
     
     // Обновляем анимацию компаньона
-    companion.frameTick++;
-    if (companion.frameTick > 80) {
+    companion.frameTick += deltaTime; // используем delta time для анимации
+    if (companion.frameTick > 120) {
       companion.frameTick = 0;
       
       if (companion.state === "idle") {
@@ -368,7 +371,7 @@ function update() {
           companion.frame = 0;
         }
       } else {
-        companion.frameTick = 70;
+        companion.frameTick = 90;
         // Анимация ходьбы
         companion.frame++;
         if (companion.frame > 10) companion.frame = 0;
@@ -379,7 +382,7 @@ function update() {
   // 🔹 Функция обновления игрока (когда он неактивен)
   function updatePlayer() {
     // Игрок остается на месте, но применяется гравитация
-    player.dy += 0.1;
+    player.dy += 0.1 * (deltaTime / 7); // нормализуем гравитацию
     player.y += player.dy;
     player.onGround = false;
     
@@ -401,8 +404,8 @@ function update() {
     player.idleTimer++;
     
     // Обновляем анимацию игрока
-    player.frameTick++;
-    if (player.frameTick > 80) {
+    player.frameTick += deltaTime; // используем delta time для анимации
+    if (player.frameTick > 180) {
       player.frameTick = 0;
       
       if (player.idleTimer > 1800) {
@@ -432,8 +435,15 @@ const imgCompanionWalk = new Image();
 imgCompanionWalk.src = "img/cato_walk.png"; // например, 4 кадров
 
 
-const imgPlatform = new Image();
-imgPlatform.src = "img/platform.png";
+// Дополнительные текстуры для платформ
+const imgPlatformGrass = new Image();
+imgPlatformGrass.src = "img/platform_grass.png";
+
+const imgPlatformStone = new Image();
+imgPlatformStone.src = "img/platform_stone.png";
+
+const imgPlatformWood = new Image();
+imgPlatformWood.src = "img/platform_wood.png";
 
 const imgTrap = new Image();
 imgTrap.src = "img/trap.png";
@@ -441,16 +451,58 @@ imgTrap.src = "img/trap.png";
 const imgFinish = new Image();
 imgFinish.src = "img/finish.png";
 
+// загрузка изображений для декораций
+// const imgFlower1 = new Image();
+// imgFlower1.src = "img/flower1.png";
+
+// const imgFlower2 = new Image();
+// imgFlower2.src = "img/flower2.png";
+
+// const imgFlower3 = new Image();
+// imgFlower3.src = "img/flower3.png";
+
+// const imgFlower4 = new Image();
+// imgFlower4.src = "img/flower4.png";
+
+// const imgBush1 = new Image();
+// imgBush1.src = "img/bush1.png";
+
+// const imgBush2 = new Image();
+// imgBush2.src = "img/bush2.png";
+
+// const imgBush3 = new Image();
+// imgBush3.src = "img/bush3.png";
+
+// const imgBush4 = new Image();
+// imgBush4.src = "img/bush4.png";
+
+const imgRock1 = new Image();
+imgRock1.src = "img/rock1.png";
+
+// const imgRock2 = new Image();
+// imgRock2.src = "img/rock2.png";
 
 // загрузка фоновых картинок
+const bgLayer0 = new Image(); // дальний фон
+bgLayer0.src = "img/background_0.png";
+
 const bgLayer1 = new Image(); // дальний фон
-bgLayer1.src = "img/background_far.png";
+bgLayer1.src = "img/background_1.png";
 
-const bgLayer2 = new Image(); // средний фон
-bgLayer2.src = "img/background_mid.png";
+const bgLayer2 = new Image();
+bgLayer2.src = "img/background_2.png";
 
-const bgLayer3 = new Image(); // ближний фон
-bgLayer3.src = "img/background_near.png";
+const bgLayer3 = new Image();
+bgLayer3.src = "img/background_3.png";
+
+const bgLayer4 = new Image();
+bgLayer4.src = "img/background_4.png";
+
+const bgLayer5 = new Image();
+bgLayer5.src = "img/background_6.png";
+
+const bgLayer6 = new Image();
+bgLayer6.src = "img/background_5.png";
 
 function getGroundY() {
   let lvl = levels[currentLevel];
@@ -462,27 +514,76 @@ function getGroundY() {
 }
 
 
+// функция отрисовки декораций
+function drawDecorations() {
+  let lvl = levels[currentLevel];
+  
+  if (lvl.decorations) {
+    lvl.decorations.forEach(dec => {
+      let img;
+      
+      // Выбираем изображение в зависимости от типа декорации
+      switch(dec.image) {
+        // case "flower1": img = imgFlower1; break;
+        // case "flower2": img = imgFlower2; break;
+        // case "flower3": img = imgFlower3; break;
+        // case "flower4": img = imgFlower4; break;
+        // case "bush1": img = imgBush1; break;
+        // case "bush2": img = imgBush2; break;
+        // case "bush3": img = imgBush3; break;
+        // case "bush4": img = imgBush4; break;
+        case "rock1": img = imgRock1; break;
+        // case "rock2": img = imgRock2; break;
+        // default: img = imgFlower1; // изображение по умолчанию
+      }
+      
+      // Рисуем декорацию с учетом камеры
+      ctx.drawImage(img, dec.x - cameraX, dec.y, dec.w, dec.h);
+    });
+  }
+}
+
 // функция отрисовки фона с параллаксом
 function drawBackground() {
   const w = canvas.width;
   const groundY = getGroundY(); // позиция низа фона по платформам
 
   // 🔹 Дальний слой
-  let x1 = -(cameraX * 0.2) % bgLayer1.width;
+  let x0 = -(cameraX * 0.2) % bgLayer1.width;
+  for (let i = -1; i <= Math.ceil(w / bgLayer0.width) + 1; i++) {
+    ctx.drawImage(bgLayer0, x0 + i * bgLayer0.width, groundY - bgLayer0.height, bgLayer0.width, bgLayer0.height);
+  }
+
+  let x1 = -(cameraX * 0.25) % bgLayer1.width;
   for (let i = -1; i <= Math.ceil(w / bgLayer1.width) + 1; i++) {
     ctx.drawImage(bgLayer1, x1 + i * bgLayer1.width, groundY - bgLayer1.height, bgLayer1.width, bgLayer1.height);
   }
 
   // 🔹 Средний слой
-  let x2 = -(cameraX * 0.5) % bgLayer2.width;
+  let x2 = -(cameraX * 0.35) % bgLayer2.width;
   for (let i = -1; i <= Math.ceil(w / bgLayer2.width) + 1; i++) {
     ctx.drawImage(bgLayer2, x2 + i * bgLayer2.width, groundY - bgLayer2.height, bgLayer2.width, bgLayer2.height);
   }
 
   // 🔹 Ближний слой
-  let x3 = -(cameraX * 0.8) % bgLayer3.width;
+  let x3 = -(cameraX * 0.5) % bgLayer3.width;
   for (let i = -1; i <= Math.ceil(w / bgLayer3.width) + 1; i++) {
     ctx.drawImage(bgLayer3, x3 + i * bgLayer3.width, groundY - bgLayer3.height, bgLayer3.width, bgLayer3.height);
+  }
+
+  let x4 = -(cameraX * 0.65) % bgLayer4.width;
+  for (let i = -1; i <= Math.ceil(w / bgLayer4.width) + 1; i++) {
+    ctx.drawImage(bgLayer4, x4 + i * bgLayer4.width, groundY - bgLayer4.height, bgLayer4.width, bgLayer4.height);
+  }
+
+  let x5 = -(cameraX * 0.72) % bgLayer5.width;
+  for (let i = -1; i <= Math.ceil(w / bgLayer5.width) + 1; i++) {
+    ctx.drawImage(bgLayer5, x5 + i * bgLayer5.width, groundY - bgLayer5.height, bgLayer5.width, bgLayer5.height);
+  }
+
+  let x6 = -(cameraX * 0.8) % bgLayer6.width;
+  for (let i = -1; i <= Math.ceil(w / bgLayer6.width) + 1; i++) {
+    ctx.drawImage(bgLayer6, x6 + i * bgLayer6.width, groundY - bgLayer6.height, bgLayer6.width, bgLayer6.height);
   }
 }
 
@@ -587,10 +688,42 @@ function drawBackground() {
 
     let lvl = levels[currentLevel];
   
-    // платформы
+    // платформы (с повторяющейся текстурой)
     lvl.platforms.forEach(p=>{
-      ctx.drawImage(imgPlatform, p.x - cameraX, p.y, p.w, p.h);
+      const platformX = p.x - cameraX;
+      const platformY = p.y;
+      const platformW = p.w;
+      const platformH = p.h;
+      
+      // Выбираем текстуру в зависимости от типа платформы
+      let textureImg = imgPlatformGrass; // по умолчанию
+      if (p.texture === "grass") textureImg = imgPlatformGrass;
+      else if (p.texture === "stone") textureImg = imgPlatformStone;
+      else if (p.texture === "wood") textureImg = imgPlatformWood;
+      
+      // Получаем размеры текстуры платформы
+      const textureW = textureImg.width;
+      const textureH = textureImg.height;
+      
+      // Рисуем повторяющуюся текстуру платформы
+      for (let x = 0; x < platformW; x += textureW) {
+        for (let y = 0; y < platformH; y += textureH) {
+          const drawW = Math.min(textureW, platformW - x);
+          const drawH = Math.min(textureH, platformH - y);
+          
+          // Рисуем основную текстуру
+          ctx.drawImage(
+            textureImg,
+            0, 0, drawW, drawH,
+            platformX + x, platformY + y, drawW, drawH
+          );
+        }
+      }
     });
+    
+    // декорации (рисуем под платформами, но над фоном)
+    drawDecorations();
+
   
     // ловушки
     lvl.traps.forEach(t=>{
@@ -627,21 +760,34 @@ function drawBackground() {
     }
   }
 
-function loop(){
+function loop(currentTime) {
+  // Вычисляем delta time для нормализации скорости
+  if (lastTime === 0) {
+    lastTime = currentTime;
+  }
+  deltaTime = currentTime - lastTime;
+  lastTime = currentTime;
+  
+  // Ограничиваем delta time для предотвращения больших скачков
+  if (deltaTime > 50) deltaTime = 50;
+  
   update();
   draw();
   requestAnimationFrame(loop);
 }
 // ждём загрузки всех картинок
 let loaded = 0;
-const bgImages = [bgLayer1, bgLayer2, bgLayer3];
+const bgImages = [bgLayer0, bgLayer1, bgLayer2, bgLayer3, bgLayer4, bgLayer5, bgLayer6];
+const decorationImages = [imgRock1];
+const platformImages = [imgPlatformGrass, imgPlatformStone, imgPlatformWood];
+const allImages = [...bgImages, ...decorationImages, ...platformImages, imgPlayerIdle, imgPlayerWalk, imgCompanionIdle, imgCompanionWalk, imgTrap, imgFinish];
 
-bgImages.forEach(img => {
+allImages.forEach(img => {
   img.onload = () => {
     loaded++;
-    if (loaded === bgImages.length) {
+    if (loaded === allImages.length) {
       // когда все картинки загружены → запускаем игру
-      loop();
+      loop(0);
     }
   };
 });
