@@ -32,7 +32,7 @@ let companion = {
     idleTimer: 0,     // таймер для анимации стояния
     targetX: 50,      // целевая позиция X
     targetY: 300,     // целевая позиция Y
-    followDelay: 0.1, // задержка следования (0.1 = быстро, 0.05 = медленно)
+    followDelay: 0.03, // задержка следования (0.15 = быстрее, 0.1 = медленнее)
   };
   
 let keys = {left:false,right:false};
@@ -301,6 +301,7 @@ function update() {
     let distanceToPlayer = Math.abs(companion.x - player.x);
     let maxDistance = 40; // максимальное расстояние
     companion.targetY = player.y;
+    
     // Если компаньон слишком далеко от игрока, определяем направление движения
     if (distanceToPlayer > maxDistance) {
       if (companion.x < player.x) {
@@ -315,14 +316,14 @@ function update() {
       companion.targetX = companion.x;
     }
     
-    // Плавно двигаем компаньона к цели по X только если игрок на земле
-    if (player.onGround) {
-      companion.x += (companion.targetX - companion.x) * companion.followDelay;
-    }
+    // Плавно двигаем компаньона к цели по X
+    companion.x += (companion.targetX - companion.x) * companion.followDelay;
+    
+    // Плавно двигаем компаньона к цели по Y с небольшой задержкой
     companion.y += (companion.targetY - companion.y + 15) * companion.followDelay;
     
-    // Гравитация для компаньона
-    companion.dy += 0.15 * (deltaTime / 7); // нормализуем гравитацию
+    // Гравитация для компаньона (уменьшили для более плавного движения)
+    companion.dy += 0.12 * (deltaTime / 7); // нормализуем гравитацию
     companion.y += companion.dy;
     companion.onGround = false;
     
@@ -341,9 +342,9 @@ function update() {
     
     // Определяем состояние анимации компаньона
     let currentDistance = Math.abs(companion.x - player.x);
-    let isMoving = Math.abs(companion.x - companion.targetX) > 5; // увеличили порог для более стабильной анимации
+    let isMoving = Math.abs(companion.x - companion.targetX) > 3; // уменьшили порог для более чувствительной анимации
     
-    if (isMoving && currentDistance > 20) {
+    if (isMoving && currentDistance > 15) {
       // Компаньон движется к игроку
       if (companion.x < companion.targetX) {
         companion.state = "walk-right";
