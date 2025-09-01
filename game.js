@@ -59,30 +59,77 @@ modalBtn.onclick = ()=>{
 };
 
 // управление
-document.getElementById("left").ontouchstart = ()=>{
+document.getElementById("left").onmousedown = ()=>{
     keys.left=true
 };
-document.getElementById("left").ontouchend = ()=>{
-    keys.left=false;
+document.getElementById("left").ontouchstart = ()=>{
+  keys.left=true
 };
-document.getElementById("right").ontouchstart = ()=>{
+document.getElementById("right").onmousedown = ()=>{
     keys.right=true;
 };
-document.getElementById("right").ontouchend = ()=>{
+document.getElementById("right").ontouchstart = ()=>{
+  keys.right=true
+};
+
+
+document.addEventListener('keydown', function(event) {
+  if (event.code == 'KeyA') {
+    keys.left=true;
+  }
+  if (event.code == 'KeyD') {
+    keys.right=true;
+  }
+  if (event.code == 'KeyW' || event.code == 'Space') {
+    jump();
+  }
+  if (event.code == 'KeyE') {
+    activeCharacter = activeCharacter === "player" ? "companion" : "player";
+  }
+});
+
+document.addEventListener('keyup', function(event) {
+  if (event.code == 'KeyA') {
+    keys.left=false;
+  }
+  if (event.code == 'KeyD') {
     keys.right=false;
+  }
+});
+
+
+document.getElementById("body").onmouseup = ()=>{
+  keys.left=false;
+  keys.right=false;
 };
-document.getElementById("jump").ontouchstart = ()=>{ 
-    if(player.onGround && !gameOver && activeCharacter === "player") {
-        player.dy=-5; // уменьшили силу прыжка с -8 до -5
-        companion.dy=-4.5;
-        player.idleTimer = 0; // сбрасываем таймер при прыжке
-    } else if(companion.onGround && !gameOver && activeCharacter === "companion") {
-        companion.dy=-5;
-        companion.idleTimer = 0;
-    }
+document.getElementById("left").ontouchend = ()=>{
+keys.left=false
 };
-document.getElementById("jump").ontouchend = ()=>{
-    // Кнопка отпущена - ничего не делаем
+document.getElementById("right").ontouchend = ()=>{
+keys.right=false
+};
+
+
+const jump = ()=>{
+  if(player.onGround && !gameOver && activeCharacter === "player") {
+    // Нормализуем силу прыжка для стабильности на всех устройствах
+    player.dy = -17 / deltaTime; // 350 / 16.67 ≈ -21 для 60 FPS
+    companion.dy = -17 / deltaTime; // 315 / 16.67 ≈ -19 для 60 FPS
+    player.idleTimer = 0; // сбрасываем таймер при прыжке
+  } else if(companion.onGround && !gameOver && activeCharacter === "companion") {
+    companion.dy = -17 / deltaTime;
+    companion.idleTimer = 0;
+  }
+};
+
+document.getElementById("jump").onmousedown = ()=>{ 
+  jump();
+};
+document.getElementById("jump").ontouchstart = ()=>{
+  jump();
+};
+document.getElementById("switch").onmousedown = ()=>{
+  activeCharacter = activeCharacter === "player" ? "companion" : "player";
 };
 document.getElementById("switch").ontouchstart = ()=>{
   activeCharacter = activeCharacter === "player" ? "companion" : "player";
