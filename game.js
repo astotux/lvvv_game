@@ -112,12 +112,12 @@ keys.right=false
 
 const jump = ()=>{
   if(player.onGround && !gameOver && activeCharacter === "player") {
-    // Нормализуем силу прыжка для стабильности на всех устройствах
-    player.dy = -17 / deltaTime; // 350 / 16.67 ≈ -21 для 60 FPS
-    companion.dy = -17 / deltaTime; // 315 / 16.67 ≈ -19 для 60 FPS
+    // Фиксированная сила прыжка, независимая от частоты кадров
+    player.dy = -4;
+    companion.dy = -4;
     player.idleTimer = 0; // сбрасываем таймер при прыжке
   } else if(companion.onGround && !gameOver && activeCharacter === "companion") {
-    companion.dy = -17 / deltaTime;
+    companion.dy = -4;
     companion.idleTimer = 0;
   }
 };
