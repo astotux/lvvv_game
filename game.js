@@ -33,7 +33,7 @@ let companion = {
     idleTimer: 0,     // таймер для анимации стояния
     targetX: 50,      // целевая позиция X
     targetY: 300,     // целевая позиция Y
-    followDelay: 0.03, // задержка следования (0.15 = быстрее, 0.1 = медленнее)
+    followDelay: 0.09, // задержка следования (0.15 = быстрее, 0.1 = медленнее)
   };
   
 let keys = {left:false,right:false};
@@ -114,11 +114,15 @@ keys.right=false
 const jump = ()=>{
   if(player.onGround && !gameOver && activeCharacter === "player") {
     // Фиксированная сила прыжка
-    player.dy = -7;
-    companion.dy = -7;
+    player.dy = -15;
+    if (companion.y - player.y < 16) {
+      setTimeout(()=>{
+        companion.dy = -15;
+      }, 110);
+    }
     player.idleTimer = 0; // сбрасываем таймер при прыжке
   } else if(companion.onGround && !gameOver && activeCharacter === "companion") {
-    companion.dy = -7;
+    companion.dy = -15;
     companion.idleTimer = 0;
   }
 };
@@ -136,7 +140,7 @@ document.getElementById("switch").ontouchstart = ()=>{
   activeCharacter = activeCharacter === "player" ? "companion" : "player";
 };
 
-function resetPlayer(){
+function resetPlayer() {
   player.x=50; player.y=250; player.dy=0;
   player.idleTimer = 0; // сбрасываем таймер
   gameOver=false;
@@ -154,9 +158,9 @@ function update() {
   if (activeCharacter === "player") {
     // Управляем игроком
     player.dx = 0;
-    if (keys.left) player.dx = -2; // фиксированная скорость
-    if (keys.right) player.dx = 2;
-    player.dy += 0.1; // фиксированная гравитация
+    if (keys.left) player.dx = -5; // фиксированная скорость
+    if (keys.right) player.dx = 5;
+    player.dy += 1; // фиксированная гравитация
 
     player.x += player.dx;
     player.y += player.dy;
@@ -213,12 +217,11 @@ function update() {
     }
     
     // обновляем кадры игрока
-    player.frameTick++; // используем простой счетчик кадров
-    if (player.frameTick > 3) { // 3 кадра = 60 FPS / 3 = 20 FPS для анимации
-        
-        if (player.state === "idle") {
-        player.frameTick = 0;
-
+    player.frameTick += 1 // используем простой счетчик кадров
+    if (player.state === "idle") {
+        // Анимация стояния медленнее (12 кадров = 5 FPS)
+        if (player.frameTick > 15) {
+            player.frameTick = 0;
             // Анимация стояния только после 10 секунд (600 кадров при 60 FPS)
             if (player.idleTimer > 600) {
                 player.frame++;
@@ -226,12 +229,13 @@ function update() {
             } else {
                 player.frame = 0; // всегда первый кадр до 10 секунд
             }
-        } else {
-          player.frameTick = 0;
-
-          // Анимация ходьбы работает всегда
-          player.frame++;
-          if (player.frame > 9) player.frame = 0; // walk 4 кадра
+        }
+    } else {
+        // Анимация ходьбы быстрее (3 кадра = 20 FPS)
+        if (player.frameTick > 3) {
+            player.frameTick = 0;
+            player.frame++;
+            if (player.frame > 9) player.frame = 0; // walk 10 кадров
         }
     }
 
@@ -248,9 +252,9 @@ function update() {
   } else {
     // Управляем компаньоном
     companion.dx = 0;
-    if (keys.left) companion.dx = -2; // фиксированная скорость
-    if (keys.right) companion.dx = 2;
-    companion.dy += 0.1; // фиксированная гравитация
+    if (keys.left) companion.dx = -4; // фиксированная скорость
+    if (keys.right) companion.dx = 4;
+    companion.dy += 1; // фиксированная гравитация
 
     companion.x += companion.dx;
     companion.y += companion.dy;
@@ -305,21 +309,24 @@ function update() {
         companion.idleTimer++;
     }
     
-    // обновляем кадры компаньона
     companion.frameTick++; // используем простой счетчик кадров
-    if (companion.frameTick > 3) {
-        if (companion.state === "idle") {
-        companion.frameTick = 0;
+    if (companion.state === "idle") {
+        // Анимация стояния медленнее (6 кадров = 10 FPS)
+        if (companion.frameTick > 6) {
+            companion.frameTick = 0;
             if (companion.idleTimer > 600) {
                 companion.frame++;
                 if (companion.frame > 8) companion.frame = 0;
             } else {
                 companion.frame = 0;
             }
-        } else {
-        companion.frameTick = 0;
-          companion.frame++;
-          if (companion.frame > 10) companion.frame = 0;
+        }
+    } else {
+        // Анимация ходьбы быстрее (2 кадра = 30 FPS)
+        if (companion.frameTick > 2) {
+            companion.frameTick = 0;
+            companion.frame++;
+            if (companion.frame > 10) companion.frame = 0;
         }
     }
 
@@ -367,11 +374,11 @@ function update() {
     // Плавно двигаем компаньона к цели по X
     companion.x += (companion.targetX - companion.x) * companion.followDelay;
     
-    // Плавно двигаем компаньона к цели по Y с небольшой задержкой
-    companion.y += (companion.targetY - companion.y + 15) * companion.followDelay;
+    // Плавно двигаем компаньона к цели по Y 
+    companion.y += (companion.targetY - companion.y) * companion.followDelay;
     
     // Гравитация для компаньона (уменьшили для более плавного движения)
-    companion.dy += 0.12; // фиксированная гравитация без deltaTime
+    companion.dy += 1; // фиксированная гравитация без deltaTime
     companion.y += companion.dy;
     companion.onGround = false;
     
@@ -408,22 +415,25 @@ function update() {
     
     // Обновляем анимацию компаньона
     companion.frameTick++; // используем простой счетчик кадров
-    if (companion.frameTick > 3) {
-      companion.frameTick = 0;
-      
-      if (companion.state === "idle") {
-        // Анимация стояния только после 10 секунд
-        if (companion.idleTimer > 600) {
-          companion.frame++;
-          if (companion.frame > 8) companion.frame = 0;
-        } else {
-          companion.frame = 0;
+    if (companion.state === "idle") {
+        // Анимация стояния медленнее (6 кадров = 10 FPS)
+        if (companion.frameTick > 24) {
+            companion.frameTick = 0;
+            // Анимация стояния только после 10 секунд
+            if (companion.idleTimer > 600) {
+                companion.frame++;
+                if (companion.frame > 8) companion.frame = 0;
+            } else {
+                companion.frame = 0;
+            }
         }
-      } else {
-        // Анимация ходьбы
-        companion.frame++;
-        if (companion.frame > 10) companion.frame = 0;
-      }
+    } else {
+        // Анимация ходьбы быстрее (2 кадра = 30 FPS)
+        if (companion.frameTick > 2) {
+            companion.frameTick = 0;
+            companion.frame++;
+            if (companion.frame > 10) companion.frame = 0;
+        }
     }
   }
   
@@ -452,17 +462,25 @@ function update() {
     player.idleTimer++;
     
     // Обновляем анимацию игрока
-    player.frameTick++; // используем простой счетчик кадров
-    if (player.frameTick > 3) {
-      player.frameTick = 0;
-      
-      if (player.idleTimer > 600) {
-        player.frame++;
-        if (player.frame > 15) player.frame = 0;
-      } else {
-        player.frame = 0;
-      }
+    player.frameTick++;
+    if (player.state === "idle") {
+        if (player.frameTick > 15) {
+            player.frameTick = 0;
+            if (player.idleTimer > 600) {
+                player.frame++;
+                if (player.frame > 15) player.frame = 0;
+            } else {
+                player.frame = 0;
+            }
+        }
+    } else {
+        if (player.frameTick > 3) {
+            player.frameTick = 0;
+            player.frame++;
+            if (player.frame > 9) player.frame = 0;
+        }
     }
+
   }
   
   // загрузка картинок
@@ -654,43 +672,45 @@ function drawDecorationsUndoPlatform() {
 function drawBackground() {
   const w = canvas.width;
   const groundY = getGroundY()+10; // позиция низа фона по платформам
+  const bg_w = 323
+  const bg_h = 302
 
   // 🔹 Дальний слой
-  let x0 = -(cameraX * 0.2) % bgLayer1.width;
-  for (let i = -1; i <= Math.ceil(w / bgLayer0.width) + 1; i++) {
-    ctx.drawImage(bgLayer0, x0 + i * bgLayer0.width, groundY - bgLayer0.height, bgLayer0.width, bgLayer0.height);
+  let x0 = -(cameraX * 0.2) % bg_w;
+  for (let i = -1; i <= Math.ceil(w / bg_w) + 1; i++) {
+    ctx.drawImage(bgLayer0, x0 + i * bg_w, groundY - bg_h, bg_w, bg_h);
   }
 
-  let x1 = -(cameraX * 0.25) % bgLayer1.width;
-  for (let i = -1; i <= Math.ceil(w / bgLayer1.width) + 1; i++) {
-    ctx.drawImage(bgLayer1, x1 + i * bgLayer1.width, groundY - bgLayer1.height, bgLayer1.width, bgLayer1.height);
+  let x1 = -(cameraX * 0.25) % bg_w;
+  for (let i = -1; i <= Math.ceil(w / bg_w) + 1; i++) {
+    ctx.drawImage(bgLayer1, x1 + i * bg_w, groundY - bg_h, bg_w, bg_h);
   }
 
   // 🔹 Средний слой
-  let x2 = -(cameraX * 0.35) % bgLayer2.width;
-  for (let i = -1; i <= Math.ceil(w / bgLayer2.width) + 1; i++) {
-    ctx.drawImage(bgLayer2, x2 + i * bgLayer2.width, groundY - bgLayer2.height, bgLayer2.width, bgLayer2.height);
+  let x2 = -(cameraX * 0.35) % bg_w;
+  for (let i = -1; i <= Math.ceil(w / bg_w) + 1; i++) {
+    ctx.drawImage(bgLayer2, x2 + i * bg_w, groundY - bg_h, bg_w, bg_h);
   }
 
   // 🔹 Ближний слой
-  let x3 = -(cameraX * 0.5) % bgLayer3.width;
-  for (let i = -1; i <= Math.ceil(w / bgLayer3.width) + 1; i++) {
-    ctx.drawImage(bgLayer3, x3 + i * bgLayer3.width, groundY - bgLayer3.height, bgLayer3.width, bgLayer3.height);
+  let x3 = -(cameraX * 0.5) % bg_w;
+  for (let i = -1; i <= Math.ceil(w / bg_w) + 1; i++) {
+    ctx.drawImage(bgLayer3, x3 + i * bg_w, groundY - bg_h, bg_w, bg_h);
   }
 
-  let x4 = -(cameraX * 0.65) % bgLayer4.width;
-  for (let i = -1; i <= Math.ceil(w / bgLayer4.width) + 1; i++) {
-    ctx.drawImage(bgLayer4, x4 + i * bgLayer4.width, groundY - bgLayer4.height, bgLayer4.width, bgLayer4.height);
+  let x4 = -(cameraX * 0.65) % bg_w;
+  for (let i = -1; i <= Math.ceil(w / bg_w) + 1; i++) {
+    ctx.drawImage(bgLayer4, x4 + i * bg_w, groundY - bg_h, bg_w, bg_h);
   }
 
-  let x5 = -(cameraX * 0.72) % bgLayer5.width;
-  for (let i = -1; i <= Math.ceil(w / bgLayer5.width) + 1; i++) {
-    ctx.drawImage(bgLayer5, x5 + i * bgLayer5.width, groundY - bgLayer5.height, bgLayer5.width, bgLayer5.height);
+  let x5 = -(cameraX * 0.72) % bg_w;
+  for (let i = -1; i <= Math.ceil(w / bg_w) + 1; i++) {
+    ctx.drawImage(bgLayer5, x5 + i * bg_w, groundY - bg_h, bg_w, bg_h);
   }
 
-  let x6 = -(cameraX * 0.8) % bgLayer6.width;
-  for (let i = -1; i <= Math.ceil(w / bgLayer6.width) + 1; i++) {
-    ctx.drawImage(bgLayer6, x6 + i * bgLayer6.width, groundY - bgLayer6.height, bgLayer6.width, bgLayer6.height);
+  let x6 = -(cameraX * 0.8) % bg_w;
+  for (let i = -1; i <= Math.ceil(w / bg_w) + 1; i++) {
+    ctx.drawImage(bgLayer6, x6 + i * bg_w, groundY - bg_h, bg_w, bg_h);
   }
 }
 
