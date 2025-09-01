@@ -113,11 +113,11 @@ keys.right=false
 const jump = ()=>{
   if(player.onGround && !gameOver && activeCharacter === "player") {
     // Фиксированная сила прыжка, независимая от частоты кадров
-    player.dy = -4;
-    companion.dy = -4;
+    player.dy = -7 * (deltaTime / 7);
+    companion.dy = -7 * (deltaTime / 7);
     player.idleTimer = 0; // сбрасываем таймер при прыжке
   } else if(companion.onGround && !gameOver && activeCharacter === "companion") {
-    companion.dy = -4;
+    companion.dy = -7 * (deltaTime / 7);
     companion.idleTimer = 0;
   }
 };
@@ -879,7 +879,7 @@ function loop(currentTime) {
   lastTime = currentTime;
   
   // Ограничиваем delta time для предотвращения больших скачков
-  if (deltaTime > 50) deltaTime = 50;
+  // if (deltaTime > 50) deltaTime = 50;
   
   update();
   draw();
