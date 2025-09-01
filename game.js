@@ -8,9 +8,10 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
-// Добавляем переменные для delta time
+// Добавляем переменные для фиксированного временного шага
 let lastTime = 0;
-let deltaTime = 0;
+let accumulator = 0;
+const fixedTimeStep = 1000 / 60; // 60 FPS = ~16.67ms
 
 let currentLevel = 0;
 let player = {
@@ -112,12 +113,12 @@ keys.right=false
 
 const jump = ()=>{
   if(player.onGround && !gameOver && activeCharacter === "player") {
-    // Фиксированная сила прыжка, независимая от частоты кадров
-    player.dy = -7 * (deltaTime / 7);
-    companion.dy = -7 * (deltaTime / 7);
+    // Фиксированная сила прыжка
+    player.dy = -7;
+    companion.dy = -7;
     player.idleTimer = 0; // сбрасываем таймер при прыжке
   } else if(companion.onGround && !gameOver && activeCharacter === "companion") {
-    companion.dy = -7 * (deltaTime / 7);
+    companion.dy = -7;
     companion.idleTimer = 0;
   }
 };
@@ -128,7 +129,7 @@ document.getElementById("jump").onmousedown = ()=>{
 document.getElementById("jump").ontouchstart = ()=>{
   jump();
 };
-document.getElementById("switch").onmousedown = ()=>{
+document.getElementById("switch").onclick = ()=>{
   activeCharacter = activeCharacter === "player" ? "companion" : "player";
 };
 document.getElementById("switch").ontouchstart = ()=>{
@@ -153,9 +154,9 @@ function update() {
   if (activeCharacter === "player") {
     // Управляем игроком
     player.dx = 0;
-    if (keys.left) player.dx = -2 * (deltaTime / 7); // нормализуем скорость движения
-    if (keys.right) player.dx = 2 * (deltaTime / 7);
-    player.dy += 0.1 * (deltaTime / 7); // нормализуем гравитацию
+    if (keys.left) player.dx = -2; // фиксированная скорость
+    if (keys.right) player.dx = 2;
+    player.dy += 0.1; // фиксированная гравитация
 
     player.x += player.dx;
     player.y += player.dy;
@@ -212,21 +213,21 @@ function update() {
     }
     
     // обновляем кадры игрока
-    player.frameTick += deltaTime; // используем delta time для анимации
-    if (player.frameTick > 180) { // чем больше число, тем медленнее анимация
+    player.frameTick++; // используем простой счетчик кадров
+    if (player.frameTick > 3) { // 3 кадра = 60 FPS / 3 = 20 FPS для анимации
         
         if (player.state === "idle") {
         player.frameTick = 0;
 
             // Анимация стояния только после 10 секунд (600 кадров при 60 FPS)
-            if (player.idleTimer > 1800) {
+            if (player.idleTimer > 600) {
                 player.frame++;
                 if (player.frame > 15) player.frame = 0; // idle 16 кадров
             } else {
                 player.frame = 0; // всегда первый кадр до 10 секунд
             }
         } else {
-          player.frameTick = 110;
+          player.frameTick = 0;
 
           // Анимация ходьбы работает всегда
           player.frame++;
@@ -247,9 +248,9 @@ function update() {
   } else {
     // Управляем компаньоном
     companion.dx = 0;
-    if (keys.left) companion.dx = -2 * (deltaTime / 7); // нормализуем скорость движения
-    if (keys.right) companion.dx = 2 * (deltaTime / 7);
-    companion.dy += 0.1 * (deltaTime / 7); // нормализуем гравитацию
+    if (keys.left) companion.dx = -2; // фиксированная скорость
+    if (keys.right) companion.dx = 2;
+    companion.dy += 0.1; // фиксированная гравитация
 
     companion.x += companion.dx;
     companion.y += companion.dy;
@@ -305,18 +306,18 @@ function update() {
     }
     
     // обновляем кадры компаньона
-    companion.frameTick += deltaTime; // используем delta time для анимации
-    if (companion.frameTick > 180) {
+    companion.frameTick++; // используем простой счетчик кадров
+    if (companion.frameTick > 3) {
         if (companion.state === "idle") {
         companion.frameTick = 0;
-            if (companion.idleTimer > 1800) {
+            if (companion.idleTimer > 600) {
                 companion.frame++;
                 if (companion.frame > 8) companion.frame = 0;
             } else {
                 companion.frame = 0;
             }
         } else {
-        companion.frameTick = 110;
+        companion.frameTick = 0;
           companion.frame++;
           if (companion.frame > 10) companion.frame = 0;
         }
@@ -370,7 +371,7 @@ function update() {
     companion.y += (companion.targetY - companion.y + 15) * companion.followDelay;
     
     // Гравитация для компаньона (уменьшили для более плавного движения)
-    companion.dy += 0.12 * (deltaTime / 7); // нормализуем гравитацию
+    companion.dy += 0.12; // фиксированная гравитация без deltaTime
     companion.y += companion.dy;
     companion.onGround = false;
     
@@ -406,20 +407,19 @@ function update() {
     }
     
     // Обновляем анимацию компаньона
-    companion.frameTick += deltaTime; // используем delta time для анимации
-    if (companion.frameTick > 120) {
+    companion.frameTick++; // используем простой счетчик кадров
+    if (companion.frameTick > 3) {
       companion.frameTick = 0;
       
       if (companion.state === "idle") {
         // Анимация стояния только после 10 секунд
-        if (companion.idleTimer > 1800) {
+        if (companion.idleTimer > 600) {
           companion.frame++;
           if (companion.frame > 8) companion.frame = 0;
         } else {
           companion.frame = 0;
         }
       } else {
-        companion.frameTick = 90;
         // Анимация ходьбы
         companion.frame++;
         if (companion.frame > 10) companion.frame = 0;
@@ -430,7 +430,7 @@ function update() {
   // 🔹 Функция обновления игрока (когда он неактивен)
   function updatePlayer() {
     // Игрок остается на месте, но применяется гравитация
-    player.dy += 0.1 * (deltaTime / 7); // нормализуем гравитацию
+    player.dy += 0.1; // фиксированная гравитация без deltaTime
     player.y += player.dy;
     player.onGround = false;
     
@@ -452,11 +452,11 @@ function update() {
     player.idleTimer++;
     
     // Обновляем анимацию игрока
-    player.frameTick += deltaTime; // используем delta time для анимации
-    if (player.frameTick > 180) {
+    player.frameTick++; // используем простой счетчик кадров
+    if (player.frameTick > 3) {
       player.frameTick = 0;
       
-      if (player.idleTimer > 1800) {
+      if (player.idleTimer > 600) {
         player.frame++;
         if (player.frame > 15) player.frame = 0;
       } else {
@@ -871,17 +871,24 @@ function drawBackground() {
   }
 
 function loop(currentTime) {
-  // Вычисляем delta time для нормализации скорости
+  // Фиксированный временной шаг для стабильной работы
   if (lastTime === 0) {
     lastTime = currentTime;
   }
-  deltaTime = currentTime - lastTime;
+  
+  const deltaTime = currentTime - lastTime;
   lastTime = currentTime;
   
-  // Ограничиваем delta time для предотвращения больших скачков
-  // if (deltaTime > 50) deltaTime = 50;
+  // Накапливаем время
+  accumulator += deltaTime;
   
-  update();
+  // Обновляем игру с фиксированным временным шагом
+  while (accumulator >= fixedTimeStep) {
+    update();
+    accumulator -= fixedTimeStep;
+  }
+  
+  // Отрисовка происходит с частотой обновления экрана
   draw();
   requestAnimationFrame(loop);
 }
