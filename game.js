@@ -164,6 +164,7 @@ document.getElementById("jump").ontouchstart = ()=>{
 document.getElementById("switch").ontouchstart = ()=>{
   activeCharacter = activeCharacter === "player" ? "companion" : "player";
 };
+document.getElementById("level").innerText = currentLevel+1
 
 function resetPlayer() {
   player.x=50; player.y=250; player.dy=0;
@@ -182,6 +183,8 @@ function resetPlayer() {
       coin.collected = false;
     });
   }
+
+  document.getElementById("level").innerText = currentLevel+1
 }
 
 function updateCoins () {
@@ -892,16 +895,7 @@ function drawBackground() {
   }
 
   // 🔹 Заполнение ниже нижней платформы
-  const fillGroundY = getGroundY() + 10;
-  if (fillGroundY < viewH) {
-    const fillHeight = viewH - fillGroundY;
-    const fillTileW = Math.max(1, Math.round(imgBackgroundAll.width * (fillHeight / imgBackgroundAll.height)));
-    
-    let fillX = -(cameraX * 0.1) % fillTileW;
-    for (let i = -1; i <= Math.ceil(w / fillTileW) + 1; i++) {
-      ctx.drawImage(imgBackgroundAll, fillX + i * fillTileW, fillGroundY, fillTileW, fillHeight);
-    }
-  }
+
 }
 
 
@@ -1128,6 +1122,13 @@ allImages.forEach(img => {
     loaded++;
     if (loaded === allImages.length) {
       // когда все картинки загружены → запускаем игру
+      // Инициализируем камеру при запуске
+      let lvl = levels[currentLevel];
+      cameraX = player.x - viewW/2;
+      if(cameraX < 0) cameraX = 0;
+      if(cameraX > lvl.width - viewW) cameraX = lvl.width - viewW;
+      cameraX = Math.round(cameraX);
+      
       loop(0);
     }
   };
