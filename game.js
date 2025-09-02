@@ -1,9 +1,26 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
+let viewW = window.innerWidth;
+let viewH = window.innerHeight;
+
+// Настройки качества рендеринга
+ctx.imageSmoothingEnabled = false;
+ctx.imageSmoothingQuality = 'high';
 
 function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  const dpr = window.devicePixelRatio || 1;
+  viewW = window.innerWidth;
+  viewH = window.innerHeight;
+  canvas.width = Math.floor(viewW * dpr);
+  canvas.height = Math.floor(viewH * dpr);
+  canvas.style.width = viewW + "px";
+  canvas.style.height = viewH + "px";
+
+  // Настройки качества рендеринга
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingQuality = 'high';
 }
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
@@ -21,6 +38,7 @@ let player = {
     frameTick: 0,     // счётчик кадров для скорости анимации
     state: "idle",    // idle | walk-left | walk-right
     idleTimer: 0,     // таймер для анимации стояния
+    prevState: "idle",
   };
 
 // Компаньон, следующий за игроком
@@ -34,12 +52,16 @@ let companion = {
     targetX: 50,      // целевая позиция X
     targetY: 300,     // целевая позиция Y
     followDelay: 0.09, // задержка следования (0.15 = быстрее, 0.1 = медленнее)
+    prevState: "idle",
   };
   
 let keys = {left:false,right:false};
 let cameraX = 0;
 let gameOver = false;
 let activeCharacter = "player"; // начальное управление игроком
+
+let totalCoins = 0; // общее количество собранных монеток
+let coinAnimation = 0; // анимация монеток
 
 // модальное окно
 const modal = document.getElementById("modal");
@@ -133,9 +155,9 @@ document.getElementById("jump").onmousedown = ()=>{
 document.getElementById("jump").ontouchstart = ()=>{
   jump();
 };
-document.getElementById("switch").onclick = ()=>{
-  activeCharacter = activeCharacter === "player" ? "companion" : "player";
-};
+// document.getElementById("switch").onclick = ()=>{
+//   activeCharacter = activeCharacter === "player" ? "companion" : "player";
+// };
 document.getElementById("switch").ontouchstart = ()=>{
   activeCharacter = activeCharacter === "player" ? "companion" : "player";
 };
@@ -144,11 +166,24 @@ function resetPlayer() {
   player.x=50; player.y=250; player.dy=0;
   player.idleTimer = 0; // сбрасываем таймер
   gameOver=false;
+  totalCoins = 0
   
   // Сбрасываем компаньона
   companion.x = 50; companion.y = 250; companion.dy = 0;
   companion.idleTimer = 0;
   companion.targetX = 50; companion.targetY = 250;
+
+  let lvl = levels[currentLevel];
+  if (lvl.coins) {
+    lvl.coins.forEach(coin => {
+      coin.collected = false;
+    });
+  }
+}
+
+function updateCoins () {
+  totalCoins++;
+  document.getElementById('totalCoins').innerText = `${totalCoins} | ${levels[currentLevel].coins.length}`
 }
 
 function update() {
@@ -204,6 +239,20 @@ function update() {
          });
     }
 
+    // Проверка сбора монеток игроком
+    if (lvl.coins) {
+      lvl.coins.forEach(coin => {
+        if (!coin.collected && 
+            player.x < coin.x + coin.w && player.x + player.w > coin.x &&
+            player.y < coin.y + coin.h && player.y + player.h > coin.y) {
+          coin.collected = true;
+          updateCoins()
+          // Анимация сбора монетки
+          coinAnimation = 30; // 30 кадров анимации
+        }
+      });
+    }
+
     // обновляем состояние анимации игрока
     if (player.dx > 0) {
         player.state = "walk-right";
@@ -214,6 +263,13 @@ function update() {
     } else {
         player.state = "idle";
         player.idleTimer++; // увеличиваем таймер стояния
+    }
+
+    // Сброс кадра/тика только при смене состояния
+    if (player.state !== player.prevState) {
+        player.frameTick = 0;
+        player.frame = 0;
+        player.prevState = player.state;
     }
     
     // обновляем кадры игрока
@@ -239,13 +295,14 @@ function update() {
         }
     }
 
-    // камера следует за игроком
-    cameraX = player.x - canvas.width/2;
+    // камера следует за игроком (логические размеры окна)
+    cameraX = player.x - viewW/2;
     if(cameraX < 0) cameraX = 0;
-    if(cameraX > lvl.width - canvas.width) cameraX = lvl.width - canvas.width;
+    if(cameraX > lvl.width - viewW) cameraX = lvl.width - viewW;
+    cameraX = Math.round(cameraX);
 
-    // 🔹 Проверка: игрок выпал за пределы экрана
-    if (player.y > canvas.height + 100 || player.x < -200 || player.x > lvl.width + 200) {
+    // 🔹 Проверка: игрок выпал за пределы экрана (логическая высота)
+    if (player.y > viewH + 100 || player.x < -200 || player.x > lvl.width + 200) {
       gameOver = true;
       showModal("Игра окончена 💀","Ты упала в пропасть!", ()=>resetPlayer());
     }
@@ -297,6 +354,20 @@ function update() {
          });
     }
 
+
+    if (lvl.coins) {
+      lvl.coins.forEach(coin => {
+        if (!coin.collected && 
+            companion.x < coin.x + coin.w && companion.x + companion.w > coin.x &&
+            companion.y < coin.y + coin.h && companion.y + companion.h > coin.y) {
+          coin.collected = true;
+          updateCoins()
+          // Анимация сбора монетки
+          coinAnimation = 30; // 30 кадров анимации
+        }
+      });
+    }
+
     // обновляем состояние анимации компаньона
     if (companion.dx > 0) {
         companion.state = "walk-right";
@@ -307,6 +378,13 @@ function update() {
     } else {
         companion.state = "idle";
         companion.idleTimer++;
+    }
+
+    // Сброс кадра/тика только при смене состояния
+    if (companion.state !== companion.prevState) {
+        companion.frameTick = 0;
+        companion.frame = 0;
+        companion.prevState = companion.state;
     }
     
     companion.frameTick++; // используем простой счетчик кадров
@@ -330,13 +408,14 @@ function update() {
         }
     }
 
-    // камера следует за компаньоном
-    cameraX = companion.x - canvas.width/2;
+    // камера следует за компаньоном (логические размеры окна)
+    cameraX = companion.x - viewW/2;
     if(cameraX < 0) cameraX = 0;
-    if(cameraX > lvl.width - canvas.width) cameraX = lvl.width - canvas.width;
+    if(cameraX > lvl.width - viewW) cameraX = lvl.width - viewW;
+    cameraX = Math.round(cameraX);
 
-    // 🔹 Проверка: компаньон выпал за пределы экрана
-    if (companion.y > canvas.height + 100 || companion.x < -200 || companion.x > lvl.width + 200) {
+    // 🔹 Проверка: компаньон выпал за пределы экрана (логическая высота)
+    if (companion.y > viewH + 100 || companion.x < -200 || companion.x > lvl.width + 200) {
       gameOver = true;
       showModal("Игра окончена 💀","Компаньон упал в пропасть!", ()=>resetPlayer());
     }
@@ -411,6 +490,13 @@ function update() {
       // Компаньон стоит на месте
       companion.state = "idle";
       companion.idleTimer++;
+    }
+
+    // Сброс кадра/тика только при смене состояния
+    if (companion.state !== companion.prevState) {
+        companion.frameTick = 0;
+        companion.frame = 0;
+        companion.prevState = companion.state;
     }
     
     // Обновляем анимацию компаньона
@@ -521,11 +607,11 @@ const imgFinish = new Image();
 imgFinish.src = "img/finish.png";
 
 // загрузка изображений для декораций
-// const imgFlower1 = new Image();
-// imgFlower1.src = "img/flower1.png";
+const imgFlower1 = new Image();
+imgFlower1.src = "img/flower1.png";
 
-// const imgFlower2 = new Image();
-// imgFlower2.src = "img/flower2.png";
+const imgFlower2 = new Image();
+imgFlower2.src = "img/flower2.png";
 
 // const imgFlower3 = new Image();
 // imgFlower3.src = "img/flower3.png";
@@ -547,6 +633,9 @@ imgFinish.src = "img/finish.png";
 
 const imgRock1 = new Image();
 imgRock1.src = "img/rock1.png";
+
+const imgRock2 = new Image();
+imgRock2.src = "img/rock2.png";
 
 const imgGrass1 = new Image();
 imgGrass1.src = "img/grass1.png";
@@ -573,6 +662,9 @@ bgLayer5.src = "img/background_6.png";
 const bgLayer6 = new Image();
 bgLayer6.src = "img/background_5.png";
 
+const imgCoin = new Image();
+imgCoin.src = "img/mini_coin.png";
+
 function getGroundY() {
   let lvl = levels[currentLevel];
   let maxY = 0;
@@ -593,8 +685,8 @@ function drawDecorations() {
       
       // Выбираем изображение в зависимости от типа декорации
       switch(dec.image) {
-        // case "flower1": img = imgFlower1; break;
-        // case "flower2": img = imgFlower2; break;
+        case "flower1": img = imgFlower1; break;
+        case "flower2": img = imgFlower2; break;
         // case "flower3": img = imgFlower3; break;
         // case "flower4": img = imgFlower4; break;
         // case "bush1": img = imgBush1; break;
@@ -602,9 +694,14 @@ function drawDecorations() {
         // case "bush3": img = imgBush3; break;
         // case "bush4": img = imgBush4; break;
         case "rock1": img = imgRock1; break;
+        case "rock2": img = imgRock2; break;
         case "grass1": img = imgGrass1; break;
         // default: img = imgFlower1; // изображение по умолчанию
       }
+      
+      // Отключаем сглаживание для пиксельной графики
+      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingQuality = 'high';
       
       // Рисуем декорацию с учетом камеры
       ctx.drawImage(img, dec.x - cameraX, dec.y, dec.w, dec.h);
@@ -621,8 +718,8 @@ function drawDecorationsUndo() {
       
       // Выбираем изображение в зависимости от типа декорации
       switch(dec.image) {
-        // case "flower1": img = imgFlower1; break;
-        // case "flower2": img = imgFlower2; break;
+        case "flower1": img = imgFlower1; break;
+        case "flower2": img = imgFlower2; break;
         // case "flower3": img = imgFlower3; break;
         // case "flower4": img = imgFlower4; break;
         // case "bush1": img = imgBush1; break;
@@ -630,9 +727,15 @@ function drawDecorationsUndo() {
         // case "bush3": img = imgBush3; break;
         // case "bush4": img = imgBush4; break;
         case "rock1": img = imgRock1; break;
+        case "rock2": img = imgRock2; break;
+
         case "grass1": img = imgGrass1; break;
         // default: img = imgFlower1; // изображение по умолчанию
       }
+      
+      // Отключаем сглаживание для пиксельной графики
+      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingQuality = 'high';
       
       // Рисуем декорацию с учетом камеры
       ctx.drawImage(img, dec.x - cameraX, dec.y, dec.w, dec.h);
@@ -649,8 +752,8 @@ function drawDecorationsUndoPlatform() {
       
       // Выбираем изображение в зависимости от типа декорации
       switch(dec.image) {
-        // case "flower1": img = imgFlower1; break;
-        // case "flower2": img = imgFlower2; break;
+        case "flower1": img = imgFlower1; break;
+        case "flower2": img = imgFlower2; break;
         // case "flower3": img = imgFlower3; break;
         // case "flower4": img = imgFlower4; break;
         // case "bush1": img = imgBush1; break;
@@ -658,9 +761,15 @@ function drawDecorationsUndoPlatform() {
         // case "bush3": img = imgBush3; break;
         // case "bush4": img = imgBush4; break;
         case "rock1": img = imgRock1; break;
+        case "rock2": img = imgRock2; break;
+
         case "grass1": img = imgGrass1; break;
         // default: img = imgFlower1; // изображение по умолчанию
       }
+      
+      // Отключаем сглаживание для пиксельной графики
+      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingQuality = 'high';
       
       // Рисуем декорацию с учетом камеры
       ctx.drawImage(img, dec.x - cameraX, dec.y, dec.w, dec.h);
@@ -668,12 +777,33 @@ function drawDecorationsUndoPlatform() {
   }
 }
 
+// Функция отрисовки монеток
+function drawCoins() {
+  let lvl = levels[currentLevel];
+  document.getElementById('totalCoins').innerText = `${totalCoins} | ${levels[currentLevel].coins.length}`
+  if (lvl.coins) {
+    lvl.coins.forEach(coin => {
+      if (!coin.collected) {
+        ctx.imageSmoothingEnabled = false;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(imgCoin, coin.x - cameraX, coin.y, coin.w, coin.h);
+        
+        ctx.restore();
+      }
+    });
+  }
+}
+
 // функция отрисовки фона с параллаксом
 function drawBackground() {
-  const w = canvas.width;
+  const w = viewW; // логическая ширина экрана
   const groundY = getGroundY()+10; // позиция низа фона по платформам
   const bg_w = 323
   const bg_h = 302
+
+  // Отключаем сглаживание для пиксельной графики
+  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingQuality = 'high';
 
   // 🔹 Дальний слой
   let x0 = -(cameraX * 0.2) % bg_w;
@@ -721,6 +851,7 @@ function drawBackground() {
   function drawPlayer() {
     // Отключаем сглаживание для пиксельной графики
     ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingQuality = 'high';
     
     let sprite, frames, frameW, frameH;
   
@@ -765,6 +896,7 @@ function drawBackground() {
   function drawCompanion() {
     // Отключаем сглаживание для пиксельной графики
     ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingQuality = 'high';
     
     let sprite, frames, frameW, frameH;
   
@@ -806,16 +938,23 @@ function drawBackground() {
   
 
   function draw() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    // очищаем по логическим размерам
+    ctx.clearRect(0,0,viewW,viewH);
     
     // Отключаем сглаживание для всех изображений
     ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingQuality = 'high';
     
     drawBackground();
     // декорации (рисуем под платформами, но над фоном)
     drawDecorationsUndoPlatform();
     let lvl = levels[currentLevel];
-  
+      // ловушки
+      lvl.traps.forEach(t=>{
+        ctx.imageSmoothingEnabled = false;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(imgTrap, t.x - cameraX, t.y, t.w, t.h);
+      });
     // платформы (с повторяющейся текстурой)
     lvl.platforms.forEach(p=>{
       const platformX = p.x - cameraX;
@@ -833,6 +972,10 @@ function drawBackground() {
       // Получаем размеры текстуры платформы
       const textureW = textureImg.width;
       const textureH = textureImg.height;
+      
+      // Отключаем сглаживание для пиксельной графики
+      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingQuality = 'high';
       
       // Рисуем повторяющуюся текстуру платформы
       for (let x = 0; x < platformW; x += textureW) {
@@ -852,15 +995,17 @@ function drawBackground() {
     // декорации (рисуем под платформами, но над фоном)
     drawDecorationsUndo();
 
+    // монетки
+    drawCoins();
+
 
   
-    // ловушки
-    lvl.traps.forEach(t=>{
-      ctx.drawImage(imgTrap, t.x - cameraX, t.y, t.w, t.h);
-    });
+
   
     // финиш
     let f=lvl.finish;
+    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(imgFinish, f.x - cameraX, f.y, f.w, f.h);
     
     // игрок
@@ -915,10 +1060,9 @@ function loop(currentTime) {
 // ждём загрузки всех картинок
 let loaded = 0;
 const bgImages = [bgLayer0, bgLayer1, bgLayer2, bgLayer3, bgLayer4, bgLayer5, bgLayer6];
-const decorationImages = [imgRock1, imgGrass1];
+const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2];
 const platformImages = [imgPlatformGrass, imgPlatformStone, imgPlatformWood];
 const allImages = [...bgImages, ...decorationImages, ...platformImages, imgPlayerIdle, imgPlayerWalk, imgCompanionIdle, imgCompanionWalk, imgTrap, imgFinish];
-
 allImages.forEach(img => {
   img.onload = () => {
     loaded++;
