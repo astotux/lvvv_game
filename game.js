@@ -121,8 +121,10 @@ document.addEventListener('keyup', function(event) {
 });
 
 
-document.getElementById("body").onmouseup = ()=>{
+document.getElementById("left").onmouseup = ()=>{
   keys.left=false;
+};
+document.getElementById("right").onmouseup = ()=>{
   keys.right=false;
 };
 document.getElementById("left").ontouchend = ()=>{
@@ -797,50 +799,53 @@ function drawCoins() {
 // функция отрисовки фона с параллаксом
 function drawBackground() {
   const w = viewW; // логическая ширина экрана
-  const groundY = getGroundY()+10; // позиция низа фона по платформам
-  const bg_w = 323
-  const bg_h = 302
+  const groundY = getGroundY()+10; // низ фона совмещаем с нижней платформой
+  const baseW = 323;
+  const baseH = 302;
+  const targetH = Math.max(groundY, 1); // растягиваем до верха экрана (y=0)
+  const scale = targetH / baseH;
+  const tileW = Math.max(1, Math.round(baseW * scale));
 
   // Отключаем сглаживание для пиксельной графики
   ctx.imageSmoothingEnabled = false;
   ctx.imageSmoothingQuality = 'high';
 
   // 🔹 Дальний слой
-  let x0 = -(cameraX * 0.2) % bg_w;
-  for (let i = -1; i <= Math.ceil(w / bg_w) + 1; i++) {
-    ctx.drawImage(bgLayer0, x0 + i * bg_w, groundY - bg_h, bg_w, bg_h);
+  let x0 = -(cameraX * 0.2) % tileW;
+  for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
+    ctx.drawImage(bgLayer0, x0 + i * tileW, 0, tileW, targetH);
   }
 
-  let x1 = -(cameraX * 0.25) % bg_w;
-  for (let i = -1; i <= Math.ceil(w / bg_w) + 1; i++) {
-    ctx.drawImage(bgLayer1, x1 + i * bg_w, groundY - bg_h, bg_w, bg_h);
+  let x1 = -(cameraX * 0.25) % tileW;
+  for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
+    ctx.drawImage(bgLayer1, x1 + i * tileW, 0, tileW, targetH);
   }
 
   // 🔹 Средний слой
-  let x2 = -(cameraX * 0.35) % bg_w;
-  for (let i = -1; i <= Math.ceil(w / bg_w) + 1; i++) {
-    ctx.drawImage(bgLayer2, x2 + i * bg_w, groundY - bg_h, bg_w, bg_h);
+  let x2 = -(cameraX * 0.35) % tileW;
+  for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
+    ctx.drawImage(bgLayer2, x2 + i * tileW, 0, tileW, targetH);
   }
 
   // 🔹 Ближний слой
-  let x3 = -(cameraX * 0.5) % bg_w;
-  for (let i = -1; i <= Math.ceil(w / bg_w) + 1; i++) {
-    ctx.drawImage(bgLayer3, x3 + i * bg_w, groundY - bg_h, bg_w, bg_h);
+  let x3 = -(cameraX * 0.5) % tileW;
+  for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
+    ctx.drawImage(bgLayer3, x3 + i * tileW, 0, tileW, targetH);
   }
 
-  let x4 = -(cameraX * 0.65) % bg_w;
-  for (let i = -1; i <= Math.ceil(w / bg_w) + 1; i++) {
-    ctx.drawImage(bgLayer4, x4 + i * bg_w, groundY - bg_h, bg_w, bg_h);
+  let x4 = -(cameraX * 0.65) % tileW;
+  for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
+    ctx.drawImage(bgLayer4, x4 + i * tileW, 0, tileW, targetH);
   }
 
-  let x5 = -(cameraX * 0.72) % bg_w;
-  for (let i = -1; i <= Math.ceil(w / bg_w) + 1; i++) {
-    ctx.drawImage(bgLayer5, x5 + i * bg_w, groundY - bg_h, bg_w, bg_h);
+  let x5 = -(cameraX * 0.72) % tileW;
+  for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
+    ctx.drawImage(bgLayer5, x5 + i * tileW, 0, tileW, targetH);
   }
 
-  let x6 = -(cameraX * 0.8) % bg_w;
-  for (let i = -1; i <= Math.ceil(w / bg_w) + 1; i++) {
-    ctx.drawImage(bgLayer6, x6 + i * bg_w, groundY - bg_h, bg_w, bg_h);
+  let x6 = -(cameraX * 0.8) % tileW;
+  for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
+    ctx.drawImage(bgLayer6, x6 + i * tileW, 0, tileW, targetH);
   }
 }
 
