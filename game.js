@@ -63,6 +63,9 @@ let activeCharacter = "player"; // начальное управление иг�
 let totalCoins = 0; // общее количество собранных монеток
 let coinAnimation = 0; // анимация монеток
 
+// Флаг фиксации компаньона к центру игрока во время совместного прыжка
+let companionLockToCenter = false;
+
 // модальное окно
 const modal = document.getElementById("modal");
 const modalTitle = document.getElementById("modalTitle");
@@ -139,11 +142,9 @@ const jump = ()=>{
   if(player.onGround && !gameOver && activeCharacter === "player") {
     // Фиксированная сила прыжка
     player.dy = -15;
-    if (companion.y - player.y < 16) {
-      setTimeout(()=>{
-        companion.dy = -15;
-      }, 110);
-    }
+    // Запускаем совместный прыжок: мягко тянем к центру в воздухе, без мгновенного телепорта
+    companion.dy = -15;
+    companionLockToCenter = true;
     player.idleTimer = 0; // сбрасываем таймер при прыжке
   } else if(companion.onGround && !gameOver && activeCharacter === "companion") {
     companion.dy = -15;
@@ -475,23 +476,56 @@ function update() {
         }
       }
     });
+
+    // Мягкое притяжение к центру игрока в воздухе, чтобы приземлиться в одной точке
+    if (activeCharacter === "player") {
+      const centerX = player.x + (player.w - companion.w) / 2;
+      if (companionLockToCenter) {
+        const followStrength = 0.15; // плавность притяжения по X
+        companion.x += (centerX - companion.x) * followStrength;
+      }
+      // Защита от падения: если компаньон сильно ниже игрока, ускоряем подтяжку по Y
+      const maxVerticalLag = 140;
+      if (companion.y - player.y > maxVerticalLag) {
+        companion.y = player.y - 2;
+        companion.dy = 0;
+      }
+      // Снятие фиксации: когда оба на земле, выравниваем по центру один раз
+      if (player.onGround && companion.onGround && companionLockToCenter) {
+        companionLockToCenter = false;
+        companion.state = "idle";
+      }
+    }
     
     // Определяем состояние анимации компаньона
     let currentDistance = Math.abs(companion.x - player.x);
     let isMoving = Math.abs(companion.x - companion.targetX) > 3; // уменьшили порог для более чувствительной анимации
-    
-    if (isMoving && currentDistance > 15) {
-      // Компаньон движется к игроку
-      if (companion.x < companion.targetX) {
-        companion.state = "walk-right";
+
+    if (companionLockToCenter && activeCharacter === "player") {
+      // Во время воздушного притяжения поворачиваемся к центру игрока
+      const centerX = player.x + (player.w - companion.w) / 2;
+      const dxToCenter = centerX - companion.x;
+      if (Math.abs(dxToCenter) > 1) {
+        companion.state = dxToCenter > 0 ? "walk-right" : "walk-left";
+        companion.idleTimer = 0;
       } else {
-        companion.state = "walk-left";
+        companion.state = "idle";
+        companion.idleTimer++;
       }
-      companion.idleTimer = 0;
     } else {
-      // Компаньон стоит на месте
-      companion.state = "idle";
-      companion.idleTimer++;
+      if (isMoving && currentDistance > 15) {
+        // Компаньон движется к игроку
+        if (companion.x < companion.targetX) {
+          companion.state = "walk-right";
+        } else {
+          companion.state = "walk-left";
+        }
+        companion.idleTimer = 0;
+      } else {
+        // Компаньон стоит на месте
+        companion.state = "idle";
+        companion.idleTimer++;
+      }
     }
 
     // Сброс кадра/тика только при смене состояния
@@ -642,6 +676,12 @@ imgRock2.src = "img/rock2.png";
 const imgGrass1 = new Image();
 imgGrass1.src = "img/grass1.png";
 
+const imgMountain = new Image();
+imgMountain.src = "img/mountain.png";
+
+const imgBackgroundAll = new Image();
+imgBackgroundAll.src = "img/background_all.png";
+
 // загрузка фоновых картинок
 const bgLayer0 = new Image(); // дальний фон
 bgLayer0.src = "img/background_0.png";
@@ -698,6 +738,7 @@ function drawDecorations() {
         case "rock1": img = imgRock1; break;
         case "rock2": img = imgRock2; break;
         case "grass1": img = imgGrass1; break;
+        case "mountain": img = imgMountain; break;
         // default: img = imgFlower1; // изображение по умолчанию
       }
       
@@ -732,6 +773,7 @@ function drawDecorationsUndo() {
         case "rock2": img = imgRock2; break;
 
         case "grass1": img = imgGrass1; break;
+        case "mountain": img = imgMountain; break;
         // default: img = imgFlower1; // изображение по умолчанию
       }
       
@@ -748,8 +790,8 @@ function drawDecorationsUndo() {
 function drawDecorationsUndoPlatform() {
   let lvl = levels[currentLevel];
   
-  if (lvl.decorationsUndo) {
-    lvl.decorationsUndo.forEach(dec => {
+  if (lvl.decorationsUndoPlatform) {
+    lvl.decorationsUndoPlatform.forEach(dec => {
       let img;
       
       // Выбираем изображение в зависимости от типа декорации
@@ -766,6 +808,7 @@ function drawDecorationsUndoPlatform() {
         case "rock2": img = imgRock2; break;
 
         case "grass1": img = imgGrass1; break;
+        case "mountain": img = imgMountain; break;
         // default: img = imgFlower1; // изображение по умолчанию
       }
       
@@ -846,6 +889,18 @@ function drawBackground() {
   let x6 = -(cameraX * 0.8) % tileW;
   for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
     ctx.drawImage(bgLayer6, x6 + i * tileW, 0, tileW, targetH);
+  }
+
+  // 🔹 Заполнение ниже нижней платформы
+  const fillGroundY = getGroundY() + 10;
+  if (fillGroundY < viewH) {
+    const fillHeight = viewH - fillGroundY;
+    const fillTileW = Math.max(1, Math.round(imgBackgroundAll.width * (fillHeight / imgBackgroundAll.height)));
+    
+    let fillX = -(cameraX * 0.1) % fillTileW;
+    for (let i = -1; i <= Math.ceil(w / fillTileW) + 1; i++) {
+      ctx.drawImage(imgBackgroundAll, fillX + i * fillTileW, fillGroundY, fillTileW, fillHeight);
+    }
   }
 }
 
@@ -1065,9 +1120,9 @@ function loop(currentTime) {
 // ждём загрузки всех картинок
 let loaded = 0;
 const bgImages = [bgLayer0, bgLayer1, bgLayer2, bgLayer3, bgLayer4, bgLayer5, bgLayer6];
-const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2];
+const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2, imgMountain];
 const platformImages = [imgPlatformGrass, imgPlatformStone, imgPlatformWood];
-const allImages = [...bgImages, ...decorationImages, ...platformImages, imgPlayerIdle, imgPlayerWalk, imgCompanionIdle, imgCompanionWalk, imgTrap, imgFinish];
+const allImages = [...bgImages, ...decorationImages, ...platformImages, imgPlayerIdle, imgPlayerWalk, imgCompanionIdle, imgCompanionWalk, imgTrap, imgFinish, imgBackgroundAll];
 allImages.forEach(img => {
   img.onload = () => {
     loaded++;

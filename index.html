@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
   <title>Подарочный платформер</title>
   <style>
-    body { margin: 0; background: #222; overflow: hidden; font-family: sans-serif; }
+    body { margin: 0; background: #222; overflow: hidden; font-family: "Pixelify Sans", sans-serif; }
     canvas {
       display: block;
       width: 100vw;
@@ -104,8 +107,7 @@
       to { transform: scale(1); opacity: 1; }
     }
     #coinCounter {
-      width: 300px;
-      font-family: Arial, sans-serif;
+      width: 270px;
       font-weight: bold;
       display: inline-flex;
       align-items: stretch;
@@ -135,29 +137,30 @@
 <body id="body">
 
   <canvas id="game" width="480" height="320"></canvas>
+  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.1.0</p>
 
   <!-- Счетчик монеток -->
 
   <div class="bottom" style="margin: 0 10px;">
-    <div id="coinCounter">
-      <div class="counterLeft"></div>
-      <div class="counterCenter">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 24px;"><img width="20px" height="20px" src="img/coin.png"></span>
-          <div>
-            <div>Уровень: <span id="levelCoins">0</span></div>
-            <div>Собрано морошки: <span id="totalCoins">0 | 0</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="counterRight"></div>
-    </div>
+    
     <div class="controls">
       <div class="btn-group">
         <button class="btn" id="left"></button>
         <button class="btn" id="right"></button>
       </div>
-      <p style="color: #fff;">v. 1.0.2</p>
+      <div id="coinCounter">
+        <div class="counterLeft"></div>
+        <div class="counterCenter">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 24px;"><img width="20px" height="20px" src="img/coin.png"></span>
+            <div>
+              <div>Уровень: <span id="levelCoins">0</span></div>
+              <div>Собрано морошки: <span id="totalCoins">0 | 0</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="counterRight"></div>
+      </div>
       <div class="btn-group">
         <button class="btn" id="switch"></button>
         <button class="btn" id="jump"></button>

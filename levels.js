@@ -52,20 +52,25 @@ const levels = [
       {x: 410, y: 328, w: 55, h: 18, type: "rock", image: "flower1"},
       {x: 465, y: 328, w: 55, h: 18, type: "rock", image: "flower2"},
       {x: 550, y: 328, w: 55, h: 18, type: "rock", image: "flower1"},
-      {x: 1500, y: 322, w: 38, h: 20, type: "rock", image: "rock1"}
+      {x: 1500, y: 322, w: 38, h: 20, type: "rock", image: "rock1"},
+      {x: 200, y: 330, w: 38, h: 20, type: "rock2", image: "rock1"},
+      {x: 680, y: 330, w: 73, h: 19, type: "grass", image: "grass1"},
+      {x: 610, y: 330, w: 73, h: 19, type: "grass", image: "grass1"},
     ],
     decorationsUndo: [
       {x: 315, y: 330, w: 29, h: 15, type: "rock2", image: "rock2"},
       {x: 280, y: 328, w: 55, h: 18, type: "rock", image: "flower2"},
+      {x: 127, y: 328, w: 55, h: 18, type: "rock", image: "flower1"},
+      {x: 180, y: 328, w: 55, h: 18, type: "rock", image: "flower2"},
+      {x: 225, y: 328, w: 55, h: 18, type: "rock", image: "flower1"},
+
       {x: 520, y: 328, w: 55, h: 18, type: "rock", image: "flower1"},
-      {x: 860, y: 334, w: 73, h: 19, type: "grass", image: "grass1"},
+      {x: 730, y: 330, w: 73, h: 19, type: "grass", image: "grass1"},
       {x: 860, y: 334, w: 73, h: 19, type: "grass", image: "grass1"},
       {x: 1470, y: 334, w: 73, h: 19, type: "grass", image: "grass1"},
       {x: 3380, y: 314, w: 73, h: 19, type: "grass", image: "grass1"}
     ],
     decorationsUndoPlatform: [
-      {x: 250, y: 314, w: 73, h: 19, type: "grass", image: "grass1"},
-      {x: 860, y: 334, w: 73, h: 19, type: "grass", image: "grass1"}
     ]
   }
 ];
