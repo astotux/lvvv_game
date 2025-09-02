@@ -32,7 +32,7 @@ const fixedTimeStep = 1000 / 60; // 60 FPS = ~16.67ms
 
 let currentLevel = 0;
 let player = {
-    x: 50, y: 300, w: 38, h: 64,
+    x: 50, y: 100, w: 38, h: 64,
     dx: 0, dy: 0, onGround: false,
     frame: 0,         // текущий кадр анимации
     frameTick: 0,     // счётчик кадров для скорости анимации
@@ -43,7 +43,7 @@ let player = {
 
 // Компаньон, следующий за игроком
 let companion = {
-    x: 50, y: 300, w: 56, h: 49,
+    x: 50, y: 100, w: 56, h: 49,
     dx: 0, dy: 0, onGround: false,
     frame: 0,         // текущий кадр анимации
     frameTick: 0,     // счётчик кадров для скорости анимации
@@ -167,13 +167,13 @@ document.getElementById("switch").ontouchstart = ()=>{
 document.getElementById("level").innerText = currentLevel+1
 
 function resetPlayer() {
-  player.x=50; player.y=250; player.dy=0;
+  player.x=50; player.y=100; player.dy=0;
   player.idleTimer = 0; // сбрасываем таймер
   gameOver=false;
   totalCoins = 0
   
   // Сбрасываем компаньона
-  companion.x = 50; companion.y = 250; companion.dy = 0;
+  companion.x = 50; companion.y = 100; companion.dy = 0;
   companion.idleTimer = 0;
   companion.targetX = 50; companion.targetY = 250;
 
@@ -213,8 +213,9 @@ function update() {
     lvl.platforms.forEach(p=>{
       if(player.x < p.x+p.w && player.x+player.w > p.x &&
          player.y < p.y+p.h && player.y+player.h > p.y){
-           if(player.dy>0){ 
-             // Более точная коллизия - ставим персонажа точно на платформу
+           // Проверяем, что персонаж падает вниз и находится выше платформы
+           if(player.dy > 0 && player.y + player.h - player.dy <= p.y){ 
+             // Ставим персонажа точно на платформу только при падении сверху
              player.y = p.y - player.h; 
              player.dy = 0; 
              player.onGround = true; 
@@ -329,7 +330,8 @@ function update() {
     lvl.platforms.forEach(p=>{
       if(companion.x < p.x+p.w && companion.x+companion.w > p.x &&
          companion.y < p.y+p.h && companion.y+companion.h > p.y){
-           if(companion.dy>0){ 
+           // Проверяем, что компаньон падает вниз и находится выше платформы
+           if(companion.dy > 0 && companion.y + companion.h - companion.dy <= p.y){ 
              companion.y = p.y - companion.h; 
              companion.dy = 0; 
              companion.onGround = true; 
@@ -472,7 +474,8 @@ function update() {
     lvl.platforms.forEach(p => {
       if (companion.x < p.x + p.w && companion.x + companion.w > p.x &&
           companion.y < p.y + p.h && companion.y + companion.h > p.y) {
-        if (companion.dy > 0) {
+        // Проверяем, что компаньон падает вниз и находится выше платформы
+        if (companion.dy > 0 && companion.y + companion.h - companion.dy <= p.y) {
           companion.y = p.y - companion.h;
           companion.dy = 0;
           companion.onGround = true;
@@ -574,7 +577,8 @@ function update() {
     lvl.platforms.forEach(p => {
       if (player.x < p.x + p.w && player.x + player.w > p.x &&
           player.y < p.y + p.h && player.y + player.h > p.y) {
-        if (player.dy > 0) {
+        // Проверяем, что игрок падает вниз и находится выше платформы
+        if (player.dy > 0 && player.y + player.h - player.dy <= p.y) {
           player.y = p.y - player.h;
           player.dy = 0;
           player.onGround = true;

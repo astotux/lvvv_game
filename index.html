@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
@@ -16,7 +16,16 @@
       margin: 0; 
       background: #222; 
       overflow: hidden; 
-      font-family: "Pixelify Sans", sans-serif; }
+      font-family: "Pixelify Sans", sans-serif;
+      /* Запрет масштабирования */
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation; }
     canvas {
       display: block;
       width: 100vw;
@@ -178,7 +187,7 @@
 <body id="body">
 
   <canvas id="game" width="480" height="320"></canvas>
-  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.1.6</p>
+  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.1.7</p>
 
   <!-- Счетчик монеток -->
   <!-- <div class="coinCounterWrapper">
@@ -232,6 +241,42 @@
     </div>
   </div>
 
+  <script>
+    // Дополнительная защита от масштабирования
+    document.addEventListener('gesturestart', function (e) {
+      e.preventDefault();
+    });
+    
+    document.addEventListener('gesturechange', function (e) {
+      e.preventDefault();
+    });
+    
+    document.addEventListener('gestureend', function (e) {
+      e.preventDefault();
+    });
+    
+    // Запрет двойного тапа для масштабирования
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+    
+    // Запрет масштабирования колесиком мыши
+    document.addEventListener('wheel', function (e) {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Запрет контекстного меню
+    document.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+    });
+  </script>
   <script src="levels.js"></script>
   <script src="game.js"></script>
 </body>

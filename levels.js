@@ -2,6 +2,7 @@ const levels = [
   {
     width: 3800,
     platforms: [
+      {x: 0, y: 260, w: 200, h: 20, texture: "grass"},
       {x: 0, y: 340, w: 850, h: 20, texture: "grass"},
       {x: 850, y: 340, w: 450, h: 20, texture: "grass"},
       {x: 1400, y: 340, w: 500, h: 20, texture: "grass"},
@@ -30,9 +31,9 @@ const levels = [
     ],
     coins: [
       // дорожка на старте
-      {x: 120, y: 300, w: 20, h: 20, collected: false},
-      {x: 170, y: 300, w: 20, h: 20, collected: false},
-      {x: 220, y: 300, w: 20, h: 20, collected: false},
+      {x: 120, y: 220, w: 20, h: 20, collected: false},
+      {x: 170, y: 220, w: 20, h: 20, collected: false},
+      {x: 230, y: 300, w: 20, h: 20, collected: false},
       // над первой ямой
       {x: 830, y: 240, w: 20, h: 20, collected: false},
       // серия над ступенями
@@ -55,7 +56,10 @@ const levels = [
       {x: 1500, y: 322, w: 38, h: 20, type: "rock", image: "rock1"},
       {x: 200, y: 330, w: 38, h: 20, type: "rock2", image: "rock1"},
       {x: 680, y: 330, w: 73, h: 19, type: "grass", image: "grass1"},
-      {x: 610, y: 330, w: 73, h: 19, type: "grass", image: "grass1"},
+      {x: 680, y: 330, w: 73, h: 19, type: "grass", image: "grass1"},
+      {x: -10, y: 270, w: 73, h: 19, type: "grass", image: "grass1"},
+      {x: 60, y: 270, w: 73, h: 19, type: "grass", image: "grass1"},
+      {x: 120, y: 270, w: 80, h: 19, type: "grass", image: "grass1"},
     ],
     decorationsUndo: [
       {x: 315, y: 330, w: 29, h: 15, type: "rock2", image: "rock2"},
