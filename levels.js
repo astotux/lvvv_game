@@ -34,7 +34,7 @@ const levels = [
       {x: 170, y: 300, w: 20, h: 20, collected: false},
       {x: 220, y: 300, w: 20, h: 20, collected: false},
       // над первой ямой
-      {x: 830, y: 280, w: 20, h: 20, collected: false},
+      {x: 830, y: 240, w: 20, h: 20, collected: false},
       // серия над ступенями
       {x: 2005, y: 260, w: 20, h: 20, collected: false},
       {x: 2115, y: 230, w: 20, h: 20, collected: false},
@@ -108,7 +108,7 @@ const levels = [
       {x: 170, y: 300, w: 20, h: 20, collected: false},
       {x: 220, y: 300, w: 20, h: 20, collected: false},
       // над первой ямой
-      {x: 830, y: 280, w: 20, h: 20, collected: false},
+      {x: 830, y: 200, w: 20, h: 20, collected: false},
       // серия над ступенями
       {x: 2005, y: 260, w: 20, h: 20, collected: false},
       {x: 2115, y: 230, w: 20, h: 20, collected: false},

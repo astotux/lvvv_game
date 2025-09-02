@@ -8,7 +8,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
   <title>Подарочный платформер</title>
   <style>
-    body { margin: 0; background: #222; overflow: hidden; font-family: "Pixelify Sans", sans-serif; }
+    body {       
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      margin: 0; 
+      background: #222; 
+      overflow: hidden; 
+      font-family: "Pixelify Sans", sans-serif; }
     canvas {
       display: block;
       width: 100vw;
@@ -37,10 +45,7 @@
       gap: 20px;
     }
     .btn {
-      -webkit-user-select: none; /* Safari */
-      -moz-user-select: none; /* Firefox */
-      -ms-user-select: none; /* IE10+/Edge */
-      user-select: none; /* Standard */
+
       width: 60px; height: 60px;
       font-size: 24px;
       border: none;
@@ -141,16 +146,39 @@
       align-items: center;
       padding: 10px 8px;
     }
+
+    .containerTops {
+      font-weight: 700;
+      display: flex;
+      gap: 10px;
+      position: fixed;
+      top: 5px;
+      right: 5px;
+      z-index: 100;
+    }
+    .miniContainerTops {
+      position: relative;
+    }
+    .textTops {
+      margin: 0;
+      font-size: 25px;
+      position: absolute;
+      top: 25%;
+      right: 20%;
+    }
+    .textRightTops {
+      right: 10%;
+    }
   </style>
   
 </head>
 <body id="body">
 
   <canvas id="game" width="480" height="320"></canvas>
-  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.1.4</p>
+  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.1.5</p>
 
   <!-- Счетчик монеток -->
-  <div class="coinCounterWrapper">
+  <!-- <div class="coinCounterWrapper">
     <div id="coinCounter">
       <div class="counterLeft"></div>
       <div class="counterCenter">
@@ -164,8 +192,18 @@
       </div>
       <div class="counterRight"></div>
     </div>
-  </div>
+  </div> -->
   
+  <div class="containerTops">
+    <div class="miniContainerTops">
+      <img src="./img/levels.png">
+      <p class="textTops" id="level">0</p>
+    </div>
+    <div class="miniContainerTops">
+      <img src="./img/coins.png">
+      <p class="textRightTops textTops" id="totalCoins">0/0</p>
+    </div>
+  </div>
 
   <div class="bottom" style="margin: 0 10px;">
     
