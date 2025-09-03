@@ -72,6 +72,8 @@ let activeCharacter = "player"; // начальное управление иг�
 window.player = player;
 window.companion = companion;
 window.keys = keys;
+let followEnabled = true;
+Object.defineProperty(window, 'followEnabled', { get(){ return followEnabled; }, set(v){ followEnabled = !!v; } });
 Object.defineProperty(window, 'gameOver', { get(){ return gameOver; }, set(v){ gameOver = v; } });
 Object.defineProperty(window, 'activeCharacter', { get(){ return activeCharacter; }, set(v){ activeCharacter = v; } });
 Object.defineProperty(window, 'companionLockToCenter', { get(){ return companionLockToCenter; }, set(v){ companionLockToCenter = v; } });
@@ -401,13 +403,19 @@ function update() {
   
   // 🔹 Функция обновления компаньона
   function updateCompanion() {
+    // Если следование отключено — фиксируем цели на текущих позициях и не притягиваемся
+    if (!followEnabled) {
+      companion.targetX = companion.x;
+      companion.targetY = companion.y;
+      companionLockToCenter = false;
+    }
     // Проверяем расстояние от игрока до компаньона
     let distanceToPlayer = Math.abs(companion.x - player.x);
     let maxDistance = C.COMPANION.MAX_HORIZONTAL_DISTANCE; // максимальное расстояние
-    companion.targetY = player.y;
+    if (followEnabled) companion.targetY = player.y;
     
     // Если компаньон слишком далеко от игрока, определяем направление движения
-    if (distanceToPlayer > maxDistance) {
+    if (followEnabled && distanceToPlayer > maxDistance) {
       if (companion.x < player.x) {
         // Компаньон слева от игрока - идем вправо
         companion.targetX = player.x - maxDistance;
@@ -421,10 +429,10 @@ function update() {
     }
     
     // Плавно двигаем компаньона к цели по X
-    companion.x += (companion.targetX - companion.x) * companion.followDelay;
+    if (followEnabled) companion.x += (companion.targetX - companion.x) * companion.followDelay;
     
     // Плавно двигаем компаньона к цели по Y 
-    companion.y += (companion.targetY - companion.y) * companion.followDelay;
+    if (followEnabled) companion.y += (companion.targetY - companion.y) * companion.followDelay;
     
     // Гравитация для компаньона (уменьшили для более плавного движения)
     companion.dy += C.COMPANION.GRAVITY; // фиксированная гравитация без deltaTime
@@ -447,7 +455,7 @@ function update() {
     });
 
     // Мягкое притяжение к центру игрока в воздухе, чтобы приземлиться в одной точке
-    if (activeCharacter === "player") {
+    if (activeCharacter === "player" && followEnabled) {
       const centerX = player.x + (player.w - companion.w) / 2;
       if (companionLockToCenter) {
         const followStrength = C.COMPANION.FOLLOW_STRENGTH_AIR; // плавность притяжения по X

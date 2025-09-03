@@ -3,8 +3,10 @@
   window.jump = function(){
     if(window.activeCharacter === "player" && window.player.onGround && !window.gameOver) {
       window.player.dy = C.PLAYER.JUMP_VY;
-      window.companion.dy = C.COMPANION.JUMP_VY;
-      window.companionLockToCenter = true;
+      if (window.followEnabled) {
+        window.companion.dy = C.COMPANION.JUMP_VY;
+        window.companionLockToCenter = true;
+      }
       window.player.idleTimer = 0;
     } else if(window.activeCharacter === "companion" && window.companion.onGround && !window.gameOver) {
       window.companion.dy = C.COMPANION.JUMP_VY;
@@ -22,6 +24,14 @@
     }
     if (event.code === 'KeyW' || event.code === 'Space') {
       window.jump();
+    }
+    if (event.code === 'KeyQ') {
+        const toggleFollow = ()=>{
+            window.followEnabled = !window.followEnabled;
+            if (window.followEnabled) followBtn.classList.add('active');
+            else followBtn.classList.remove('active');
+          };
+          toggleFollow()
     }
     if (event.code === 'KeyE') {
       window.activeCharacter = window.activeCharacter === "player" ? "companion" : "player";
@@ -42,6 +52,7 @@
   const rightBtn = document.getElementById("right");
   const jumpBtn = document.getElementById("jump");
   const switchBtn = document.getElementById("switch");
+  const followBtn = document.getElementById("follow");
 
   if (leftBtn) {
     leftBtn.onmousedown = ()=>{ window.keys.left = true; };
@@ -63,6 +74,15 @@
     switchBtn.ontouchstart = ()=>{
       window.activeCharacter = window.activeCharacter === "player" ? "companion" : "player";
     };
+  }
+  if (followBtn) {
+    const toggleFollow = ()=>{
+      window.followEnabled = !window.followEnabled;
+      if (window.followEnabled) followBtn.classList.add('active');
+      else followBtn.classList.remove('active');
+    };
+    followBtn.onmousedown = toggleFollow;
+    followBtn.ontouchstart = toggleFollow;
   }
 })();
 

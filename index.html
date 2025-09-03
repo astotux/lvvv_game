@@ -64,7 +64,7 @@
     }
     .btn {
 
-      width: 60px; height: 60px;
+      width: 70px; height: 70px;
       font-size: 24px;
       border: none;
       background: none;
@@ -95,6 +95,16 @@
     }
     #switch:active {
       background-image: url("img/button_switch_click.png");
+    }
+    #follow {
+      padding: 0;
+      width: 140px;
+      height: 70px;
+      background-image: url("img/button_follow_disable.png");
+    }
+    #follow.active,
+    #follow:active {
+      background-image: url("img/button_follow.png");
     }
     /* модальное окно */
     #modal {
@@ -251,7 +261,7 @@
 <body id="body">
 
   <canvas id="game" width="480" height="320"></canvas>
-  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.2.1refactor</p>
+  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.3.0</p>
   
   <!-- Уведомление о повороте экрана -->
   <div id="rotateNotification">
@@ -296,7 +306,8 @@
         <button class="btn" id="right"></button>
       </div>
       <div class="btn-group" style="margin-right: 20px;">
-        <button class="btn" id="switch"></button>
+        <button class="btn active" id="follow" style="margin-right: 10px;"></button>
+        <button class="btn" id="switch" style="margin-right: 20px;"></button>
         <button class="btn" id="jump"></button>
       </div>
     </div>
