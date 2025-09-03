@@ -17,7 +17,9 @@ const levels = [
       {x: 2880, y: 240, w: 180, h: 20, texture: "wood"},
       {x: 3110, y: 220, w: 180, h: 20, texture: "wood"},
       // финальная площадка
-      {x: 3350, y: 320, w: 350, h: 20, texture: "grass"}
+      {x: 3350, y: 320, w: 400, h: 20, texture: "grass"},
+      {x: 3500, y: 260, w: 250, h: 20, texture: "grass"},
+
     ],
     traps: [
       // ранняя яма с шипами
@@ -45,7 +47,7 @@ const levels = [
       {x: 2930, y: 190, w: 20, h: 20, collected: false},
       {x: 3160, y: 170, w: 20, h: 20, collected: false}
     ],
-    finish: {x: 3660, y: 260, w: 24, h: 63},
+    finish: {x: 3660, y: 200, w: 24, h: 63},
     gift: {title: "Уровень: Переправа", desc: "Ты справилась! Двигаемся дальше ❤️"},
     decorations: [
       {x: 330, y: 330, w: 29, h: 15, type: "rock2", image: "rock2"},
