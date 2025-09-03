@@ -2,12 +2,21 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
+  <!-- iOS fullscreen/PWA hints -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#282825">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
   <title>Подарочный платформер</title>
   <style>
+    html, body {
+      height: -webkit-fill-available;
+      min-height: 100%;
+    }
     body {       
       -webkit-user-select: none;
       -moz-user-select: none;
@@ -17,6 +26,7 @@
       background: #222; 
       overflow: hidden; 
       font-family: "Pixelify Sans", sans-serif;
+      min-height: 100dvh;
       /* Запрет масштабирования */
       -webkit-touch-callout: none;
       -webkit-user-select: none;
@@ -29,7 +39,7 @@
     canvas {
       display: block;
       width: 100vw;
-      height: 100vh;
+      height: 100dvh; /* более надёжная высота на iOS 15+ */
       background: transparent;
       position: relative;
       z-index: 1;
@@ -241,7 +251,7 @@
 <body id="body">
 
   <canvas id="game" width="480" height="320"></canvas>
-  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.2.1</p>
+  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.2.1safari</p>
   
   <!-- Уведомление о повороте экрана -->
   <div id="rotateNotification">
@@ -307,7 +317,18 @@
     document.addEventListener('gesturestart', function (e) {
       e.preventDefault();
     });
-    
+    // Попытка скрыть тулбары Safari с помощью скролла (в рамках возможностей браузера)
+    function hideSafariBars() {
+      setTimeout(() => {
+        window.scrollTo(0, 1);
+      }, 50);
+    }
+
+    window.addEventListener('load', hideSafariBars);
+    window.addEventListener('orientationchange', hideSafariBars);
+    window.addEventListener('focus', hideSafariBars);
+    window.addEventListener('touchend', hideSafariBars, { passive: true });
+
     document.addEventListener('gesturechange', function (e) {
       e.preventDefault();
     });
