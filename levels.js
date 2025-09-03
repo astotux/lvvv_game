@@ -77,14 +77,14 @@ const levels = [
       {x: 3380, y: 314, w: 73, h: 19, type: "grass", image: "grass1"}
     ],
     decorationsUndoPlatform: [
-      {x: 780, y: 235, w: 78, h: 110, image: "three"},
+      {x: 320, y: 215, w: 85, h: 130, image: "three"},
+
+      {x: 450, y: 235, w: 78, h: 110, image: "three"},
       {x: 700, y: 195, w: 100, h: 150, image: "three"},
 
-      {x: 600, y: 235, w: 78, h: 110, image: "three"},
+      {x: 590, y: 215, w: 85, h: 130, image: "three"},
       {x: 830, y: 235, w: 78, h: 110, image: "three"},
       {x: 970, y: 235, w: 78, h: 110, image: "three"},
-      {x: 600, y: 235, w: 78, h: 110, image: "three"},
-      {x: 600, y: 235, w: 78, h: 110, image: "three"},
     ]
   },
   {

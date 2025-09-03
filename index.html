@@ -181,13 +181,74 @@
     .textRightTops {
       right: 10%;
     }
+    
+    /* Уведомление о повороте экрана */
+    #rotateNotification {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(#282825 33%, #222220 33% 66%, #1d1d1b 66% 100%);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      color: white;
+      font-family: "Pixelify Sans", sans-serif;
+      text-align: center;
+    }
+    
+    #rotateNotification .rotateIcon {
+      width: 120px;
+      margin-bottom: 20px;
+      animation: rotate 2s linear infinite;
+    }
+    
+    #rotateNotification h2 {
+      font-size: 24px;
+      margin: 0 0 10px 0;
+    }
+    
+    #rotateNotification p {
+      font-size: 16px;
+      margin: 0;
+      opacity: 0.8;
+    }
+    
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      90% { transform: rotate(95deg); }
+      100% { transform: rotate(0deg); }
+    }
+    
+    /* Показываем уведомление только в портретной ориентации */
+    @media screen and (orientation: portrait) {
+      #rotateNotification {
+        display: flex;
+      }
+    }
+    
+    @media screen and (orientation: landscape) {
+      #rotateNotification {
+        display: none !important;
+      }
+    }
   </style>
   
 </head>
 <body id="body">
 
   <canvas id="game" width="480" height="320"></canvas>
-  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.2.0</p>
+  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.2.1</p>
+  
+  <!-- Уведомление о повороте экрана -->
+  <div id="rotateNotification">
+    <img src="img/phone.png" class="rotateIcon">
+    <h2>Поверни телефон</h2>
+    <p>Для лучшего игрового опыта поверни устройство горизонтально и обнови страницу</p>
+  </div>
 
   <!-- Счетчик монеток -->
   <!-- <div class="coinCounterWrapper">
@@ -275,6 +336,26 @@
     // Запрет контекстного меню
     document.addEventListener('contextmenu', function (e) {
       e.preventDefault();
+    });
+    
+    // Управление уведомлением о повороте экрана
+    function updateRotateNotification() {
+      const notification = document.getElementById('rotateNotification');
+      const isPortrait = window.innerHeight > window.innerWidth;
+      
+      if (isPortrait) {
+        notification.style.display = 'flex';
+      } else {
+        notification.style.display = 'none';
+      }
+    }
+    
+    // Проверяем ориентацию при загрузке и изменении размера
+    window.addEventListener('load', updateRotateNotification);
+    window.addEventListener('resize', updateRotateNotification);
+    window.addEventListener('orientationchange', function() {
+      // Небольшая задержка для корректного определения новой ориентации
+      setTimeout(updateRotateNotification, 100);
     });
   </script>
   <script src="levels.js"></script>
