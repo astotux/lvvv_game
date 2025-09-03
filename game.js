@@ -1,7 +1,16 @@
 const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-let viewW = window.innerWidth;
-let viewH = window.innerHeight;
+const screenCtx = canvas.getContext("2d");
+let viewW = 960; // логическая ширина
+let viewH = 540; // логическая высота
+let screenW = window.innerWidth;  // физическая ширина экрана (CSS px)
+let screenH = window.innerHeight; // физическая высота экрана (CSS px)
+
+const LOGIC_WIDTH = 960;
+const LOGIC_HEIGHT = 540;
+const offscreen = document.createElement("canvas");
+offscreen.width = LOGIC_WIDTH;
+offscreen.height = LOGIC_HEIGHT;
+const ctx = offscreen.getContext("2d");
 
 // Настройки качества рендеринга
 ctx.imageSmoothingEnabled = false;
@@ -9,18 +18,17 @@ ctx.imageSmoothingQuality = 'high';
 
 function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
-  viewW = window.innerWidth;
-  viewH = window.innerHeight;
-  canvas.width = Math.floor(viewW * dpr);
-  canvas.height = Math.floor(viewH * dpr);
-  canvas.style.width = viewW + "px";
-  canvas.style.height = viewH + "px";
+  screenW = window.innerWidth;
+  screenH = window.innerHeight;
+  canvas.width = Math.floor(screenW * dpr);
+  canvas.height = Math.floor(screenH * dpr);
+  canvas.style.width = screenW + "px";
+  canvas.style.height = screenH + "px";
 
   // Настройки качества рендеринга
-  const ctx = canvas.getContext("2d");
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.imageSmoothingEnabled = false;
-  ctx.imageSmoothingQuality = 'high';
+  screenCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  screenCtx.imageSmoothingEnabled = false;
+  screenCtx.imageSmoothingQuality = 'high';
 }
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
@@ -638,7 +646,7 @@ const imgPlatformStone = new Image();
 imgPlatformStone.src = "img/platform_stone.png";
 
 const imgPlatformStone2 = new Image();
-imgPlatformStone2.src = "img/platform_stone2.png";
+imgPlatformStone2.src = "img/platform_stone3.png";
 
 const imgPlatformWood = new Image();
 imgPlatformWood.src = "img/platform_wood.png";
@@ -648,6 +656,10 @@ imgTrap.src = "img/trap.png";
 
 const imgFinish = new Image();
 imgFinish.src = "img/finish.png";
+
+// текстура земли
+const imgDirt = new Image();
+imgDirt.src = "img/dirt.png";
 
 // загрузка изображений для декораций
 const imgFlower1 = new Image();
@@ -685,6 +697,9 @@ imgGrass1.src = "img/grass1.png";
 
 const imgMountain = new Image();
 imgMountain.src = "img/mountain.png";
+
+const imgThree = new Image();
+imgThree.src = "img/three.png";
 
 const imgBackgroundAll = new Image();
 imgBackgroundAll.src = "img/background_all.png";
@@ -746,6 +761,7 @@ function drawDecorations() {
         case "rock2": img = imgRock2; break;
         case "grass1": img = imgGrass1; break;
         case "mountain": img = imgMountain; break;
+        case "three": img = imgThree; break;
         // default: img = imgFlower1; // изображение по умолчанию
       }
       
@@ -781,6 +797,7 @@ function drawDecorationsUndo() {
 
         case "grass1": img = imgGrass1; break;
         case "mountain": img = imgMountain; break;
+        case "three": img = imgThree; break;
         // default: img = imgFlower1; // изображение по умолчанию
       }
       
@@ -816,6 +833,7 @@ function drawDecorationsUndoPlatform() {
 
         case "grass1": img = imgGrass1; break;
         case "mountain": img = imgMountain; break;
+        case "three": img = imgThree; break;
         // default: img = imgFlower1; // изображение по умолчанию
       }
       
@@ -898,8 +916,36 @@ function drawBackground() {
     ctx.drawImage(bgLayer6, x6 + i * tileW, 0, tileW, targetH);
   }
 
-  // 🔹 Заполнение ниже нижней платформы
+  // 🔹 Заполнение ниже нижней платформы: 5 рядов тайлами dirt (без растяжения) с рандомным поворотом 0/90/180/270
+  const dirtW = imgDirt.width;
+  const dirtH = imgDirt.height;
+  if (dirtW && dirtH) {
+    // начальная X с учётом камеры кратно ширине тайла, чтобы не дёргалось при скролле
+    let startX = Math.floor(cameraX / dirtW) * dirtW - cameraX;
+    for (let x = startX; x < w; x += dirtW) {
+      // мировой индекс тайла по X для стабильного рандома
+      const worldX = x + cameraX;
+      const tileXIndex = Math.floor(worldX / dirtW);
+      for (let r = 0; r < 5; r++) {
+        let y = groundY + r * dirtH;
+        // стабильный псевдослучайный выбор угла на основе индексов (tileXIndex, r)
+        let seed = (tileXIndex * 73856093) ^ (r * 19349663);
+        // приводим к 0..3
+        let idx = (seed >>> 0) & 3;
+        let angle = 0;
+        if (idx === 1) angle = Math.PI / 2;       // 90
+        else if (idx === 2) angle = Math.PI;      // 180
+        else if (idx === 3) angle = 3 * Math.PI / 2; // 270
 
+        // рисуем с поворотом вокруг центра тайла
+        ctx.save();
+        ctx.translate(x + dirtW / 2, y + dirtH / 2);
+        ctx.rotate(angle);
+        ctx.drawImage(imgDirt, -dirtW / 2, -dirtH / 2);
+        ctx.restore();
+      }
+    }
+  }
 }
 
 
@@ -1091,6 +1137,19 @@ function drawBackground() {
         ctx.strokeRect(p.x - cameraX, p.y, p.w, p.h);
       });
     }
+    // Масштабированная отрисовка offscreen на экранный канвас
+    const scale = Math.min(screenW / LOGIC_WIDTH, screenH / LOGIC_HEIGHT);
+    const destW = Math.floor(LOGIC_WIDTH * scale);
+    const destH = Math.floor(LOGIC_HEIGHT * scale);
+    const dx = Math.floor((screenW - destW) / 2);
+    const dy = Math.floor((screenH - destH) / 2);
+
+    screenCtx.clearRect(0, 0, screenW, screenH);
+    screenCtx.fillStyle = "#282825";
+    screenCtx.fillRect(0, 0, screenW, screenH);
+    screenCtx.imageSmoothingEnabled = false;
+    screenCtx.imageSmoothingQuality = 'high';
+    screenCtx.drawImage(offscreen, 0, 0, LOGIC_WIDTH, LOGIC_HEIGHT, dx, dy, destW, destH);
   }
 
 function loop(currentTime) {
@@ -1118,9 +1177,10 @@ function loop(currentTime) {
 // ждём загрузки всех картинок
 let loaded = 0;
 const bgImages = [bgLayer0, bgLayer1, bgLayer2, bgLayer3, bgLayer4, bgLayer5, bgLayer6];
-const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2, imgMountain];
-const platformImages = [imgPlatformGrass, imgPlatformStone, imgPlatformWood];
-const allImages = [...bgImages, ...decorationImages, ...platformImages, imgPlayerIdle, imgPlayerWalk, imgCompanionIdle, imgCompanionWalk, imgTrap, imgFinish, imgBackgroundAll];
+const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2, imgMountain, imgThree];
+const platformImages = [imgPlatformGrass, imgPlatformStone, imgPlatformWood, imgPlatformStone2];
+const groundImages = [imgDirt];
+const allImages = [...bgImages, ...decorationImages, ...platformImages, ...groundImages, imgPlayerIdle, imgPlayerWalk, imgCompanionIdle, imgCompanionWalk, imgTrap, imgFinish, imgBackgroundAll];
 allImages.forEach(img => {
   img.onload = () => {
     loaded++;
