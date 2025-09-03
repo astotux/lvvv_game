@@ -81,7 +81,7 @@
       if (window.followEnabled) followBtn.classList.add('active');
       else followBtn.classList.remove('active');
     };
-    followBtn.onmousedown = toggleFollow;
+    // followBtn.onmousedown = toggleFollow;
     followBtn.ontouchstart = toggleFollow;
   }
 })();
