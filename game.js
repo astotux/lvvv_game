@@ -39,6 +39,23 @@ let accumulator = 0;
 const fixedTimeStep = C.FIXED_TIMESTEP_MS; // 60 FPS = ~16.67ms
 
 let currentLevel = 0;
+// Хранилище прогресса уровней в localStorage
+const STORAGE_KEY_LEVEL = 'love_game_unlocked_level';
+function loadLevelProgress(){
+  try {
+    const stored = parseInt(localStorage.getItem(STORAGE_KEY_LEVEL) || '0', 10);
+    if (!isNaN(stored) && stored >= 0 && stored < levels.length) {
+      currentLevel = stored;
+    }
+  } catch (e) {}
+}
+function saveLevelProgress(nextLevelIndex){
+  try {
+    // Сохраняем следующий доступный уровень (или последний, если прошли всё)
+    const toStore = Math.min(Math.max(0, nextLevelIndex), levels.length - 1);
+    localStorage.setItem(STORAGE_KEY_LEVEL, String(toStore));
+  } catch (e) {}
+}
 let player = {
     x: 50, y: 100, w: C.PLAYER.W, h: C.PLAYER.H,
     dx: 0, dy: 0, onGround: false,
@@ -103,6 +120,7 @@ modalBtn.onclick = ()=>{
 };
 
 // управление вынесено в js/input.js
+loadLevelProgress();
 document.getElementById("level").innerText = currentLevel+1
 
 function resetPlayer() {
@@ -190,6 +208,8 @@ function update() {
     if(player.x < f.x+f.w && player.x+player.w > f.x &&
        player.y < f.y+f.h && player.y+player.h > f.y){
          showModal(lvl.gift.title, lvl.gift.desc, ()=>{
+           const nextLevel = currentLevel + 1;
+           saveLevelProgress(nextLevel);
            currentLevel++;
            if(currentLevel>=levels.length){
              showModal("Поздравляю 🎉","Ты прошла все уровни!", ()=>{currentLevel=0; resetPlayer();});
@@ -317,6 +337,8 @@ function update() {
     if(companion.x < f.x+f.w && companion.x+companion.w > f.x &&
        companion.y < f.y+f.h && companion.y+companion.h > f.y){
          showModal(lvl.gift.title, lvl.gift.desc, ()=>{
+           const nextLevel = currentLevel + 1;
+           saveLevelProgress(nextLevel);
            currentLevel++;
            if(currentLevel>=levels.length){
              showModal("Поздравляю 🎉","Ты прошла все уровни!", ()=>{currentLevel=0; resetPlayer();});
@@ -620,6 +642,7 @@ function drawDecorations() {
         case "grass1": img = imgGrass1; break;
         case "mountain": img = imgMountain; break;
         case "three": img = imgThree; break;
+        case "alert": img = imgAlert; break;
         // default: img = imgFlower1; // изображение по умолчанию
       }
       
@@ -692,6 +715,7 @@ function drawDecorationsUndoPlatform() {
         case "grass1": img = imgGrass1; break;
         case "mountain": img = imgMountain; break;
         case "three": img = imgThree; break;
+        case "alert": img = imgAlert; break;
         // default: img = imgFlower1; // изображение по умолчанию
       }
       
@@ -999,7 +1023,7 @@ function loop(currentTime) {
 // ждём загрузки всех картинок
 let loaded = 0;
 const bgImages = [bgLayer0, bgLayer1, bgLayer2, bgLayer3, bgLayer4, bgLayer5, bgLayer6];
-const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2, imgMountain, imgThree];
+const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2, imgMountain, imgThree, imgAlert];
 const platformImages = [imgPlatformGrass, imgPlatformStone, imgPlatformWood, imgPlatformStone2];
 const groundImages = [imgDirt];
 const allImages = [...bgImages, ...decorationImages, ...platformImages, ...groundImages, imgPlayerIdle, imgPlayerWalk, imgCompanionIdle, imgCompanionWalk, imgTrap, imgFinish, imgBackgroundAll];

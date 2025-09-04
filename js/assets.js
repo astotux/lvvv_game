@@ -46,6 +46,8 @@
   imgMountain.src = "img/mountain.png";
   window.imgThree = new Image();
   imgThree.src = "img/three.png";
+  window.imgAlert = new Image();
+  imgAlert.src = "img/alert.png";
 
   // Фоны
   window.bgLayer0 = new Image(); bgLayer0.src = "img/background_0.png";

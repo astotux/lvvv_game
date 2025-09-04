@@ -13,55 +13,82 @@ const levels = [
       // полка над ямой с шипами
       {x: 2350, y: 230, w: 220, h: 20, texture: "grass"},
       // длинная полка с разрывами
-      {x: 2650, y: 260, w: 164, h: 20, texture: "wood"},
-      {x: 2880, y: 240, w: 164, h: 20, texture: "wood"},
-      {x: 3110, y: 220, w: 164, h: 20, texture: "wood"},
+      {x: 2650, y: 260, w: 66, h: 22, texture: "stone2"},
+      {x: 2800, y: 240, w: 66, h: 22, texture: "stone2"},
+      {x: 2950, y: 220, w: 66, h: 22, texture: "stone2"},
+      {x: 3100, y: 200, w: 66, h: 22, texture: "stone2"}, 
       // финальная площадка
-      {x: 3350, y: 320, w: 400, h: 20, texture: "grass"},
-      {x: 3500, y: 260, w: 250, h: 20, texture: "grass"},
+      {x: 3300, y: 340, w: 500, h: 20, texture: "grass"},
+      {x: 3500, y: 260, w: 300, h: 20, texture: "grass"},
 
     ],
     traps: [
       // ранняя яма с шипами
       {x: 800, y: 325, w: 20, h: 22},
       {x: 820, y: 325, w: 20, h: 22},
-      {x: 840, y: 325, w: 20, h: 22},
       // коридор шипов под полкой
-      {x: 2410, y: 215, w: 20, h: 22},
-      {x: 2435, y: 215, w: 20, h: 22},
-      {x: 2460, y: 215, w: 20, h: 22},
+      {x: 2425, y: 215, w: 20, h: 22},
+      {x: 2450, y: 215, w: 20, h: 22},
+      {x: 2475, y: 215, w: 20, h: 22},
     ],
     coins: [
       // дорожка на старте
       {x: 120, y: 220, w: 20, h: 20, collected: false},
       {x: 170, y: 220, w: 20, h: 20, collected: false},
-      {x: 230, y: 300, w: 20, h: 20, collected: false},
+      {x: 270, y: 300, w: 20, h: 20, collected: false},
+      {x: 320, y: 300, w: 20, h: 20, collected: false},
+      {x: 370, y: 300, w: 20, h: 20, collected: false},
       // над первой ямой
-      {x: 830, y: 240, w: 20, h: 20, collected: false},
+      {x: 810, y: 230, w: 20, h: 20, collected: false},
+
+      {x: 1335, y: 230, w: 20, h: 20, collected: false},
+      {x: 1635, y: 300, w: 20, h: 20, collected: false},
+      {x: 1685, y: 300, w: 20, h: 20, collected: false},
+      {x: 1735, y: 300, w: 20, h: 20, collected: false},
       // серия над ступенями
       {x: 2005, y: 260, w: 20, h: 20, collected: false},
       {x: 2115, y: 230, w: 20, h: 20, collected: false},
       {x: 2225, y: 200, w: 20, h: 20, collected: false},
       // над полкой с разрывами
-      {x: 2700, y: 210, w: 20, h: 20, collected: false},
-      {x: 2930, y: 190, w: 20, h: 20, collected: false},
-      {x: 3160, y: 170, w: 20, h: 20, collected: false}
+      {x: 2825, y: 190, w: 20, h: 20, collected: false},
+      {x: 3125, y: 150, w: 20, h: 20, collected: false}
     ],
     finish: {x: 3660, y: 200, w: 24, h: 63},
     gift: {title: "Уровень: Переправа", desc: "Ты справилась! Двигаемся дальше ❤️"},
     decorations: [
-      {x: 330, y: 330, w: 29, h: 15, type: "rock2", image: "rock2"},
-      {x: 350, y: 328, w: 55, h: 18, type: "rock", image: "flower2"},
-      {x: 410, y: 328, w: 55, h: 18, type: "rock", image: "flower1"},
-      {x: 465, y: 328, w: 55, h: 18, type: "rock", image: "flower2"},
-      {x: 550, y: 328, w: 55, h: 18, type: "rock", image: "flower1"},
-      {x: 1500, y: 322, w: 38, h: 20, type: "rock", image: "rock1"},
-      {x: 200, y: 330, w: 38, h: 20, type: "rock2", image: "rock1"},
-      {x: 680, y: 330, w: 73, h: 19, type: "grass", image: "grass1"},
-      {x: 680, y: 330, w: 73, h: 19, type: "grass", image: "grass1"},
-      {x: -10, y: 270, w: 73, h: 19, type: "grass", image: "grass1"},
-      {x: 60, y: 270, w: 73, h: 19, type: "grass", image: "grass1"},
-      {x: 120, y: 270, w: 80, h: 19, type: "grass", image: "grass1"},
+      {x: 330, y: 330, w: 29, h: 15, image: "rock2"},
+      {x: 350, y: 328, w: 55, h: 18, image: "flower2"},
+      {x: 410, y: 328, w: 55, h: 18, image: "flower1"},
+      {x: 465, y: 328, w: 55, h: 18, image: "flower2"},
+      {x: 550, y: 328, w: 55, h: 18, image: "flower1"},
+      {x: 1500, y: 322, w: 38, h: 20, image: "rock1"},
+      {x: 200, y: 330, w: 38, h: 20, image: "rock1"},
+      {x: 680, y: 330, w: 73, h: 19, image: "grass1"},
+      {x: 680, y: 330, w: 73, h: 19, image: "grass1"},
+      {x: 840, y: 334, w: 73, h: 19, image: "grass1"},
+
+      {x: -10, y: 270, w: 73, h: 19, image: "grass1"},
+      {x: 60, y: 270, w: 73, h: 19, image: "grass1"},
+      {x: 120, y: 270, w: 80, h: 19, image: "grass1"},
+      {x: 970, y: 330, w: 38, h: 20, image: "rock1"},
+      {x: 1000, y: 328, w: 55, h: 18, image: "flower1"},
+      {x: 1055, y: 328, w: 55, h: 18, image: "flower2"},
+      {x: 1110, y: 328, w: 55, h: 18, image: "flower1"},
+      {x: 1165, y: 330, w: 80, h: 19, image: "grass1"},
+      {x: 1280, y: 310, w: 20, h: 35, image: "alert"},
+      {x: 1600, y: 328, w: 55, h: 18, image: "flower1"},
+      {x: 1655, y: 328, w: 55, h: 18, image: "flower2"},
+      {x: 1710, y: 328, w: 55, h: 18, image: "flower1"},
+      {x: 1765, y: 330, w: 80, h: 19, image: "grass1"},
+      {x: 1880, y: 310, w: 20, h: 35, image: "alert"},
+
+      {x: 3350, y: 328, w: 55, h: 18, image: "flower1"},
+      {x: 3405, y: 328, w: 55, h: 18, image: "flower2"},
+      {x: 3460, y: 328, w: 55, h: 18, image: "flower1"},
+      {x: 3515, y: 330, w: 80, h: 19, image: "grass1"},
+      {x: 3595, y: 330, w: 80, h: 19, image: "grass1"},
+      {x: 3675, y: 330, w: 80, h: 19, image: "grass1"},
+
     ],
     decorationsUndo: [
       {x: 315, y: 330, w: 29, h: 15, type: "rock2", image: "rock2"},
@@ -69,30 +96,37 @@ const levels = [
       {x: 127, y: 328, w: 55, h: 18, type: "rock", image: "flower1"},
       {x: 180, y: 328, w: 55, h: 18, type: "rock", image: "flower2"},
       {x: 225, y: 328, w: 55, h: 18, type: "rock", image: "flower1"},
+      {x: 920, y: 330, w: 29, h: 15, type: "rock2", image: "rock2"},
 
       {x: 520, y: 328, w: 55, h: 18, type: "rock", image: "flower1"},
       {x: 730, y: 330, w: 73, h: 19, type: "grass", image: "grass1"},
-      {x: 860, y: 334, w: 73, h: 19, type: "grass", image: "grass1"},
       {x: 1470, y: 334, w: 73, h: 19, type: "grass", image: "grass1"},
-      {x: 3380, y: 314, w: 73, h: 19, type: "grass", image: "grass1"}
     ],
     decorationsUndoPlatform: [
       {x: 320, y: 215, w: 85, h: 130, image: "three"},
 
       {x: 450, y: 235, w: 78, h: 110, image: "three"},
       {x: 700, y: 195, w: 100, h: 150, image: "three"},
+      {x: 190, y: 195, w: 100, h: 150, image: "three"},
 
       {x: 590, y: 215, w: 85, h: 130, image: "three"},
       {x: 830, y: 235, w: 78, h: 110, image: "three"},
       {x: 970, y: 235, w: 78, h: 110, image: "three"},
+      {x: 1230, y: 235, w: 78, h: 110, image: "three"},
+
+      {x: 1420, y: 235, w: 78, h: 110, image: "three"},
+      {x: 1550, y: 235, w: 78, h: 110, image: "three"},
+      {x: 1780, y: 235, w: 78, h: 110, image: "three"},
+
+      {x: 3350, y: 235, w: 78, h: 110, image: "three"},
     ]
   },
   {
     width: 6000,
     platforms: [
       // стартовая зона
-      {x: 0, y: 360, w: 900, h: 24, texture: "grass"},
-      {x: 900, y: 360, w: 500, h: 24, texture: "grass"},
+      {x: 0, y: 360, w: 900, h: 20, texture: "grass"},
+      {x: 900, y: 360, w: 500, h: 20, texture: "grass"},
       // лесные террасы
       {x: 1500, y: 320, w: 260, h: 20, texture: "wood"},
       {x: 1750, y: 290, w: 220, h: 20, texture: "wood"},
@@ -106,11 +140,11 @@ const levels = [
       {x: 3310, y: 260, w: 180, h: 20, texture: "wood"},
       {x: 3550, y: 240, w: 160, h: 20, texture: "wood"},
       // плато перед финишем
-      {x: 3800, y: 340, w: 400, h: 24, texture: "grass"},
+      {x: 3800, y: 340, w: 400, h: 20, texture: "grass"},
       {x: 4220, y: 300, w: 260, h: 22, texture: "stone"},
       {x: 4520, y: 280, w: 240, h: 22, texture: "stone"},
       // финальная площадка
-      {x: 5100, y: 320, w: 700, h: 24, texture: "grass"}
+      {x: 5100, y: 320, w: 700, h: 20, texture: "grass"}
     ],
     // стены, двери и свитчи
     walls: [
