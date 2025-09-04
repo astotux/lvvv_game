@@ -41,6 +41,8 @@ const fixedTimeStep = C.FIXED_TIMESTEP_MS; // 60 FPS = ~16.67ms
 let currentLevel = 0;
 // Хранилище прогресса уровней в localStorage
 const STORAGE_KEY_LEVEL = 'love_game_unlocked_level';
+const STORAGE_KEY_STATS = 'love_game_level_stats';
+
 function loadLevelProgress(){
   try {
     const stored = parseInt(localStorage.getItem(STORAGE_KEY_LEVEL) || '0', 10);
@@ -49,12 +51,69 @@ function loadLevelProgress(){
     }
   } catch (e) {}
 }
+
 function saveLevelProgress(nextLevelIndex){
   try {
     // Сохраняем следующий доступный уровень (или последний, если прошли всё)
     const toStore = Math.min(Math.max(0, nextLevelIndex), levels.length - 1);
     localStorage.setItem(STORAGE_KEY_LEVEL, String(toStore));
   } catch (e) {}
+}
+
+// Функции для работы со статистикой уровней
+function loadLevelStats() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_STATS);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {}
+  return {};
+}
+
+function saveLevelStats(levelIndex, stats) {
+  try {
+    const allStats = loadLevelStats();
+    allStats[levelIndex] = stats;
+    localStorage.setItem(STORAGE_KEY_STATS, JSON.stringify(allStats));
+  } catch (e) {}
+}
+
+function getLevelStats(levelIndex) {
+  const allStats = loadLevelStats();
+  return allStats[levelIndex] || { bestTime: null, bestCoins: 0 };
+}
+
+// Функции для работы с таймером
+function startLevelTimer() {
+  levelStartTime = performance.now();
+  levelTimerActive = true;
+  levelElapsedTime = 0;
+}
+
+function stopLevelTimer() {
+  levelTimerActive = false;
+  levelElapsedTime = performance.now() - levelStartTime;
+  return levelElapsedTime;
+}
+
+function updateLevelTimer() {
+  if (levelTimerActive) {
+    levelElapsedTime = performance.now() - levelStartTime;
+  }
+}
+
+function formatTime(milliseconds) {
+  const seconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  const ms = Math.floor((milliseconds % 1000) / 10);
+  
+  if (minutes > 0) {
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+  } else {
+    return `${remainingSeconds}.${ms.toString().padStart(2, '0')}`;
+  }
 }
 let player = {
     x: 50, y: 100, w: C.PLAYER.W, h: C.PLAYER.H,
@@ -98,6 +157,17 @@ Object.defineProperty(window, 'companionLockToCenter', { get(){ return companion
 let totalCoins = 0; // общее количество собранных монеток
 let coinAnimation = 0; // анимация монеток
 
+// Система таймера и статистики
+let levelStartTime = 0; // время начала уровня
+let levelElapsedTime = 0; // прошедшее время уровня
+let levelTimerActive = false; // активен ли таймер
+let levelStats = {
+  time: 0,
+  coins: 0,
+  bestTime: null,
+  bestCoins: 0
+};
+
 // Флаг фиксации компаньона к центру игрока во время совместного прыжка
 let companionLockToCenter = false;
 
@@ -106,28 +176,66 @@ const modal = document.getElementById("modal");
 const modalTitle = document.getElementById("modalTitle");
 const modalText = document.getElementById("modalText");
 const modalBtn = document.getElementById("modalBtn");
+const modalNextBtn = document.getElementById("modalNextBtn");
+const modalRestartBtn = document.getElementById("modalRestartBtn");
 
-let modalCallback = ()=>{};
-function showModal(title, text, callback) {
+let modalNextCallback = ()=>{};
+let modalRestartCallback = ()=>{};
+
+function showModal(title, text, nextCallback = null, restartCallback = null) {
   modalTitle.textContent = title;
   modalText.textContent = text;
   modal.style.display = "flex";
-  modalCallback = callback;
+  modalRestartCallback = restartCallback || (()=>{});
+  
+  if (nextCallback) {
+    modalNextBtn.style.display = "inline-block";
+  } else {
+    modalNextBtn.style.display = "none";
+  }
+  
+  if (restartCallback) {
+    modalRestartBtn.style.display = "inline-block";
+  } else {
+    modalRestartBtn.style.display = "none";
+  }
+  
+  // Кнопка OK показывается только если нет других кнопок
+  if (!nextCallback && !restartCallback) {
+    modalBtn.style.display = "inline-block";
+  } else {
+    modalBtn.style.display = "none";
+  }
 }
+
 modalBtn.onclick = ()=>{
   modal.style.display = "none";
-  modalCallback();
+};
+
+modalRestartBtn.onclick = ()=>{
+  modal.style.display = "none";
+  modalRestartCallback();
 };
 
 // управление вынесено в js/input.js
 loadLevelProgress();
-document.getElementById("level").innerText = currentLevel+1
+
+// Загружаем статистику для текущего уровня
+const stats = getLevelStats(currentLevel);
+levelStats.bestTime = stats.bestTime;
+levelStats.bestCoins = stats.bestCoins;
+
+document.getElementById("level").innerText = currentLevel+1;
+
+// Запускаем таймер при инициализации игры
+startLevelTimer();
+updateStatsDisplay();
 
 function resetPlayer() {
   player.x=50; player.y=100; player.dy=0;
   player.idleTimer = 0; // сбрасываем таймер
   gameOver=false;
-  totalCoins = 0
+  totalCoins = 0;
   
   // Сбрасываем компаньона
   companion.x = 50; companion.y = 100; companion.dy = 0;
@@ -141,7 +249,19 @@ function resetPlayer() {
     });
   }
 
-  document.getElementById("level").innerText = currentLevel+1
+  // Загружаем статистику уровня
+  const stats = getLevelStats(currentLevel);
+  levelStats.bestTime = stats.bestTime;
+  levelStats.bestCoins = stats.bestCoins;
+
+  // Останавливаем текущий таймер и запускаем новый
+  if (levelTimerActive) {
+    stopLevelTimer();
+  }
+  startLevelTimer();
+
+  document.getElementById("level").innerText = currentLevel+1;
+  updateStatsDisplay();
 }
 
 function updateCoins () {
@@ -149,8 +269,17 @@ function updateCoins () {
   document.getElementById('totalCoins').innerText = `${totalCoins} | ${levels[currentLevel].coins.length}`
 }
 
+function updateStatsDisplay() {
+  // Обновляем отображение монет
+  document.getElementById('totalCoins').innerText = `${totalCoins} | ${levels[currentLevel].coins.length}`;
+}
+
 function update() {
   if(gameOver) return;
+  
+  // Обновляем отображение статистики только если игра не окончена
+  updateStatsDisplay();
+  
   // обработка кнопок/динамических платформ до расчета физики
   processSwitchesAndDynamics();
 
@@ -199,7 +328,7 @@ function update() {
       if(player.x < t.x+t.w && player.x+player.w > t.x &&
          player.y < t.y+t.h && player.y+player.h > t.y){
            gameOver = true;
-           showModal("Игра окончена 💀","Ты наступила на шипы!", ()=>resetPlayer());
+           showModal("Игра окончена 💀","Ты наступила на шипы!", null, ()=>resetPlayer());
       }
     });
 
@@ -207,15 +336,48 @@ function update() {
     let f = lvl.finish;
     if(player.x < f.x+f.w && player.x+player.w > f.x &&
        player.y < f.y+f.h && player.y+player.h > f.y){
-         showModal(lvl.gift.title, lvl.gift.desc, ()=>{
-           const nextLevel = currentLevel + 1;
-           saveLevelProgress(nextLevel);
-           currentLevel++;
-           if(currentLevel>=levels.length){
-             showModal("Поздравляю 🎉","Ты прошла все уровни!", ()=>{currentLevel=0; resetPlayer();});
-           } else {
-             resetPlayer();
-           }
+         // Устанавливаем gameOver чтобы остановить обновления
+         gameOver = true;
+         
+         // Останавливаем таймер и сохраняем результаты
+         const finishTime = stopLevelTimer();
+         const currentStats = getLevelStats(currentLevel);
+         
+         // Проверяем, является ли это лучшим результатом
+         let isNewBestTime = !currentStats.bestTime || finishTime < currentStats.bestTime;
+         let isNewBestCoins = totalCoins > currentStats.bestCoins;
+         
+         // Сохраняем новые лучшие результаты
+         if (isNewBestTime || isNewBestCoins) {
+           const newStats = {
+             bestTime: isNewBestTime ? finishTime : currentStats.bestTime,
+             bestCoins: isNewBestCoins ? totalCoins : currentStats.bestCoins
+           };
+           saveLevelStats(currentLevel, newStats);
+         }
+         
+         // Формируем текст с результатами
+         let resultText = `${lvl.gift.desc}\n\n`;
+         resultText += `⏱️: ${formatTime(finishTime)}\n`;
+         resultText += `🪙: ${totalCoins}/${lvl.coins.length}\n\n`;
+         
+         if (isNewBestTime) {
+           resultText += `🏆 Новый рекорд времени!\n`;
+         }
+         if (isNewBestCoins) {
+           resultText += `🏆 Новый рекорд монет!\n`;
+         }
+         
+         if (currentStats.bestTime) {
+           resultText += `Лучшее ⏱️: ${formatTime(currentStats.bestTime)}\n`;
+         }
+         resultText += `Лучшие 🪙: ${currentStats.bestCoins}/${lvl.coins.length}`;
+         
+         showModal(lvl.gift.title, resultText, ()=>{
+           // Кнопка "Далее" - пустая ссылка без логики
+         }, ()=>{
+           // Кнопка "Начать заново" - перезапускаем текущий уровень
+           resetPlayer();
          });
     }
 
@@ -284,7 +446,7 @@ function update() {
     // 🔹 Проверка: игрок выпал за пределы экрана (логическая высота)
     if (player.y > viewH + C.FALL_OFF.Y_MARGIN || player.x < -C.FALL_OFF.X_MARGIN || player.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
-      showModal("Игра окончена 💀","Ты упала в пропасть!", ()=>resetPlayer());
+      showModal("Игра окончена 💀","Ты упала в пропасть!", null, ()=>resetPlayer());
     }
   } else {
     // Управляем компаньоном
@@ -328,7 +490,7 @@ function update() {
       if(companion.x < t.x+t.w && companion.x+companion.w > t.x &&
          companion.y < t.y+t.h && companion.y+companion.h > t.y){
            gameOver = true;
-           showModal("Игра окончена 💀","Компаньон наступил на шипы!", ()=>resetPlayer());
+           showModal("Игра окончена 💀","Компаньон наступил на шипы!", null, ()=>resetPlayer());
       }
     });
 
@@ -336,15 +498,48 @@ function update() {
     let f = lvl.finish;
     if(companion.x < f.x+f.w && companion.x+companion.w > f.x &&
        companion.y < f.y+f.h && companion.y+companion.h > f.y){
-         showModal(lvl.gift.title, lvl.gift.desc, ()=>{
-           const nextLevel = currentLevel + 1;
-           saveLevelProgress(nextLevel);
-           currentLevel++;
-           if(currentLevel>=levels.length){
-             showModal("Поздравляю 🎉","Ты прошла все уровни!", ()=>{currentLevel=0; resetPlayer();});
-           } else {
-             resetPlayer();
-           }
+         // Устанавливаем gameOver чтобы остановить обновления
+         gameOver = true;
+         
+         // Останавливаем таймер и сохраняем результаты
+         const finishTime = stopLevelTimer();
+         const currentStats = getLevelStats(currentLevel);
+         
+         // Проверяем, является ли это лучшим результатом
+         let isNewBestTime = !currentStats.bestTime || finishTime < currentStats.bestTime;
+         let isNewBestCoins = totalCoins > currentStats.bestCoins;
+         
+         // Сохраняем новые лучшие результаты
+         if (isNewBestTime || isNewBestCoins) {
+           const newStats = {
+             bestTime: isNewBestTime ? finishTime : currentStats.bestTime,
+             bestCoins: isNewBestCoins ? totalCoins : currentStats.bestCoins
+           };
+           saveLevelStats(currentLevel, newStats);
+         }
+         
+         // Формируем текст с результатами
+         let resultText = `${lvl.gift.desc}\n\n`;
+         resultText += `⏱️ Время: ${formatTime(finishTime)}\n`;
+         resultText += `🪙 Монеты: ${totalCoins}/${lvl.coins.length}\n\n`;
+         
+         if (isNewBestTime) {
+           resultText += `🏆 Новый рекорд времени!\n`;
+         }
+         if (isNewBestCoins) {
+           resultText += `🏆 Новый рекорд монет!\n`;
+         }
+         
+         if (currentStats.bestTime) {
+           resultText += `Лучшее время: ${formatTime(currentStats.bestTime)}\n`;
+         }
+         resultText += `Лучшие монеты: ${currentStats.bestCoins}/${lvl.coins.length}`;
+         
+         showModal(lvl.gift.title, resultText, ()=>{
+           // Кнопка "Далее" - пустая ссылка без логики
+         }, ()=>{
+           // Кнопка "Начать заново" - перезапускаем текущий уровень
+           resetPlayer();
          });
     }
 
@@ -411,7 +606,7 @@ function update() {
     // 🔹 Проверка: компаньон выпал за пределы экрана (логическая высота)
     if (companion.y > viewH + C.FALL_OFF.Y_MARGIN || companion.x < -C.FALL_OFF.X_MARGIN || companion.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
-      showModal("Игра окончена 💀","Компаньон упал в пропасть!", ()=>resetPlayer());
+      showModal("Игра окончена 💀","Компаньон упал в пропасть!", null, ()=>resetPlayer());
     }
   }
   

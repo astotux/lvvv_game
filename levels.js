@@ -75,12 +75,10 @@ const levels = [
       {x: 1055, y: 328, w: 55, h: 18, image: "flower2"},
       {x: 1110, y: 328, w: 55, h: 18, image: "flower1"},
       {x: 1165, y: 330, w: 80, h: 19, image: "grass1"},
-      {x: 1280, y: 310, w: 20, h: 35, image: "alert"},
       {x: 1600, y: 328, w: 55, h: 18, image: "flower1"},
       {x: 1655, y: 328, w: 55, h: 18, image: "flower2"},
       {x: 1710, y: 328, w: 55, h: 18, image: "flower1"},
       {x: 1765, y: 330, w: 80, h: 19, image: "grass1"},
-      {x: 1880, y: 310, w: 20, h: 35, image: "alert"},
 
       {x: 3350, y: 328, w: 55, h: 18, image: "flower1"},
       {x: 3405, y: 328, w: 55, h: 18, image: "flower2"},
@@ -103,6 +101,8 @@ const levels = [
       {x: 1470, y: 334, w: 73, h: 19, type: "grass", image: "grass1"},
     ],
     decorationsUndoPlatform: [
+
+
       {x: 320, y: 215, w: 85, h: 130, image: "three"},
 
       {x: 450, y: 235, w: 78, h: 110, image: "three"},
@@ -119,6 +119,9 @@ const levels = [
       {x: 1780, y: 235, w: 78, h: 110, image: "three"},
 
       {x: 3350, y: 235, w: 78, h: 110, image: "three"},
+
+      {x: 1280, y: 310, w: 20, h: 35, image: "alert"},
+      {x: 1880, y: 310, w: 20, h: 35, image: "alert"},
     ]
   },
   {
