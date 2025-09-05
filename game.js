@@ -376,20 +376,16 @@ function update() {
          
          // Формируем текст с результатами
          let resultText = `${lvl.gift.desc}\n\n`;
-         resultText += `⏱️: ${formatTime(finishTime)}\n`;
-         resultText += `🪙: ${totalCoins}/${lvl.coins.length}\n\n`;
+         resultText += `Время прохождения: ${formatTime(finishTime)}\n`;
+         resultText += `Собрано морошки: ${totalCoins}/${lvl.coins.length}\n\n`;
          
          if (isNewBestTime) {
-           resultText += `🏆 Новый рекорд времени!\n`;
-         }
-         if (isNewBestCoins) {
-           resultText += `🏆 Новый рекорд монет!\n`;
+           resultText += `Новый рекорд времени!\n`;
          }
          
          if (currentStats.bestTime) {
-           resultText += `Лучшее ⏱️: ${formatTime(currentStats.bestTime)}\n`;
+           resultText += `Лучшее время: ${formatTime(currentStats.bestTime)}\n`;
          }
-         resultText += `Лучшие 🪙: ${currentStats.bestCoins}/${lvl.coins.length}`;
          
          showModal(lvl.gift.title, resultText, ()=>{
            // Кнопка "Далее" - пустая ссылка без логики
@@ -541,8 +537,8 @@ function update() {
          
          // Формируем текст с результатами
          let resultText = `${lvl.gift.desc}\n\n`;
-         resultText += `⏱️ Время: ${formatTime(finishTime)}\n`;
-         resultText += `🪙 Монеты: ${totalCoins}/${lvl.coins.length}\n\n`;
+         resultText += `Время прохождения: ${formatTime(finishTime)}\n`;
+         resultText += `Собрано морошки: ${totalCoins}/${lvl.coins.length}\n\n`;
          
          if (isNewBestTime) {
            resultText += `🏆 Новый рекорд времени!\n`;
@@ -554,7 +550,6 @@ function update() {
          if (currentStats.bestTime) {
            resultText += `Лучшее время: ${formatTime(currentStats.bestTime)}\n`;
          }
-         resultText += `Лучшие монеты: ${currentStats.bestCoins}/${lvl.coins.length}`;
          
          showModal(lvl.gift.title, resultText, ()=>{
            // Кнопка "Далее" - пустая ссылка без логики

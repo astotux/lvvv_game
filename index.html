@@ -126,6 +126,8 @@
     }
     #modalContent h2 { margin: 0 0 10px; color: orange; }
     #modalContent p { margin: 0 0 15px; }
+    /* Показывать переносы строк в тексте модалки */
+    #modalText { width: max-content;white-space: pre-line; }
     #modalContent button {
       /* padding: 10px 20px; */
       border: none;
@@ -176,6 +178,7 @@
       background-size: auto 100%;
       display: flex;
       align-items: center;
+      justify-content: center;
       flex-direction: column;
       padding: 30px 8px;
     }
@@ -268,7 +271,7 @@
 <body id="body">
 
   <canvas id="game" width="480" height="320"></canvas>
-  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.5.0</p>
+  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.5.1</p>
   
   <!-- Уведомление о повороте экрана -->
   <div id="rotateNotification">

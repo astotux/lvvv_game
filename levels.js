@@ -214,7 +214,6 @@ const levels = [
       // цветы и трава
       {x: 300, y: 348, w: 55, h: 18, type: "rock", image: "flower2"},
       {x: 360, y: 348, w: 55, h: 18, type: "rock", image: "flower1"},
-      {x: 600, y: 350, w: 73, h: 19, type: "grass", image: "grass1"},
       // скалы
       {x: 1200, y: 344, w: 38, h: 20, type: "rock", image: "rock1"},
       {x: 1700, y: 300, w: 29, h: 15, type: "rock2", image: "rock2"},
