@@ -190,8 +190,11 @@ function showModal(title, text, nextCallback = null, restartCallback = null) {
   
   if (nextCallback) {
     modalNextBtn.style.display = "inline-block";
+    // Ссылка на страницу диалога
+    modalNextBtn.setAttribute('href', 'dialog.html');
   } else {
     modalNextBtn.style.display = "none";
+    modalNextBtn.setAttribute('href', '#');
   }
   
   if (restartCallback) {
@@ -206,6 +209,10 @@ function showModal(title, text, nextCallback = null, restartCallback = null) {
   } else {
     modalBtn.style.display = "none";
   }
+  // После показа модалки пересчитываем размеры краёв таблички, если контейнер есть
+  if (typeof window.updateCounterEdges === 'function') {
+    setTimeout(()=>window.updateCounterEdges(), 0);
+  }
 }
 
 modalBtn.onclick = ()=>{
@@ -219,6 +226,17 @@ modalRestartBtn.onclick = ()=>{
 
 // управление вынесено в js/input.js
 loadLevelProgress();
+// Если с диалоговой страницы пришёл запрос перейти на следующий уровень
+try {
+  const goNext = localStorage.getItem('love_game_go_next');
+  if (goNext === '1') {
+    localStorage.removeItem('love_game_go_next');
+    const nextLevel = Math.min(currentLevel + 1, levels.length - 1);
+    currentLevel = nextLevel;
+    // Синхронизируем прогресс
+    saveLevelProgress(nextLevel);
+  }
+} catch (e) {}
 
 // Загружаем статистику для текущего уровня
 const stats = getLevelStats(currentLevel);
@@ -277,9 +295,6 @@ function updateStatsDisplay() {
 function update() {
   if(gameOver) return;
   
-  // Обновляем отображение статистики только если игра не окончена
-  updateStatsDisplay();
-  
   // обработка кнопок/динамических платформ до расчета физики
   processSwitchesAndDynamics();
 
@@ -328,7 +343,7 @@ function update() {
       if(player.x < t.x+t.w && player.x+player.w > t.x &&
          player.y < t.y+t.h && player.y+player.h > t.y){
            gameOver = true;
-           showModal("Игра окончена 💀","Ты наступила на шипы!", null, ()=>resetPlayer());
+           showModal("Игра окончена.","Ты наступила на шипы!", null, ()=>resetPlayer());
       }
     });
 
@@ -355,6 +370,9 @@ function update() {
            };
            saveLevelStats(currentLevel, newStats);
          }
+         
+         // Сохраняем пройденный уровень для страницы диалога
+         try { localStorage.setItem('love_game_dialog_level', String(currentLevel)); } catch (e) {}
          
          // Формируем текст с результатами
          let resultText = `${lvl.gift.desc}\n\n`;
@@ -446,7 +464,7 @@ function update() {
     // 🔹 Проверка: игрок выпал за пределы экрана (логическая высота)
     if (player.y > viewH + C.FALL_OFF.Y_MARGIN || player.x < -C.FALL_OFF.X_MARGIN || player.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
-      showModal("Игра окончена 💀","Ты упала в пропасть!", null, ()=>resetPlayer());
+      showModal("Игра окончена.","Ты упала в пропасть!", null, ()=>resetPlayer());
     }
   } else {
     // Управляем компаньоном
@@ -490,7 +508,7 @@ function update() {
       if(companion.x < t.x+t.w && companion.x+companion.w > t.x &&
          companion.y < t.y+t.h && companion.y+companion.h > t.y){
            gameOver = true;
-           showModal("Игра окончена 💀","Компаньон наступил на шипы!", null, ()=>resetPlayer());
+           showModal("Игра окончена.","Арчик наступил на шипы!", null, ()=>resetPlayer());
       }
     });
 
@@ -517,6 +535,9 @@ function update() {
            };
            saveLevelStats(currentLevel, newStats);
          }
+         
+         // Сохраняем пройденный уровень для страницы диалога
+         try { localStorage.setItem('love_game_dialog_level', String(currentLevel)); } catch (e) {}
          
          // Формируем текст с результатами
          let resultText = `${lvl.gift.desc}\n\n`;
@@ -606,7 +627,7 @@ function update() {
     // 🔹 Проверка: компаньон выпал за пределы экрана (логическая высота)
     if (companion.y > viewH + C.FALL_OFF.Y_MARGIN || companion.x < -C.FALL_OFF.X_MARGIN || companion.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
-      showModal("Игра окончена 💀","Компаньон упал в пропасть!", null, ()=>resetPlayer());
+      showModal("Игра окончена.","Арчик упал в пропасть!", null, ()=>resetPlayer());
     }
   }
   
@@ -927,7 +948,6 @@ function drawDecorationsUndoPlatform() {
 // Функция отрисовки монеток
 function drawCoins() {
   let lvl = levels[currentLevel];
-  document.getElementById('totalCoins').innerText = `${totalCoins} | ${levels[currentLevel].coins.length}`
   if (lvl.coins) {
     lvl.coins.forEach(coin => {
       if (!coin.collected) {

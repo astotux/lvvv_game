@@ -54,7 +54,7 @@ const levels = [
       {x: 3125, y: 150, w: 20, h: 20, collected: false}
     ],
     finish: {x: 3660, y: 200, w: 24, h: 63},
-    gift: {title: "Уровень: Переправа", desc: "Ты справилась! Двигаемся дальше ❤️"},
+    gift: {title: "Уровень 1", desc: "Супер! Первый пройден!"},
     decorations: [
       {x: 330, y: 330, w: 29, h: 15, image: "rock2"},
       {x: 350, y: 328, w: 55, h: 18, image: "flower2"},

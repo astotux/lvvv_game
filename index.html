@@ -120,7 +120,6 @@
     #modalContent {
       background: #fff;
       padding: 20px;
-      border-radius: 15px;
       max-width: 300px;
       text-align: center;
       animation: fadeIn 0.3s;
@@ -128,10 +127,8 @@
     #modalContent h2 { margin: 0 0 10px; color: orange; }
     #modalContent p { margin: 0 0 15px; }
     #modalContent button {
-      padding: 10px 20px;
-      background: orange;
+      /* padding: 10px 20px; */
       border: none;
-      border-radius: 10px;
       font-size: 16px;
       cursor: pointer;
     }
@@ -159,9 +156,16 @@
     }
     #coinCounter .counterLeft,
     #coinCounter .counterRight {
-      width: 12px;
+      height: 100%;
+      /* Ширина вычисляется из высоты по aspect-ratio */
+      aspect-ratio: var(--edge-ar, 1);
       background-repeat: no-repeat;
-      background-size: 100% 100%;
+      /* Масштабируем по высоте, чтобы не искажать пропорции */
+      background-size: auto 100%;
+      background-position: center;
+      /* Авто-ширина на основании aspect-ratio */
+      width: auto;
+      flex: 0 0 auto;
     }
     #coinCounter .counterLeft { background-image: url("img/tabl1.png"); }
     #coinCounter .counterRight { background-image: url("img/tabl3.png"); }
@@ -172,9 +176,12 @@
       background-size: auto 100%;
       display: flex;
       align-items: center;
-      padding: 10px 8px;
+      flex-direction: column;
+      padding: 30px 8px;
     }
-
+    .counterCenter h2, .counterCenter p {
+      margin: 0;
+    }
     .containerTops {
       font-weight: 700;
       display: flex;
@@ -261,7 +268,7 @@
 <body id="body">
 
   <canvas id="game" width="480" height="320"></canvas>
-  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.4.0</p>
+  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.5.0</p>
   
   <!-- Уведомление о повороте экрана -->
   <div id="rotateNotification">
@@ -299,18 +306,25 @@
     </div>
   </div>
 
-  <!-- модальное окно -->
+
+
+    <!-- модальное окно -->
   <div id="modal">
-    <div id="modalContent">
-      <h2 id="modalTitle"></h2>
-      <p id="modalText"></p>
-             <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
-         <button id="modalBtn" style="display: none;">OK</button>
-         <a href="#" id="modalNextBtn" style="display: none; background: #4CAF50; padding: 10px 20px; border-radius: 10px; font-size: 16px; cursor: pointer; text-decoration: none; color: white;">Далее</a>
-         <button id="modalRestartBtn" style="display: none; background: #ff6b6b;">Начать заново</button>
-       </div>
+    <div id="coinCounter">
+      <div class="counterLeft"></div>
+      <div class="counterCenter">
+        <h2 id="modalTitle"></h2>
+        <p id="modalText"></p>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+          <button id="modalBtn" style="display: none;">OK</button>
+          <button id="modalRestartBtn" style="display: none; padding: 0; margin: 0; border: none; background: none; cursor: pointer;"><img src="./img/restart.png" style="width: 50px; height: 50px;"></button>
+          <a href="#" id="modalNextBtn" style="display: none; padding: 0; margin: 0; border: none; background: none; text-decoration: none; "><img src="./img/next.png" style="width: 50px; height: 50px;"></a>
+        </div>
+      </div>
+      <div class="counterRight"></div>
     </div>
   </div>
+
 
   <script>
     // Дополнительная защита от масштабирования
@@ -378,6 +392,47 @@
       // Небольшая задержка для корректного определения новой ориентации
       setTimeout(updateRotateNotification, 100);
     });
+
+    // Устанавливаем корректные размеры краёв таблички по высоте центра
+    (function initCounterEdges(){
+      const leftUrl = 'img/tabl1.png';
+      const rightUrl = 'img/tabl3.png';
+      const imgL = new Image();
+      const imgR = new Image();
+      let ready = 0;
+      let arLeft = 1, arRight = 1;
+      function applyAR() {
+        if (ready < 2) return;
+        arLeft = imgL.naturalWidth && imgL.naturalHeight ? (imgL.naturalWidth / imgL.naturalHeight) : 1;
+        arRight = imgR.naturalWidth && imgR.naturalHeight ? (imgR.naturalWidth / imgR.naturalHeight) : 1;
+        updateCounterEdges();
+      }
+      // Публичная функция пересчёта (вызываем при открытии модалки/ресайзе)
+      window.updateCounterEdges = function updateCounterEdges(){
+        const leftEl = document.querySelector('#coinCounter .counterLeft');
+        const rightEl = document.querySelector('#coinCounter .counterRight');
+        const centerEl = document.querySelector('#coinCounter .counterCenter');
+        if (!leftEl || !rightEl || !centerEl) return;
+        // Если модалка скрыта, высота может быть 0. В таком случае делаем отложенный пересчёт.
+        const h = centerEl.clientHeight;
+        if (h === 0) {
+          setTimeout(updateCounterEdges, 50);
+          return;
+        }
+        leftEl.style.width = (h * arLeft) + 'px';
+        rightEl.style.width = (h * arRight) + 'px';
+        leftEl.style.height = h + 'px';
+        rightEl.style.height = h + 'px';
+      };
+      imgL.onload = ()=>{ ready++; applyAR(); };
+      imgR.onload = ()=>{ ready++; applyAR(); };
+      imgL.src = leftUrl;
+      imgR.src = rightUrl;
+      // Пересчёт при ресайзе окна
+      window.addEventListener('resize', ()=>{
+        if (ready >= 2) window.updateCounterEdges();
+      });
+    })();
   </script>
   <script src="js/constants.js"></script>
   <script src="levels.js"></script>
