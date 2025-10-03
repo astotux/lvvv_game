@@ -7,6 +7,7 @@
   <style>
     html, body { margin: 0; height: 100%; background: #222; display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .wrap { width: 100%; height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    #dialogImage { width: 100vw; height: 100%; object-fit: cover; }
     a { color: #fff; text-decoration: underline; font-family: sans-serif; }
     .fade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 1s ease; }
     .fade.show { opacity: 1; }
@@ -25,7 +26,7 @@
   </head>
 <body>
   <div class="wrap">
-    <img id="dialogImage" src="./img/play_bg.png" alt="play_bg" style="width: 100%;">
+    <img id="dialogImage" src="./img/play_bg.png" alt="play_bg">
     <a id="playLink" href="index.html" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 0; margin: 0; margin-bottom: 20px; border: none; background: none; text-decoration: none; "><img src="./img/play.png" style="height: 100px;"></a>
     </div>
   <div id="introFade"></div>
