@@ -6,8 +6,7 @@
   <title>Диалог</title>
   <style>
     html, body { margin: 0; height: 100%; background: #222; display: flex; align-items: center; justify-content: center; }
-    .wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-    .wrap img { max-width: 90vw; max-height: 80vh; image-rendering: pixelated; }
+    .wrap { width: 100vw; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 16px; }
     a { color: #fff; text-decoration: underline; font-family: sans-serif; }
   </style>
   <script>
@@ -18,32 +17,48 @@
         1: 'img/dialog_level_1.png',
         2: 'img/dialog_level_2.png'
       };
-      return map[levelIndex] || 'img/dialog_default.png';
+      return map[levelIndex] || 'img/dialog_first.png';
     }
     window.addEventListener('DOMContentLoaded', ()=>{
-      let idx = 0;
+      let idx = null;
       try {
         const stored = localStorage.getItem('love_game_dialog_level');
-        if (stored != null) idx = parseInt(stored, 10) || 0;
+        idx = parseInt(stored, 10);
       } catch (e) {}
       const img = document.getElementById('dialogImage');
-      img.src = pickImageForLevel(idx);
+      img.src = idx !== null ? pickImageForLevel(idx) : 'img/dialog_first.png';
       // Навешиваем обработчик на next
-      const nextLink = document.getElementById('nextLink');
-      if (nextLink) {
-        nextLink.addEventListener('click', (e)=>{
-          try { localStorage.setItem('love_game_go_next', '1'); } catch (err) {}
-          // позволяем перейти по ссылке на index.html
-        });
+      if (localStorage.getItem('love_game_dialog_level')) {
+        const nextLink = document.getElementById('nextLink');
+        if (nextLink) {
+            nextLink.addEventListener('click', (e)=>{
+            try { localStorage.setItem('love_game_go_next', '1'); } catch (err) {}
+            // позволяем перейти по ссылке на index.html
+            });
+        }
+        const backLink = document.getElementById('backLink');
+        if (backLink) {
+            backLink.addEventListener('click', (e)=>{
+            try { localStorage.setItem('love_game_go_next', '0'); } catch (err) {}
+            // позволяем перейти по ссылке на index.html
+            });
+        }
+      } else {
+        const backLink = document.getElementById('backLink');
+        backLink.style.display = "none"
       }
+      
     });
   </script>
   </head>
 <body>
   <div class="wrap">
-    <img id="dialogImage" alt="dialog">
-    <a id="nextLink" href="index.html" style="padding: 0; margin: 0; border: none; background: none; text-decoration: none; "><img src="./img/next.png" style="width: 50px; height: 50px;"></a>
-  </div>
+    <img id="dialogImage" alt="dialog" style="width: 100%;">
+        <div style="display: flex; gap: 20px;">
+            <a id="backLink" href="index.html" style="padding: 0; margin: 0; border: none; background: none; text-decoration: none; "><img src="./img/restart.png" style="height: 50px;"></a>
+            <a id="nextLink" href="index.html" style="padding: 0; margin: 0; border: none; background: none; text-decoration: none; "><img src="./img/next_2.png" style="height: 50px;"></a>
+        </div>
+    </div>
 </body>
 </html>
 

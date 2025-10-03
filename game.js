@@ -235,6 +235,8 @@ try {
     currentLevel = nextLevel;
     // Синхронизируем прогресс
     saveLevelProgress(nextLevel);
+  } else {
+    
   }
 } catch (e) {}
 
