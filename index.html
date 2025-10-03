@@ -265,13 +265,26 @@
         display: none !important;
       }
     }
+    /* Стартовое затемнение на 2 секунды */
+    #introFade {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #000;
+      z-index: 2000;
+      opacity: 1;
+      pointer-events: none;
+      transition: opacity 2s ease;
+    }
+    #introFade.hide { opacity: 0; }
+    .fade { z-index: 2000; position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 1s ease; }
+    .fade.show { opacity: 1; }
   </style>
   
 </head>
 <body id="body">
 
   <canvas id="game" width="480" height="320"></canvas>
-  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.5.3</p>
+  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.6.0</p>
   
   <!-- Уведомление о повороте экрана -->
   <div id="rotateNotification">
@@ -279,6 +292,9 @@
     <h2>Поверни телефон</h2>
     <p>Для лучшего игрового опыта поверни устройство горизонтально и обнови страницу</p>
   </div>
+
+  <!-- Стартовый тёмный оверлей, плавно исчезающий за 2 секунды -->
+  <div id="introFade"></div>
 
   <!-- Счетчик монеток -->
 
@@ -328,6 +344,7 @@
     </div>
   </div>
 
+  <div id="fade" class="fade"></div>
 
   <script>
     // Дополнительная защита от масштабирования
@@ -437,6 +454,21 @@
       });
     })();
   </script>
+  <script>
+    // Плавное исчезновение стартового оверлея
+    window.addEventListener('load', function () {
+      var fade = document.getElementById('introFade');
+      if (!fade) return;
+      // Ждём один кадр, чтобы CSS применился, затем запускаем анимацию
+      requestAnimationFrame(function () {
+        fade.classList.add('hide');
+        setTimeout(function () {
+          if (fade && fade.parentNode) fade.parentNode.removeChild(fade);
+        }, 2100);
+      });
+    });
+  </script>
+
   <script src="js/constants.js"></script>
   <script src="levels.js"></script>
   <script src="js/assets.js"></script>
@@ -444,5 +476,17 @@
   <script src="js/render.js"></script>
   <script src="js/input.js"></script>
   <script src="game.js"></script>
+  <script>
+    (function() {
+      var link = document.querySelector('#modalNextBtn');
+      var fade = document.getElementById('fade');
+      if (!link || !fade) return;
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        fade.classList.add('show');
+        setTimeout(function() { window.location.href = link.getAttribute('href'); }, 1100);
+      });
+    })();
+  </script>
 </body>
 </html>
