@@ -116,12 +116,6 @@
       return (
         // Проверка на iOS Safari в полноэкранном режиме
         (window.navigator.standalone === true) ||
-        // Проверка на Android Chrome в полноэкранном режиме
-        (window.matchMedia('(display-mode: fullscreen)').matches) ||
-        // Проверка на Android Chrome в standalone режиме
-        (window.matchMedia('(display-mode: standalone)').matches) ||
-        // Проверка на минимальном UI режиме
-        (window.matchMedia('(display-mode: minimal-ui)').matches) ||
         // Дополнительная проверка для iOS
         (window.screen.height - window.innerHeight < 100 && window.screen.width - window.innerWidth < 100)
       );
