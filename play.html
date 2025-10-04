@@ -49,7 +49,7 @@
     /* Модальное окно для добавления на домашний экран */
     #pwaModal {
       position: fixed;
-      top: 0; left: 0;
+      top: 5%; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.8);
       display: none;
@@ -69,10 +69,12 @@
       height: auto;
     }
     #pwaModalContent button {
+      position: absolute;
+      z-index: 3001;
+      bottom: 5px;
       background: none;
       border: none;
       padding: 0;
-      margin-top: 20px;
       cursor: pointer;
     }
     #pwaModalContent button img {
@@ -104,8 +106,6 @@
       const modal = document.getElementById('pwaModal');
       if (modal) {
         modal.style.display = 'none';
-        // Сохраняем информацию о том, что пользователь уже видел предложение
-        localStorage.setItem('pwaModalShown', 'true');
       }
     }
 
@@ -136,14 +136,7 @@
 
     // Проверка при загрузке страницы
     window.addEventListener('load', function() {
-      // Проверяем, не показывали ли уже модальное окно
-      const modalShown = localStorage.getItem('pwaModalShown');
-      
-      // Если приложение НЕ запущено в PWA режиме и модальное окно еще не показывали
-      if (!isPwaMode() && !modalShown) {
-        // Показываем модальное окно с небольшой задержкой
-        setTimeout(showPwaModal, 1000);
-      }
+      showPwaModal
     });
 
     // Попытка скрыть тулбары Safari с помощью скролла (в рамках возможностей браузера)
