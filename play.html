@@ -45,6 +45,40 @@
       transition: opacity 1s ease;
     }
     #introFade.hide { opacity: 0; }
+    
+    /* Модальное окно для добавления на домашний экран */
+    #pwaModal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+    }
+    #pwaModalContent {
+      background: transparent;
+      padding: 0;
+      max-width: 90%;
+      text-align: center;
+      animation: fadeIn 0.3s;
+    }
+    #pwaModalContent img {
+      max-width: 100%;
+      height: auto;
+    }
+    #pwaModalContent button {
+      background: none;
+      border: none;
+      padding: 0;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    #pwaModalContent button img {
+      width: 80px;
+      height: auto;
+    }
   </style>
   </head>
 <body>
@@ -54,7 +88,64 @@
     </div>
   <div id="introFade"></div>
   <div id="fade" class="fade"></div>
+  
+  <!-- Модальное окно для добавления на домашний экран -->
+  <div id="pwaModal">
+    <div id="pwaModalContent">
+      <img src="./img/modal_alert.png" alt="Добавить на домашний экран">
+      <button onclick="closePwaModal()">
+        <img src="./img/ok.png" alt="OK">
+      </button>
+    </div>
+  </div>
   <script>
+    // Функция для закрытия PWA модального окна
+    function closePwaModal() {
+      const modal = document.getElementById('pwaModal');
+      if (modal) {
+        modal.style.display = 'none';
+        // Сохраняем информацию о том, что пользователь уже видел предложение
+        localStorage.setItem('pwaModalShown', 'true');
+      }
+    }
+
+    // Функция для проверки, запущено ли приложение в PWA режиме
+    function isPwaMode() {
+      // Проверяем различные признаки PWA режима
+      return (
+        // Проверка на iOS Safari в полноэкранном режиме
+        (window.navigator.standalone === true) ||
+        // Проверка на Android Chrome в полноэкранном режиме
+        (window.matchMedia('(display-mode: fullscreen)').matches) ||
+        // Проверка на Android Chrome в standalone режиме
+        (window.matchMedia('(display-mode: standalone)').matches) ||
+        // Проверка на минимальном UI режиме
+        (window.matchMedia('(display-mode: minimal-ui)').matches) ||
+        // Дополнительная проверка для iOS
+        (window.screen.height - window.innerHeight < 100 && window.screen.width - window.innerWidth < 100)
+      );
+    }
+
+    // Функция для показа модального окна PWA
+    function showPwaModal() {
+      const modal = document.getElementById('pwaModal');
+      if (modal) {
+        modal.style.display = 'flex';
+      }
+    }
+
+    // Проверка при загрузке страницы
+    window.addEventListener('load', function() {
+      // Проверяем, не показывали ли уже модальное окно
+      const modalShown = localStorage.getItem('pwaModalShown');
+      
+      // Если приложение НЕ запущено в PWA режиме и модальное окно еще не показывали
+      if (!isPwaMode() && !modalShown) {
+        // Показываем модальное окно с небольшой задержкой
+        setTimeout(showPwaModal, 1000);
+      }
+    });
+
     // Попытка скрыть тулбары Safari с помощью скролла (в рамках возможностей браузера)
     function hideSafariBars() {
       setTimeout(() => {
