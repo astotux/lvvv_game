@@ -2,7 +2,7 @@
   "name": "ИГРАТЬ",
   "short_name": "ИГРАТЬ",
   "description": "Увлекательная игра-платформер с пиксельной графикой",
-  "start_url": "/",
+  "start_url": "/lvvv_game/play.html",
   "display": "fullscreen",
   "orientation": "landscape",
   "theme_color": "#282825",
