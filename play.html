@@ -2,7 +2,12 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
+  <!-- iOS fullscreen/PWA hints -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#282825">
   <title>ИГРАТЬ</title>
   <style>
     html, body { margin: 0; height: 100%; background: #222; display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -31,6 +36,19 @@
     </div>
   <div id="introFade"></div>
   <div id="fade" class="fade"></div>
+  <script>
+    // Попытка скрыть тулбары Safari с помощью скролла (в рамках возможностей браузера)
+    function hideSafariBars() {
+      setTimeout(() => {
+        window.scrollTo(0, 1);
+      }, 50);
+    }
+
+    window.addEventListener('load', hideSafariBars);
+    window.addEventListener('orientationchange', hideSafariBars);
+    window.addEventListener('focus', hideSafariBars);
+    window.addEventListener('touchend', hideSafariBars, { passive: true });
+  </script>
   <script>
     (function() {
       var link = document.querySelector('#playLink');
