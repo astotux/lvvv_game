@@ -49,7 +49,7 @@
     /* Модальное окно для добавления на домашний экран */
     #pwaModal {
       position: fixed;
-      top: 5%; left: 0;
+      top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.8);
       display: none;
@@ -58,6 +58,7 @@
       z-index: 3000;
     }
     #pwaModalContent {
+      position: relative;
       background: transparent;
       padding: 0;
       max-width: 90%;
@@ -71,7 +72,7 @@
     #pwaModalContent button {
       position: absolute;
       z-index: 3001;
-      bottom: 5px;
+      bottom: 5px; left: 33%;
       background: none;
       border: none;
       padding: 0;
