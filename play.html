@@ -71,8 +71,12 @@
     }
     #pwaModalContent button {
       position: absolute;
+      margin-left: auto;
+      margin-right: auto;
+      margin-bottom: 15px;
+      left: 0;
+      right: 0;
       z-index: 3001;
-      bottom: 5px; left: 33%;
       background: none;
       border: none;
       padding: 0;
@@ -121,6 +125,14 @@
       );
     }
 
+    // Функция для определения iOS Safari
+    function isIOSSafari() {
+      const userAgent = navigator.userAgent;
+      const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+      const isSafari = /Safari/.test(userAgent) && !/Chrome|CriOS|FxiOS|OPiOS|mercury/.test(userAgent);
+      return isIOS && isSafari;
+    }
+
     // Функция для показа модального окна PWA
     function showPwaModal() {
       const modal = document.getElementById('pwaModal');
@@ -131,7 +143,12 @@
 
     // Проверка при загрузке страницы
     window.addEventListener('load', function() {
-      showPwaModal()
+      // Показываем модальное окно только если:
+      // 1. НЕ в PWA режиме
+      // 2. Это iOS Safari
+      if (!isPwaMode() && isIOSSafari()) {
+        showPwaModal();
+      }
     });
   </script>
   <script>
