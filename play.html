@@ -138,18 +138,6 @@
     window.addEventListener('load', function() {
       showPwaModal
     });
-
-    // Попытка скрыть тулбары Safari с помощью скролла (в рамках возможностей браузера)
-    function hideSafariBars() {
-      setTimeout(() => {
-        window.scrollTo(0, 1);
-      }, 50);
-    }
-
-    window.addEventListener('load', hideSafariBars);
-    window.addEventListener('orientationchange', hideSafariBars);
-    window.addEventListener('focus', hideSafariBars);
-    window.addEventListener('touchend', hideSafariBars, { passive: true });
   </script>
   <script>
     (function() {
