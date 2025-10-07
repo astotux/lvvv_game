@@ -128,61 +128,55 @@ const levels = [
     width: 6000,
     platforms: [
       // стартовая зона
-      {x: 0, y: 360, w: 900, h: 20, texture: "grass"},
-      {x: 900, y: 360, w: 500, h: 20, texture: "grass"},
-      // лесные террасы
-      {x: 1500, y: 320, w: 260, h: 20, texture: "wood"},
-      {x: 1750, y: 290, w: 220, h: 20, texture: "wood"},
-      {x: 1980, y: 260, w: 180, h: 20, texture: "wood"},
-      // каменные уступы
-      {x: 2200, y: 300, w: 300, h: 22, texture: "stone2"},
-      {x: 2550, y: 270, w: 220, h: 22, texture: "stone2"},
-      {x: 2800, y: 240, w: 180, h: 22, texture: "stone2"},
-      // длинная галерея с разрывами
-      {x: 3050, y: 280, w: 200, h: 20, texture: "wood"},
-      {x: 3310, y: 260, w: 180, h: 20, texture: "wood"},
-      {x: 3550, y: 240, w: 160, h: 20, texture: "wood"},
-      // плато перед финишем
-      {x: 3800, y: 340, w: 400, h: 20, texture: "grass"},
-      {x: 4220, y: 300, w: 260, h: 22, texture: "stone"},
-      {x: 4520, y: 280, w: 240, h: 22, texture: "stone"},
-      // финальная площадка
-      {x: 5100, y: 320, w: 700, h: 20, texture: "grass"}
+      {x: 0, y: 360, w: 400, h: 20, texture: "grass"},
+      {x: 450, y: 320, w: 66, h: 22, texture: "stone2"},
+      {x: 700, y: 260, w: 66, h: 22, texture: "stone2"},
+      {x: 820, y: 280, w: 250, h: 20, texture: "grass"},
+      {x: 1310, y: 247, w: 66, h: 22, texture: "stone2"},
+      {x: 1420, y: 155, w: 66, h: 22, texture: "stone2"},
+      {x: 1720, y: 270, w: 400, h: 20, texture: "grass"},
+
+      
     ],
     // стены, двери и свитчи
     walls: [
+      {x: 1488, y: 0, w: 40, h: 152, texture: "stone"},
+
       // простая стена, блокирующая обход
-      {x: 1250, y: 260, w: 40, h: 100, texture: "stone"}
     ],
     doors: [
       // вертикальная дверь у галереи, открывается удержанием кнопки 2
-      {x: 3480, y: 200, w: 40, h: 120, texture: "stone2", group: 2, mode: "hold", open: false},
+      // {x: 3480, y: 200, w: 40, h: 120, texture: "stone2", group: 2, mode: "hold", open: false},
+      // {x: 1250, y: 249, w: 36, h: 111, texture: "danger_door", group: 3, mode: "hold", open: false}
+
       // дверь-мост (горизонтальная переборка) у старта, открывается кнопкой 1
-      {x: 1000, y: 320, w: 180, h: 24, texture: "wood", group: 1, mode: "hold", open: false}
     ],
     switches: [
       // первая кнопка у старта
-      {x: 600, y: 349, w: 26, h: 11, group: 1},
+      {x: 330, y: 355, w: 26, h: 11, group: 1},
       // вторая кнопка далеко далее
-      {x: 3300, y: 249, w: 26, h: 11, group: 2}
+      {x: 1030, y: 277, w: 26, h: 11, group: 2}, 
+      {x: 1443, y: 149, w: 26, h: 11, group: 3} 
     ],
-    dynamicPlatforms: [],
+    dynamicPlatforms: [
+      {x: 550, y: 290, w: 111, h: 22, texture: "danger_platform", group: 1, mode: "hold", open: false},
+      {x: 1120, y: 250, w: 111, h: 22, texture: "danger_platform", group: 2, mode: "hold", open: false},
+      {x: 1420, y: 330, w: 111, h: 22, texture: "danger_platform", group: 3, mode: "hold", open: false},
+      {x: 1565, y: 330, w: 111, h: 22, texture: "danger_platform", group: 3, mode: "hold", open: false},
+
+    ],
     traps: [
       // ранние ловушки
-      {x: 820, y: 345, w: 20, h: 22},
-      {x: 840, y: 345, w: 20, h: 22},
-      // под террасами
-      {x: 1620, y: 305, w: 20, h: 22},
-      {x: 1890, y: 275, w: 20, h: 22},
-      // каменные коридоры
-      {x: 2280, y: 285, w: 20, h: 22},
-      {x: 2600, y: 255, w: 20, h: 22},
-      // перед плато
-      {x: 3400, y: 245, w: 20, h: 22},
-      {x: 3580, y: 225, w: 20, h: 22},
-      // финишная полоса
-      {x: 4400, y: 285, w: 20, h: 22},
-      {x: 4700, y: 265, w: 20, h: 22}
+
+      {x: 910, y: 268, w: 20, h: 18},
+      {x: 930, y: 268, w: 20, h: 18},
+
+      {x: 1511, y: 315, w: 20, h: 18},
+      {x: 1565, y: 315, w: 20, h: 18},
+
+      {x: 1900, y: 257, w: 20, h: 18},
+      {x: 1920, y: 257, w: 20, h: 18},
+
     ],
     coins: [
       // стартовая дорожка
@@ -212,29 +206,31 @@ const levels = [
     gift: {title: "Большое приключение", desc: "Красивый масштабный уровень пройден! ❤️"},
     decorations: [
       // цветы и трава
-      {x: 300, y: 348, w: 55, h: 18, type: "rock", image: "flower2"},
-      {x: 360, y: 348, w: 55, h: 18, type: "rock", image: "flower1"},
+      {x: 205, y: 348, w: 55, h: 18, type: "rock", image: "flower2"},
+      {x: 260, y: 348, w: 55, h: 18, type: "rock", image: "flower1"},
+      {x: 950, y: 272, w: 73, h: 19, type: "grass", image: "grass1"},
+
       // скалы
       {x: 1200, y: 344, w: 38, h: 20, type: "rock", image: "rock1"},
       {x: 1700, y: 300, w: 29, h: 15, type: "rock2", image: "rock2"},
       {x: 2100, y: 280, w: 38, h: 20, type: "rock", image: "rock1"},
-      // деревья
-      {x: 1450, y: 230, w: 100, h: 150, image: "three"},
-      {x: 3200, y: 180, w: 78, h: 110, image: "three"},
-      {x: 5000, y: 240, w: 100, h: 150, image: "three"},
-      // горы на заднем плане
-      {x: 800, y: 240, w: 120, h: 70, image: "mountain"},
-      {x: 2600, y: 220, w: 120, h: 70, image: "mountain"}
+
     ],
     decorationsUndo: [
-      {x: 250, y: 350, w: 55, h: 18, type: "rock", image: "flower1"},
-      {x: 450, y: 350, w: 55, h: 18, type: "rock", image: "flower2"},
-      {x: 950, y: 352, w: 73, h: 19, type: "grass", image: "grass1"},
-      {x: 1800, y: 302, w: 73, h: 19, type: "grass", image: "grass1"},
+      {x: 150, y: 350, w: 55, h: 18, type: "rock", image: "flower1"},
+      {x: 1800, y: 257, w: 73, h: 19, type: "grass", image: "grass1"},
+
       {x: 3400, y: 262, w: 73, h: 19, type: "grass", image: "grass1"}
     ],
     decorationsUndoPlatform: [
-      {x: 760, y: 255, w: 78, h: 110, image: "three"},
+      {x: 1010, y: 255, w: 50, h: 35, type: "bush", image: "bush"},
+
+      {x: 380, y: 330, w: 20, h: 35, image: "alert"},
+      {x: 290, y: 255, w: 78, h: 110, image: "three"},
+      {x: 100, y: 255, w: 78, h: 110, image: "three"},
+      {x: 20, y: 220, w: 100, h: 150, image: "three"},
+      {x: 820, y: 140, w: 100, h: 150, image: "three"},
+
       {x: 2100, y: 200, w: 78, h: 110, image: "three"},
       {x: 3900, y: 260, w: 78, h: 110, image: "three"}
     ]

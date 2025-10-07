@@ -853,6 +853,7 @@ function drawDecorations() {
         case "rock1": img = imgRock1; break;
         case "rock2": img = imgRock2; break;
         case "grass1": img = imgGrass1; break;
+        case "bush": img = imgBush; break;
         case "mountain": img = imgMountain; break;
         case "three": img = imgThree; break;
         case "alert": img = imgAlert; break;
@@ -890,6 +891,7 @@ function drawDecorationsUndo() {
         case "rock2": img = imgRock2; break;
 
         case "grass1": img = imgGrass1; break;
+        case "bush": img = imgBush; break;
         case "mountain": img = imgMountain; break;
         case "three": img = imgThree; break;
         // default: img = imgFlower1; // изображение по умолчанию
@@ -926,6 +928,7 @@ function drawDecorationsUndoPlatform() {
         case "rock2": img = imgRock2; break;
 
         case "grass1": img = imgGrass1; break;
+        case "bush": img = imgBush; break;
         case "mountain": img = imgMountain; break;
         case "three": img = imgThree; break;
         case "alert": img = imgAlert; break;
@@ -1235,8 +1238,8 @@ function loop(currentTime) {
 // ждём загрузки всех картинок
 let loaded = 0;
 const bgImages = [bgLayer0, bgLayer1, bgLayer2, bgLayer3, bgLayer4, bgLayer5, bgLayer6];
-const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2, imgMountain, imgThree, imgAlert];
-const platformImages = [imgPlatformGrass, imgPlatformStone, imgPlatformWood, imgPlatformStone2];
+const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2, imgMountain, imgThree, imgAlert, imgBush];
+const platformImages = [imgPlatformGrass, imgPlatformStone, imgPlatformWood, imgPlatformStone2, imgPlatformDanger, imgDoorDanger];
 const groundImages = [imgDirt];
 const allImages = [...bgImages, ...decorationImages, ...platformImages, ...groundImages, imgPlayerIdle, imgPlayerWalk, imgCompanionIdle, imgCompanionWalk, imgTrap, imgFinish, imgBackgroundAll];
 allImages.forEach(img => {

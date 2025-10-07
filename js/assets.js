@@ -18,6 +18,10 @@
   imgPlatformStone2.src = "img/platform_stone3.png";
   window.imgPlatformWood = new Image();
   imgPlatformWood.src = "img/platform_wood.png";
+  window.imgPlatformDanger = new Image();
+  imgPlatformDanger.src = "img/danger_platform.png";
+  window.imgDoorDanger = new Image();
+  imgDoorDanger.src = "img/danger_door.png";
 
   // Ловушки/финиш/земля/кнопки
   window.imgTrap = new Image();
@@ -42,6 +46,8 @@
   imgRock2.src = "img/rock2.png";
   window.imgGrass1 = new Image();
   imgGrass1.src = "img/grass1.png";
+  window.imgBush = new Image();
+  imgBush.src = "img/bush.png";
   window.imgMountain = new Image();
   imgMountain.src = "img/mountain.png";
   window.imgThree = new Image();

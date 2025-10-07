@@ -31,6 +31,7 @@
       else if (p.texture === "stone") textureImg = imgPlatformStone;
       else if (p.texture === "stone2") textureImg = imgPlatformStone2;
       else if (p.texture === "wood") textureImg = imgPlatformWood;
+      else if (p.texture === "danger_platform") textureImg = imgPlatformDanger;
       
       // Получаем размеры текстуры платформы
       const textureW = textureImg.width;
@@ -75,7 +76,7 @@
     if (lvl.doors) {
       lvl.doors.forEach(d=>{
         if (d.open) return; // открытая дверь невидима и проходима
-        const textureImg = d.texture === 'wood' ? imgPlatformWood : (d.texture === 'grass' ? imgPlatformGrass : imgPlatformStone2);
+        const textureImg = d.texture === 'wood' ? imgPlatformWood : (d.texture === 'grass' ? imgPlatformGrass : imgDoorDanger);
         const textureW = textureImg.width;
         const textureH = textureImg.height;
         for (let x = 0; x < d.w; x += textureW) {
