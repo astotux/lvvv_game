@@ -125,7 +125,7 @@ const levels = [
     ]
   },
   {
-    "width": 6000,
+    "width": 3100,
     "platforms": [
       {
         "x": 0,
@@ -374,34 +374,6 @@ const levels = [
       {
         "x": 270,
         "y": 320,
-        "w": 20,
-        "h": 20,
-        "collected": false
-      },
-      {
-        "x": 5150,
-        "y": 280,
-        "w": 20,
-        "h": 20,
-        "collected": false
-      },
-      {
-        "x": 5250,
-        "y": 280,
-        "w": 20,
-        "h": 20,
-        "collected": false
-      },
-      {
-        "x": 5350,
-        "y": 280,
-        "w": 20,
-        "h": 20,
-        "collected": false
-      },
-      {
-        "x": 5450,
-        "y": 280,
         "w": 20,
         "h": 20,
         "collected": false
