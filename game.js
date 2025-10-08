@@ -161,6 +161,8 @@ let levelStats = {
 
 let companionLockToCenter = false;
 
+let enemies = [];
+
 const modal = document.getElementById("modal");
 const modalTitle = document.getElementById("modalTitle");
 const modalText = document.getElementById("modalText");
@@ -232,6 +234,57 @@ document.getElementById("level").innerText = currentLevel+1;
 startLevelTimer();
 updateStatsDisplay();
 
+window.createEnemy = function(platformX, platformY, platformW) {
+  return {
+    x: platformX + 10,
+    y: platformY - 38,
+    w: 46,
+    h: 38,
+    dx: 1,
+    direction: 1,
+    platformX: platformX,
+    platformW: platformW,
+    frame: 0,
+    frameTick: 0,
+    state: "walk"
+  };
+}
+
+window.updateEnemies = function() {
+  enemies.forEach(enemy => {
+    enemy.x += enemy.dx * enemy.direction;
+    
+    if (enemy.x <= enemy.platformX) {
+      enemy.x = enemy.platformX;
+      enemy.direction = 1;
+    } else if (enemy.x + enemy.w >= enemy.platformX + enemy.platformW) {
+      enemy.x = enemy.platformX + enemy.platformW - enemy.w;
+      enemy.direction = -1;
+    }
+    
+
+    enemy.frameTick++;
+    if (enemy.frameTick > 3) {
+      enemy.frameTick = 0;
+      enemy.frame++;
+      if (enemy.frame > 10) enemy.frame = 0;
+    }
+    
+    if (player.x < enemy.x + enemy.w && player.x + player.w > enemy.x &&
+        player.y < enemy.y + enemy.h && player.y + player.h > enemy.y) {
+      gameOver = true;
+      showModal("Игра окончена.", "Ты столкнулась с врагом!", null, ()=>resetPlayer());
+    }
+    
+    if (activeCharacter === "companion" && 
+        companion.x < enemy.x + enemy.w && companion.x + companion.w > enemy.x &&
+        companion.y < enemy.y + enemy.h && companion.y + companion.h > enemy.y) {
+      gameOver = true;
+      showModal("Игра окончена.", "Арчик столкнулся с врагом!", null, ()=>resetPlayer());
+    }
+  });
+}
+
 function resetPlayer() {
   player.x=50; player.y=100; player.dy=0;
   player.idleTimer = 0;
@@ -242,7 +295,19 @@ function resetPlayer() {
   companion.idleTimer = 0;
   companion.targetX = 50; companion.targetY = 250;
 
+  enemies = [];
   let lvl = levels[currentLevel];
+  if (lvl.enemies) {
+    lvl.enemies.forEach(enemyData => {
+      const platform = lvl.platforms.find(p => 
+        p.x === enemyData.platformX && p.y === enemyData.platformY
+      );
+      if (platform) {
+        enemies.push(createEnemy(platform.x, platform.y, platform.w));
+      }
+    });
+  }
+
   if (lvl.coins) {
     lvl.coins.forEach(coin => {
       coin.collected = false;
@@ -275,6 +340,7 @@ function update() {
   if(gameOver) return;
   
   processSwitchesAndDynamics();
+  updateEnemies();
 
   if (activeCharacter === "player") {
     player.dx = 0;
@@ -746,6 +812,8 @@ function drawDecorations() {
         case "alert": img = imgAlert; break;
       }
       
+      if (!img) return;
+
       ctx.imageSmoothingEnabled = false;
       ctx.imageSmoothingQuality = 'high';
       
@@ -771,8 +839,11 @@ function drawDecorationsUndo() {
         case "bush": img = imgBush; break;
         case "mountain": img = imgMountain; break;
         case "three": img = imgThree; break;
+        case "alert": img = imgAlert; break;
       }
       
+      if (!img) return;
+
       ctx.imageSmoothingEnabled = false;
       ctx.imageSmoothingQuality = 'high';
       
@@ -801,6 +872,8 @@ function drawDecorationsUndoPlatform() {
         case "alert": img = imgAlert; break;
       }
       
+      if (!img) return;
+
       ctx.imageSmoothingEnabled = false;
       ctx.imageSmoothingQuality = 'high';
       
@@ -822,6 +895,37 @@ function drawCoins() {
       }
     });
   }
+}
+
+window.drawEnemies = function() {
+  enemies.forEach(enemy => {
+    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingQuality = 'high';
+    
+    const frameW = imgEnemy.width / 11;
+    const frameH = imgEnemy.height;
+    const frameX = enemy.frame * frameW;
+    
+    let drawX = enemy.x - cameraX;
+    let drawY = enemy.y;
+    
+    if (enemy.direction === -1) {
+      ctx.save();
+      ctx.scale(-1, 1);
+      ctx.drawImage(
+        imgEnemy,
+        frameX, 0, frameW, frameH,
+        -(drawX + enemy.w), drawY, enemy.w, enemy.h
+      );
+      ctx.restore();
+    } else {
+      ctx.drawImage(
+        imgEnemy,
+        frameX, 0, frameW, frameH,
+        drawX, drawY, enemy.w, enemy.h
+      );
+    }
+  });
 }
 
 function drawBackground() {
@@ -1073,7 +1177,7 @@ const bgImages = [bgLayer0, bgLayer1, bgLayer2, bgLayer3, bgLayer4, bgLayer5, bg
 const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2, imgMountain, imgThree, imgAlert, imgBush];
 const platformImages = [imgPlatformGrass, imgPlatformStone, imgPlatformWood, imgPlatformStone2, imgPlatformDanger, imgDoorDanger];
 const groundImages = [imgDirt];
-const allImages = [...bgImages, ...decorationImages, ...platformImages, ...groundImages, imgPlayerIdle, imgPlayerWalk, imgCompanionIdle, imgCompanionWalk, imgTrap, imgFinish, imgBackgroundAll];
+const allImages = [...bgImages, ...decorationImages, ...platformImages, ...groundImages, imgPlayerIdle, imgPlayerWalk, imgCompanionIdle, imgCompanionWalk, imgTrap, imgFinish, imgBackgroundAll, imgEnemy];
 allImages.forEach(img => {
   img.onload = () => {
     loaded++;
@@ -1084,6 +1188,18 @@ allImages.forEach(img => {
       if(cameraX < 0) cameraX = 0;
       if(cameraX > lvl.width - viewW) cameraX = lvl.width - viewW;
       cameraX = Math.round(cameraX);
+      
+      enemies = [];
+      if (lvl.enemies) {
+        lvl.enemies.forEach(enemyData => {
+          const platform = lvl.platforms.find(p => 
+            p.x === enemyData.platformX && p.y === enemyData.platformY
+          );
+          if (platform) {
+            enemies.push(createEnemy(platform.x, platform.y, platform.w));
+          }
+        });
+      }
       
       loop(0);
     }

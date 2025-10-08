@@ -68,6 +68,10 @@
   window.imgCoin = new Image();
   imgCoin.src = "img/mini_coin.png";
 
+  // Враг
+  window.imgEnemy = new Image();
+  imgEnemy.src = "img/enemy.png";
+
   // Общий фон
   window.imgBackgroundAll = new Image();
   imgBackgroundAll.src = "img/background_all.png";

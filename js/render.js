@@ -97,6 +97,7 @@
     drawPlayer();
     
     drawCompanion();
+    drawEnemies();
     drawDecorations();
 
     const scale = Math.min(screenW / LOGIC_WIDTH, screenH / LOGIC_HEIGHT);
