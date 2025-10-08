@@ -741,7 +741,7 @@ function update() {
   }
   
   function updatePlayer() {
-    player.dy += 0.1;
+    player.dy += C.PLAYER.GRAVITY;
     player.y += player.dy;
     player.onGround = false;
     
@@ -757,6 +757,11 @@ function update() {
         }
       }
     });
+    
+    if (player.y > viewH + C.FALL_OFF.Y_MARGIN || player.x < -C.FALL_OFF.X_MARGIN || player.x > lvl.width + C.FALL_OFF.X_MARGIN) {
+      gameOver = true;
+      showModal("Игра окончена.","Ты упала в пропасть!", null, ()=>resetPlayer());
+    }
     
     player.state = "idle";
     player.idleTimer++;
