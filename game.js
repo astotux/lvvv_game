@@ -1,9 +1,9 @@
 const canvas = document.getElementById("game");
 const screenCtx = canvas.getContext("2d");
-let viewW = C.LOGIC_WIDTH; // логическая ширина
-let viewH = C.LOGIC_HEIGHT; // логическая высота
-let screenW = window.innerWidth;  // физическая ширина экрана (CSS px)
-let screenH = window.innerHeight; // физическая высота экрана (CSS px)
+let viewW = C.LOGIC_WIDTH;
+let viewH = C.LOGIC_HEIGHT;
+let screenW = window.innerWidth;
+let screenH = window.innerHeight;
 
 const LOGIC_WIDTH = C.LOGIC_WIDTH;
 const LOGIC_HEIGHT = C.LOGIC_HEIGHT;
@@ -12,7 +12,6 @@ offscreen.width = LOGIC_WIDTH;
 offscreen.height = LOGIC_HEIGHT;
 const ctx = offscreen.getContext("2d");
 
-// Настройки качества рендеринга
 ctx.imageSmoothingEnabled = false;
 ctx.imageSmoothingQuality = C.IMAGE_SMOOTHING_QUALITY;
 
@@ -25,7 +24,6 @@ function resizeCanvas() {
   canvas.style.width = screenW + "px";
   canvas.style.height = screenH + "px";
 
-  // Настройки качества рендеринга
   screenCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   screenCtx.imageSmoothingEnabled = false;
   screenCtx.imageSmoothingQuality = 'high';
@@ -33,13 +31,11 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
-// Добавляем переменные для фиксированного временного шага
 let lastTime = 0;
 let accumulator = 0;
-const fixedTimeStep = C.FIXED_TIMESTEP_MS; // 60 FPS = ~16.67ms
+const fixedTimeStep = C.FIXED_TIMESTEP_MS;
 
 let currentLevel = 0;
-// Хранилище прогресса уровней в localStorage
 const STORAGE_KEY_LEVEL = 'love_game_unlocked_level';
 const STORAGE_KEY_STATS = 'love_game_level_stats';
 
@@ -54,13 +50,11 @@ function loadLevelProgress(){
 
 function saveLevelProgress(nextLevelIndex){
   try {
-    // Сохраняем следующий доступный уровень (или последний, если прошли всё)
     const toStore = Math.min(Math.max(0, nextLevelIndex), levels.length - 1);
     localStorage.setItem(STORAGE_KEY_LEVEL, String(toStore));
   } catch (e) {}
 }
 
-// Функции для работы со статистикой уровней
 function loadLevelStats() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY_STATS);
@@ -84,7 +78,6 @@ function getLevelStats(levelIndex) {
   return allStats[levelIndex] || { bestTime: null, bestCoins: 0 };
 }
 
-// Функции для работы с таймером
 function startLevelTimer() {
   levelStartTime = performance.now();
   levelTimerActive = true;
@@ -118,33 +111,33 @@ function formatTime(milliseconds) {
 let player = {
     x: 50, y: 100, w: C.PLAYER.W, h: C.PLAYER.H,
     dx: 0, dy: 0, onGround: false,
-    frame: 0,         // текущий кадр анимации
-    frameTick: 0,     // счётчик кадров для скорости анимации
-    state: "idle",    // idle | walk-left | walk-right
-    idleTimer: 0,     // таймер для анимации стояния
+    frame: 0,
+    frameTick: 0,
+    state: "idle",
+    idleTimer: 0,     
     prevState: "idle",
   };
 
-// Компаньон, следующий за игроком
+
 let companion = {
     x: 50, y: 100, w: C.COMPANION.W, h: C.COMPANION.H,
     dx: 0, dy: 0, onGround: false,
-    frame: 0,         // текущий кадр анимации
-    frameTick: 0,     // счётчик кадров для скорости анимации
-    state: "idle",    // idle | walk-left | walk-right
-    idleTimer: 0,     // таймер для анимации стояния
-    targetX: 50,      // целевая позиция X
-    targetY: 300,     // целевая позиция Y
-    followDelay: C.COMPANION.FOLLOW_DELAY, // задержка следования (0.15 = быстрее, 0.1 = медленнее)
+    frame: 0,       
+    frameTick: 0,    
+    state: "idle",    
+    idleTimer: 0,   
+    targetX: 50,     
+    targetY: 300,  
+    followDelay: C.COMPANION.FOLLOW_DELAY,
     prevState: "idle",
   };
   
 let keys = {left:false,right:false};
 let cameraX = 0;
 let gameOver = false;
-let activeCharacter = "player"; // начальное управление игроком
+let activeCharacter = "player";
 
-// Экспорт общих сущностей для использования в js/input.js
+
 window.player = player;
 window.companion = companion;
 window.keys = keys;
@@ -154,13 +147,11 @@ Object.defineProperty(window, 'gameOver', { get(){ return gameOver; }, set(v){ g
 Object.defineProperty(window, 'activeCharacter', { get(){ return activeCharacter; }, set(v){ activeCharacter = v; } });
 Object.defineProperty(window, 'companionLockToCenter', { get(){ return companionLockToCenter; }, set(v){ companionLockToCenter = v; } });
 
-let totalCoins = 0; // общее количество собранных монеток
-let coinAnimation = 0; // анимация монеток
+let totalCoins = 0;
 
-// Система таймера и статистики
-let levelStartTime = 0; // время начала уровня
-let levelElapsedTime = 0; // прошедшее время уровня
-let levelTimerActive = false; // активен ли таймер
+let levelStartTime = 0;
+let levelElapsedTime = 0;
+let levelTimerActive = false;
 let levelStats = {
   time: 0,
   coins: 0,
@@ -168,10 +159,8 @@ let levelStats = {
   bestCoins: 0
 };
 
-// Флаг фиксации компаньона к центру игрока во время совместного прыжка
 let companionLockToCenter = false;
 
-// модальное окно
 const modal = document.getElementById("modal");
 const modalTitle = document.getElementById("modalTitle");
 const modalText = document.getElementById("modalText");
@@ -190,7 +179,6 @@ function showModal(title, text, nextCallback = null, restartCallback = null) {
   
   if (nextCallback) {
     modalNextBtn.style.display = "inline-block";
-    // Ссылка на страницу диалога
     modalNextBtn.setAttribute('href', 'dialog.html');
   } else {
     modalNextBtn.style.display = "none";
@@ -203,13 +191,11 @@ function showModal(title, text, nextCallback = null, restartCallback = null) {
     modalRestartBtn.style.display = "none";
   }
   
-  // Кнопка OK показывается только если нет других кнопок
   if (!nextCallback && !restartCallback) {
     modalBtn.style.display = "inline-block";
   } else {
     modalBtn.style.display = "none";
   }
-  // После показа модалки пересчитываем размеры краёв таблички, если контейнер есть
   if (typeof window.updateCounterEdges === 'function') {
     setTimeout(()=>window.updateCounterEdges(), 0);
   }
@@ -224,40 +210,34 @@ modalRestartBtn.onclick = ()=>{
   modalRestartCallback();
 };
 
-// управление вынесено в js/input.js
 loadLevelProgress();
-// Если с диалоговой страницы пришёл запрос перейти на следующий уровень
 try {
   const goNext = localStorage.getItem('love_game_go_next');
   if (goNext === '1') {
     localStorage.removeItem('love_game_go_next');
     const nextLevel = Math.min(currentLevel + 1, levels.length - 1);
     currentLevel = nextLevel;
-    // Синхронизируем прогресс
     saveLevelProgress(nextLevel);
   } else {
     
   }
 } catch (e) {}
 
-// Загружаем статистику для текущего уровня
 const stats = getLevelStats(currentLevel);
 levelStats.bestTime = stats.bestTime;
 levelStats.bestCoins = stats.bestCoins;
 
 document.getElementById("level").innerText = currentLevel+1;
 
-// Запускаем таймер при инициализации игры
 startLevelTimer();
 updateStatsDisplay();
 
 function resetPlayer() {
   player.x=50; player.y=100; player.dy=0;
-  player.idleTimer = 0; // сбрасываем таймер
+  player.idleTimer = 0;
   gameOver=false;
   totalCoins = 0;
   
-  // Сбрасываем компаньона
   companion.x = 50; companion.y = 100; companion.dy = 0;
   companion.idleTimer = 0;
   companion.targetX = 50; companion.targetY = 250;
@@ -269,12 +249,10 @@ function resetPlayer() {
     });
   }
 
-  // Загружаем статистику уровня
   const stats = getLevelStats(currentLevel);
   levelStats.bestTime = stats.bestTime;
   levelStats.bestCoins = stats.bestCoins;
 
-  // Останавливаем текущий таймер и запускаем новый
   if (levelTimerActive) {
     stopLevelTimer();
   }
@@ -290,23 +268,19 @@ function updateCoins () {
 }
 
 function updateStatsDisplay() {
-  // Обновляем отображение монет
   document.getElementById('totalCoins').innerText = `${totalCoins} | ${levels[currentLevel].coins.length}`;
 }
 
 function update() {
   if(gameOver) return;
   
-  // обработка кнопок/динамических платформ до расчета физики
   processSwitchesAndDynamics();
 
-  // Управление в зависимости от активного персонажа
   if (activeCharacter === "player") {
-    // Управляем игроком
     player.dx = 0;
-    if (keys.left) player.dx = -C.PLAYER.SPEED; // фиксированная скорость
+    if (keys.left) player.dx = -C.PLAYER.SPEED;
     if (keys.right) player.dx = C.PLAYER.SPEED;
-    player.dy += C.PLAYER.GRAVITY; // фиксированная гравитация
+    player.dy += C.PLAYER.GRAVITY;
 
     player.x += player.dx;
     player.y += player.dy;
@@ -315,7 +289,6 @@ function update() {
     let lvl = levels[currentLevel];
     const ground = getGroundArray(lvl);
 
-    // приземление на платформы/стены/закрытые двери (вертикальная коллизия)
     ground.forEach(p=>{
       if(player.x < p.x+p.w && player.x+player.w > p.x &&
          player.y < p.y+p.h && player.y+player.h > p.y){
@@ -326,21 +299,17 @@ function update() {
            }
       }
     });
-    // стены и закрытые двери (горизонтальная блокировка)
     const obstacles = getObstaclesArray(lvl);
     obstacles.forEach(o=>{
       if(player.x < o.x+o.w && player.x+player.w > o.x &&
          player.y < o.y+o.h && player.y+player.h > o.y){
-           // если персонаж строго над верхней кромкой стены — не толкать по X
            if (player.y + player.h <= o.y + 1) return;
-           // если персонаж строго ниже низа — тоже не толкать
            if (player.y >= o.y + o.h - 1) return;
            if (player.dx > 0) player.x = o.x - player.w;
            else if (player.dx < 0) player.x = o.x + o.w;
       }
     });
 
-    // ловушки для игрока
     lvl.traps.forEach(t=>{
       if(player.x < t.x+t.w && player.x+player.w > t.x &&
          player.y < t.y+t.h && player.y+player.h > t.y){
@@ -349,22 +318,17 @@ function update() {
       }
     });
 
-    // финиш для игрока
     let f = lvl.finish;
     if(player.x < f.x+f.w && player.x+player.w > f.x &&
        player.y < f.y+f.h && player.y+player.h > f.y){
-         // Устанавливаем gameOver чтобы остановить обновления
          gameOver = true;
          
-         // Останавливаем таймер и сохраняем результаты
          const finishTime = stopLevelTimer();
          const currentStats = getLevelStats(currentLevel);
          
-         // Проверяем, является ли это лучшим результатом
          let isNewBestTime = !currentStats.bestTime || finishTime < currentStats.bestTime;
          let isNewBestCoins = totalCoins > currentStats.bestCoins;
          
-         // Сохраняем новые лучшие результаты
          if (isNewBestTime || isNewBestCoins) {
            const newStats = {
              bestTime: isNewBestTime ? finishTime : currentStats.bestTime,
@@ -373,10 +337,8 @@ function update() {
            saveLevelStats(currentLevel, newStats);
          }
          
-         // Сохраняем пройденный уровень для страницы диалога
          try { localStorage.setItem('love_game_dialog_level', String(currentLevel)); } catch (e) {}
          
-         // Формируем текст с результатами
          let resultText = `${lvl.gift.desc}\n\n`;
          resultText += `Время прохождения: ${formatTime(finishTime)}\n`;
          resultText += `Собрано морошки: ${totalCoins}/${lvl.coins.length}\n\n`;
@@ -389,15 +351,12 @@ function update() {
            resultText += `Лучшее время: ${formatTime(currentStats.bestTime)}\n`;
          }
          
-         showModal(lvl.gift.title, resultText, ()=>{
-           // Кнопка "Далее" - пустая ссылка без логики
-         }, ()=>{
-           // Кнопка "Начать заново" - перезапускаем текущий уровень
-           resetPlayer();
-         });
+        showModal(lvl.gift.title, resultText, ()=>{
+        }, ()=>{
+          resetPlayer();
+        });
     }
 
-    // Проверка сбора монеток игроком
     if (lvl.coins) {
       lvl.coins.forEach(coin => {
         if (!coin.collected && 
@@ -405,71 +364,60 @@ function update() {
             player.y < coin.y + coin.h && player.y + player.h > coin.y) {
           coin.collected = true;
           updateCoins()
-          // Анимация сбора монетки
-          coinAnimation = 30; // 30 кадров анимации
         }
       });
     }
 
-    // обновляем состояние анимации игрока
     if (player.dx > 0) {
         player.state = "walk-right";
-        player.idleTimer = 0; // сбрасываем таймер при движении
+        player.idleTimer = 0;
     } else if (player.dx < 0) {
         player.state = "walk-left";
-        player.idleTimer = 0; // сбрасываем таймер при движении
+        player.idleTimer = 0;
     } else {
         player.state = "idle";
-        player.idleTimer++; // увеличиваем таймер стояния
+        player.idleTimer++;
     }
 
-    // Сброс кадра/тика только при смене состояния
     if (player.state !== player.prevState) {
         player.frameTick = 0;
         player.frame = 0;
         player.prevState = player.state;
     }
     
-    // обновляем кадры игрока
-    player.frameTick += 1 // используем простой счетчик кадров
+    player.frameTick += 1
     if (player.state === "idle") {
-        // Анимация стояния медленнее (12 кадров = 5 FPS)
         if (player.frameTick > C.PLAYER.IDLE_FRAME_TICK) {
             player.frameTick = 0;
-            // Анимация стояния только после 10 секунд (600 кадров при 60 FPS)
             if (player.idleTimer > C.PLAYER.IDLE_ANIM_DELAY_FRAMES) {
                 player.frame++;
-                if (player.frame > C.PLAYER.IDLE_FRAMES - 1) player.frame = 0; // idle 16 кадров
+                if (player.frame > C.PLAYER.IDLE_FRAMES - 1) player.frame = 0;
             } else {
-                player.frame = 0; // всегда первый кадр до 10 секунд
+                player.frame = 0;
             }
         }
     } else {
-        // Анимация ходьбы быстрее (3 кадра = 20 FPS)
         if (player.frameTick > C.PLAYER.WALK_FRAME_TICK) {
             player.frameTick = 0;
             player.frame++;
-            if (player.frame > C.PLAYER.WALK_FRAMES - 1) player.frame = 0; // walk 10 кадров
+            if (player.frame > C.PLAYER.WALK_FRAMES - 1) player.frame = 0;
         }
     }
 
-    // камера следует за игроком (логические размеры окна)
     cameraX = player.x - viewW/2;
     if(cameraX < 0) cameraX = 0;
     if(cameraX > lvl.width - viewW) cameraX = lvl.width - viewW;
     cameraX = Math.round(cameraX);
 
-    // 🔹 Проверка: игрок выпал за пределы экрана (логическая высота)
     if (player.y > viewH + C.FALL_OFF.Y_MARGIN || player.x < -C.FALL_OFF.X_MARGIN || player.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
       showModal("Игра окончена.","Ты упала в пропасть!", null, ()=>resetPlayer());
     }
   } else {
-    // Управляем компаньоном
     companion.dx = 0;
-    if (keys.left) companion.dx = -C.COMPANION.SPEED; // фиксированная скорость
+    if (keys.left) companion.dx = -C.COMPANION.SPEED;
     if (keys.right) companion.dx = C.COMPANION.SPEED;
-    companion.dy += C.COMPANION.GRAVITY; // фиксированная гравитация
+    companion.dy += C.COMPANION.GRAVITY;
 
     companion.x += companion.dx;
     companion.y += companion.dy;
@@ -478,7 +426,6 @@ function update() {
     let lvl = levels[currentLevel];
     const groundC = getGroundArray(lvl);
 
-    // приземление на платформы/стены/закрытые двери (вертикальная коллизия)
     groundC.forEach(p=>{
       if(companion.x < p.x+p.w && companion.x+companion.w > p.x &&
          companion.y < p.y+p.h && companion.y+companion.h > p.y){
@@ -489,7 +436,6 @@ function update() {
            }
       }
     });
-    // стены и закрытые двери (горизонтальная блокировка)
     const obstacles2 = getObstaclesArray(lvl);
     obstacles2.forEach(o=>{
       if(companion.x < o.x+o.w && companion.x+companion.w > o.x &&
@@ -501,7 +447,6 @@ function update() {
       }
     });
 
-    // ловушки для компаньона
     lvl.traps.forEach(t=>{
       if(companion.x < t.x+t.w && companion.x+companion.w > t.x &&
          companion.y < t.y+t.h && companion.y+companion.h > t.y){
@@ -510,22 +455,17 @@ function update() {
       }
     });
 
-    // финиш для компаньона
     let f = lvl.finish;
     if(companion.x < f.x+f.w && companion.x+companion.w > f.x &&
        companion.y < f.y+f.h && companion.y+companion.h > f.y){
-         // Устанавливаем gameOver чтобы остановить обновления
          gameOver = true;
          
-         // Останавливаем таймер и сохраняем результаты
          const finishTime = stopLevelTimer();
          const currentStats = getLevelStats(currentLevel);
          
-         // Проверяем, является ли это лучшим результатом
          let isNewBestTime = !currentStats.bestTime || finishTime < currentStats.bestTime;
          let isNewBestCoins = totalCoins > currentStats.bestCoins;
          
-         // Сохраняем новые лучшие результаты
          if (isNewBestTime || isNewBestCoins) {
            const newStats = {
              bestTime: isNewBestTime ? finishTime : currentStats.bestTime,
@@ -534,10 +474,8 @@ function update() {
            saveLevelStats(currentLevel, newStats);
          }
          
-         // Сохраняем пройденный уровень для страницы диалога
          try { localStorage.setItem('love_game_dialog_level', String(currentLevel)); } catch (e) {}
          
-         // Формируем текст с результатами
          let resultText = `${lvl.gift.desc}\n\n`;
          resultText += `Время прохождения: ${formatTime(finishTime)}\n`;
          resultText += `Собрано морошки: ${totalCoins}/${lvl.coins.length}\n\n`;
@@ -554,10 +492,8 @@ function update() {
          }
          
          showModal(lvl.gift.title, resultText, ()=>{
-           // Кнопка "Далее" - пустая ссылка без логики
          }, ()=>{
-           // Кнопка "Начать заново" - перезапускаем текущий уровень
-           resetPlayer();
+          resetPlayer();
          });
     }
 
@@ -569,13 +505,10 @@ function update() {
             companion.y < coin.y + coin.h && companion.y + companion.h > coin.y) {
           coin.collected = true;
           updateCoins()
-          // Анимация сбора монетки
-          coinAnimation = 30; // 30 кадров анимации
         }
       });
     }
 
-    // обновляем состояние анимации компаньона
     if (companion.dx > 0) {
         companion.state = "walk-right";
         companion.idleTimer = 0;
@@ -587,16 +520,14 @@ function update() {
         companion.idleTimer++;
     }
 
-    // Сброс кадра/тика только при смене состояния
     if (companion.state !== companion.prevState) {
         companion.frameTick = 0;
         companion.frame = 0;
         companion.prevState = companion.state;
     }
     
-    companion.frameTick++; // используем простой счетчик кадров
+    companion.frameTick++;
     if (companion.state === "idle") {
-        // Анимация стояния медленнее (6 кадров = 10 FPS)
         if (companion.frameTick > 6) {
             companion.frameTick = 0;
             if (companion.idleTimer > 600) {
@@ -607,7 +538,6 @@ function update() {
             }
         }
     } else {
-        // Анимация ходьбы быстрее (2 кадра = 30 FPS)
         if (companion.frameTick > 2) {
             companion.frameTick = 0;
             companion.frame++;
@@ -615,20 +545,17 @@ function update() {
         }
     }
 
-    // камера следует за компаньоном (логические размеры окна)
     cameraX = companion.x - viewW/2;
     if(cameraX < 0) cameraX = 0;
     if(cameraX > lvl.width - viewW) cameraX = lvl.width - viewW;
     cameraX = Math.round(cameraX);
 
-    // 🔹 Проверка: компаньон выпал за пределы экрана (логическая высота)
     if (companion.y > viewH + C.FALL_OFF.Y_MARGIN || companion.x < -C.FALL_OFF.X_MARGIN || companion.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
       showModal("Игра окончена.","Арчик упал в пропасть!", null, ()=>resetPlayer());
     }
   }
   
-  // 🔹 Обновление неактивного персонажа
   if (activeCharacter === "player") {
     updateCompanion();
   } else {
@@ -636,51 +563,39 @@ function update() {
   }
 }
   
-  // 🔹 Функция обновления компаньона
   function updateCompanion() {
-    // Если следование отключено — фиксируем цели на текущих позициях и не притягиваемся
     if (!followEnabled) {
       companion.targetX = companion.x;
       companion.targetY = companion.y;
       companionLockToCenter = false;
     }
-    // Проверяем расстояние от игрока до компаньона
     let distanceToPlayer = Math.abs(companion.x - player.x);
-    let maxDistance = C.COMPANION.MAX_HORIZONTAL_DISTANCE; // максимальное расстояние
+    let maxDistance = C.COMPANION.MAX_HORIZONTAL_DISTANCE;
     if (followEnabled) companion.targetY = player.y;
     
-    // Если компаньон слишком далеко от игрока, определяем направление движения
     if (followEnabled && distanceToPlayer > maxDistance) {
       if (companion.x < player.x) {
-        // Компаньон слева от игрока - идем вправо
         companion.targetX = player.x - maxDistance;
       } else {
-        // Компаньон справа от игрока - идем влево
         companion.targetX = player.x + maxDistance;
       }
     } else {
-      // Компаньон в пределах радиуса - оставляем его на месте
       companion.targetX = companion.x;
     }
     
-    // Плавно двигаем компаньона к цели по X
     if (followEnabled) companion.x += (companion.targetX - companion.x) * companion.followDelay;
     
-    // Плавно двигаем компаньона к цели по Y 
     if (followEnabled) companion.y += (companion.targetY - companion.y) * companion.followDelay;
     
-    // Гравитация для компаньона (уменьшили для более плавного движения)
-    companion.dy += C.COMPANION.GRAVITY; // фиксированная гравитация без deltaTime
+    companion.dy += C.COMPANION.GRAVITY;
     companion.y += companion.dy;
     companion.onGround = false;
     
-    // Коллизия с поверхностями (платформы/стены/закрытые двери) для компаньона
     let lvl = levels[currentLevel];
     const groundF = getGroundArray(lvl);
     groundF.forEach(p => {
       if (companion.x < p.x + p.w && companion.x + companion.w > p.x &&
           companion.y < p.y + p.h && companion.y + companion.h > p.y) {
-        // Проверяем, что компаньон падает вниз и находится выше поверхности
         if (companion.dy > 0 && companion.y + companion.h - companion.dy <= p.y) {
           companion.y = p.y - companion.h;
           companion.dy = 0;
@@ -689,32 +604,27 @@ function update() {
       }
     });
 
-    // Мягкое притяжение к центру игрока в воздухе, чтобы приземлиться в одной точке
     if (activeCharacter === "player" && followEnabled) {
       const centerX = player.x + (player.w - companion.w) / 2;
       if (companionLockToCenter) {
-        const followStrength = C.COMPANION.FOLLOW_STRENGTH_AIR; // плавность притяжения по X
+        const followStrength = C.COMPANION.FOLLOW_STRENGTH_AIR;
         companion.x += (centerX - companion.x) * followStrength;
       }
-      // Защита от падения: если компаньон сильно ниже игрока, ускоряем подтяжку по Y
       const maxVerticalLag = C.COMPANION.MAX_VERTICAL_LAG;
       if (companion.y - player.y > maxVerticalLag) {
         companion.y = player.y - 2;
         companion.dy = 0;
       }
-      // Снятие фиксации: когда оба на земле, выравниваем по центру один раз
       if (player.onGround && companion.onGround && companionLockToCenter) {
         companionLockToCenter = false;
         companion.state = "idle";
       }
     }
     
-    // Определяем состояние анимации компаньона
     let currentDistance = Math.abs(companion.x - player.x);
-    let isMoving = Math.abs(companion.x - companion.targetX) > C.COMPANION.MOTION_THRESHOLD; // уменьшили порог для более чувствительной анимации
+    let isMoving = Math.abs(companion.x - companion.targetX) > C.COMPANION.MOTION_THRESHOLD;
 
     if (companionLockToCenter && activeCharacter === "player") {
-      // Во время воздушного притяжения поворачиваемся к центру игрока
       const centerX = player.x + (player.w - companion.w) / 2;
       const dxToCenter = centerX - companion.x;
       if (Math.abs(dxToCenter) > C.COMPANION.CENTER_TOLERANCE) {
@@ -726,7 +636,6 @@ function update() {
       }
     } else {
       if (isMoving && currentDistance > 15) {
-        // Компаньон движется к игроку
         if (companion.x < companion.targetX) {
           companion.state = "walk-right";
         } else {
@@ -734,26 +643,21 @@ function update() {
         }
         companion.idleTimer = 0;
       } else {
-        // Компаньон стоит на месте
         companion.state = "idle";
         companion.idleTimer++;
       }
     }
 
-    // Сброс кадра/тика только при смене состояния
     if (companion.state !== companion.prevState) {
         companion.frameTick = 0;
         companion.frame = 0;
         companion.prevState = companion.state;
     }
     
-    // Обновляем анимацию компаньона
-    companion.frameTick++; // используем простой счетчик кадров
+    companion.frameTick++;
     if (companion.state === "idle") {
-        // Анимация стояния медленнее (6 кадров = 10 FPS)
         if (companion.frameTick > C.COMPANION.IDLE_FRAME_TICK) {
             companion.frameTick = 0;
-            // Анимация стояния только после 10 секунд
             if (companion.idleTimer > C.COMPANION.IDLE_ANIM_DELAY_FRAMES) {
                 companion.frame++;
                 if (companion.frame > C.COMPANION.IDLE_FRAMES - 1) companion.frame = 0;
@@ -762,7 +666,6 @@ function update() {
             }
         }
     } else {
-        // Анимация ходьбы быстрее (2 кадра = 30 FPS)
         if (companion.frameTick > C.COMPANION.WALK_FRAME_TICK) {
             companion.frameTick = 0;
             companion.frame++;
@@ -771,20 +674,16 @@ function update() {
     }
   }
   
-  // 🔹 Функция обновления игрока (когда он неактивен)
   function updatePlayer() {
-    // Игрок остается на месте, но применяется гравитация
-    player.dy += 0.1; // фиксированная гравитация без deltaTime
+    player.dy += 0.1;
     player.y += player.dy;
     player.onGround = false;
     
-    // Коллизия с платформами для игрока
     let lvl = levels[currentLevel];
     const platforms = getPlatformsArray(lvl);
     platforms.forEach(p => {
       if (player.x < p.x + p.w && player.x + player.w > p.x &&
           player.y < p.y + p.h && player.y + player.h > p.y) {
-        // Проверяем, что игрок падает вниз и находится выше платформы
         if (player.dy > 0 && player.y + player.h - player.dy <= p.y) {
           player.y = p.y - player.h;
           player.dy = 0;
@@ -793,11 +692,9 @@ function update() {
       }
     });
     
-    // Анимация стояния для неактивного игрока
     player.state = "idle";
     player.idleTimer++;
     
-    // Обновляем анимацию игрока
     player.frameTick++;
     if (player.state === "idle") {
         if (player.frameTick > 15) {
@@ -819,20 +716,17 @@ function update() {
 
   }
   
-  // ассеты вынесены в js/assets.js
-
 function getGroundY() {
   let lvl = levels[currentLevel];
   let maxY = 0;
   const plats = getPlatformsArray(lvl);
   plats.forEach(p => {
-    if (p.y > maxY) maxY = p.y; // ищем самую нижнюю платформу
+    if (p.y > maxY) maxY = p.y;
   });
-  return maxY; // +50 чтобы фон немного «заходил» вниз
+  return maxY;
 }
 
 
-// функция отрисовки декораций
 function drawDecorations() {
   let lvl = levels[currentLevel];
   
@@ -840,16 +734,9 @@ function drawDecorations() {
     lvl.decorations.forEach(dec => {
       let img;
       
-      // Выбираем изображение в зависимости от типа декорации
       switch(dec.image) {
         case "flower1": img = imgFlower1; break;
         case "flower2": img = imgFlower2; break;
-        // case "flower3": img = imgFlower3; break;
-        // case "flower4": img = imgFlower4; break;
-        // case "bush1": img = imgBush1; break;
-        // case "bush2": img = imgBush2; break;
-        // case "bush3": img = imgBush3; break;
-        // case "bush4": img = imgBush4; break;
         case "rock1": img = imgRock1; break;
         case "rock2": img = imgRock2; break;
         case "grass1": img = imgGrass1; break;
@@ -857,14 +744,11 @@ function drawDecorations() {
         case "mountain": img = imgMountain; break;
         case "three": img = imgThree; break;
         case "alert": img = imgAlert; break;
-        // default: img = imgFlower1; // изображение по умолчанию
       }
       
-      // Отключаем сглаживание для пиксельной графики
       ctx.imageSmoothingEnabled = false;
       ctx.imageSmoothingQuality = 'high';
       
-      // Рисуем декорацию с учетом камеры
       ctx.drawImage(img, dec.x - cameraX, dec.y, dec.w, dec.h);
     });
   }
@@ -877,16 +761,9 @@ function drawDecorationsUndo() {
     lvl.decorationsUndo.forEach(dec => {
       let img;
       
-      // Выбираем изображение в зависимости от типа декорации
       switch(dec.image) {
         case "flower1": img = imgFlower1; break;
         case "flower2": img = imgFlower2; break;
-        // case "flower3": img = imgFlower3; break;
-        // case "flower4": img = imgFlower4; break;
-        // case "bush1": img = imgBush1; break;
-        // case "bush2": img = imgBush2; break;
-        // case "bush3": img = imgBush3; break;
-        // case "bush4": img = imgBush4; break;
         case "rock1": img = imgRock1; break;
         case "rock2": img = imgRock2; break;
 
@@ -894,14 +771,11 @@ function drawDecorationsUndo() {
         case "bush": img = imgBush; break;
         case "mountain": img = imgMountain; break;
         case "three": img = imgThree; break;
-        // default: img = imgFlower1; // изображение по умолчанию
       }
       
-      // Отключаем сглаживание для пиксельной графики
       ctx.imageSmoothingEnabled = false;
       ctx.imageSmoothingQuality = 'high';
       
-      // Рисуем декорацию с учетом камеры
       ctx.drawImage(img, dec.x - cameraX, dec.y, dec.w, dec.h);
     });
   }
@@ -914,16 +788,9 @@ function drawDecorationsUndoPlatform() {
     lvl.decorationsUndoPlatform.forEach(dec => {
       let img;
       
-      // Выбираем изображение в зависимости от типа декорации
       switch(dec.image) {
         case "flower1": img = imgFlower1; break;
         case "flower2": img = imgFlower2; break;
-        // case "flower3": img = imgFlower3; break;
-        // case "flower4": img = imgFlower4; break;
-        // case "bush1": img = imgBush1; break;
-        // case "bush2": img = imgBush2; break;
-        // case "bush3": img = imgBush3; break;
-        // case "bush4": img = imgBush4; break;
         case "rock1": img = imgRock1; break;
         case "rock2": img = imgRock2; break;
 
@@ -932,20 +799,16 @@ function drawDecorationsUndoPlatform() {
         case "mountain": img = imgMountain; break;
         case "three": img = imgThree; break;
         case "alert": img = imgAlert; break;
-        // default: img = imgFlower1; // изображение по умолчанию
       }
       
-      // Отключаем сглаживание для пиксельной графики
       ctx.imageSmoothingEnabled = false;
       ctx.imageSmoothingQuality = 'high';
       
-      // Рисуем декорацию с учетом камеры
       ctx.drawImage(img, dec.x - cameraX, dec.y, dec.w, dec.h);
     });
   }
 }
 
-// Функция отрисовки монеток
 function drawCoins() {
   let lvl = levels[currentLevel];
   if (lvl.coins) {
@@ -961,21 +824,18 @@ function drawCoins() {
   }
 }
 
-// функция отрисовки фона с параллаксом
 function drawBackground() {
-  const w = viewW; // логическая ширина экрана
-  const groundY = getGroundY()+10; // низ фона совмещаем с нижней платформой
+  const w = viewW;
+  const groundY = getGroundY()+10;
   const baseW = C.BACKGROUND.BASE_W;
   const baseH = C.BACKGROUND.BASE_H;
-  const targetH = Math.max(groundY, 1); // растягиваем до верха экрана (y=0)
+  const targetH = Math.max(groundY, 1);
   const scale = targetH / baseH;
   const tileW = Math.max(1, Math.round(baseW * scale));
 
-  // Отключаем сглаживание для пиксельной графики
   ctx.imageSmoothingEnabled = false;
   ctx.imageSmoothingQuality = 'high';
 
-  // 🔹 Дальний слой
   let x0 = -(cameraX * C.PARALLAX[0]) % tileW;
   for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
     ctx.drawImage(bgLayer0, x0 + i * tileW, 0, tileW, targetH);
@@ -986,13 +846,11 @@ function drawBackground() {
     ctx.drawImage(bgLayer1, x1 + i * tileW, 0, tileW, targetH);
   }
 
-  // 🔹 Средний слой
   let x2 = -(cameraX * C.PARALLAX[2]) % tileW;
   for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
     ctx.drawImage(bgLayer2, x2 + i * tileW, 0, tileW, targetH);
   }
 
-  // 🔹 Ближний слой
   let x3 = -(cameraX * C.PARALLAX[3]) % tileW;
   for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
     ctx.drawImage(bgLayer3, x3 + i * tileW, 0, tileW, targetH);
@@ -1013,28 +871,22 @@ function drawBackground() {
     ctx.drawImage(bgLayer6, x6 + i * tileW, 0, tileW, targetH);
   }
 
-  // 🔹 Заполнение ниже нижней платформы: 5 рядов тайлами dirt (без растяжения) с рандомным поворотом 0/90/180/270
   const dirtW = imgDirt.width;
   const dirtH = imgDirt.height;
   if (dirtW && dirtH) {
-    // начальная X с учётом камеры кратно ширине тайла, чтобы не дёргалось при скролле
     let startX = Math.floor(cameraX / dirtW) * dirtW - cameraX;
     for (let x = startX; x < w; x += dirtW) {
-      // мировой индекс тайла по X для стабильного рандома
       const worldX = x + cameraX;
       const tileXIndex = Math.floor(worldX / dirtW);
       for (let r = 0; r < C.DIRT.ROWS; r++) {
         let y = groundY + r * dirtH;
-        // стабильный псевдослучайный выбор угла на основе индексов (tileXIndex, r)
         let seed = (tileXIndex * 73856093) ^ (r * 19349663);
-        // приводим к 0..3
         let idx = (seed >>> 0) & 3;
         let angle = 0;
-        if (idx === 1) angle = Math.PI / 2;       // 90
-        else if (idx === 2) angle = Math.PI;      // 180
-        else if (idx === 3) angle = 3 * Math.PI / 2; // 270
+        if (idx === 1) angle = Math.PI / 2;
+        else if (idx === 2) angle = Math.PI;
+        else if (idx === 3) angle = 3 * Math.PI / 2;
 
-        // рисуем с поворотом вокруг центра тайла
         ctx.save();
         ctx.translate(x + dirtW / 2, y + dirtH / 2);
         ctx.rotate(angle);
@@ -1049,7 +901,6 @@ function drawBackground() {
 
 
 
-  // утилита: получить массив платформ с учетом открытых динамических
   function getPlatformsArray(lvl){
     let arr = (lvl.platforms||[]).slice();
     if (lvl.dynamicPlatforms) {
@@ -1058,7 +909,6 @@ function drawBackground() {
     return arr;
   }
 
-  // утилита: получить препятствия для боковых коллизий (стены + закрытые двери)
   function getObstaclesArray(lvl){
     let arr = (lvl.walls||[]).slice();
     if (lvl.doors) {
@@ -1067,7 +917,6 @@ function drawBackground() {
     return arr;
   }
 
-  // утилита: поверхности для приземления (платформы + стены + закрытые двери)
   function getGroundArray(lvl){
     let arr = getPlatformsArray(lvl);
     if (lvl.walls) arr = arr.concat(lvl.walls);
@@ -1075,13 +924,10 @@ function drawBackground() {
     return arr;
   }
 
-  // обновление кнопок и связанных динамических платформ/дверей
   function processSwitchesAndDynamics(){
     const lvl = levels[currentLevel];
     if(!lvl.switches) return;
-    // сбрасываем текущее состояние нажатий
     lvl.switches.forEach(sw=>{ sw.pressed = false; });
-    // проверяем пересечения с игроками
     const entities = [
       {x: player.x, y: player.y, w: player.w, h: player.h},
       {x: companion.x, y: companion.y, w: companion.w, h: companion.h}
@@ -1094,7 +940,6 @@ function drawBackground() {
         }
       }
     });
-    // применяем к динамическим платформам
     if (lvl.dynamicPlatforms) {
       lvl.dynamicPlatforms.forEach(dp=>{
         const related = lvl.switches.filter(sw=> sw.group === dp.group);
@@ -1103,12 +948,10 @@ function drawBackground() {
         if (dp.mode === 'hold') {
           dp.open = anyPressed;
         } else {
-          // latch: однократно открылось и остается открытым
           if (anyPressed) dp.open = true;
         }
       });
     }
-    // применяем к дверям
     if (lvl.doors) {
       lvl.doors.forEach(door=>{
         const related = lvl.switches.filter(sw=> sw.group === door.group);
@@ -1123,7 +966,6 @@ function drawBackground() {
     }
   }
   function drawPlayer() {
-    // Отключаем сглаживание для пиксельной графики
     ctx.imageSmoothingEnabled = false;
     ctx.imageSmoothingQuality = 'high';
     
@@ -1131,23 +973,20 @@ function drawBackground() {
   
     if (player.state === "idle") {
       sprite = imgPlayerIdle;
-      frames = 16; // кадров в idle
+      frames = 16;
     } else {
       sprite = imgPlayerWalk;
-      frames = 10; // кадров в walk
+      frames = 10;
     }
   
     frameW = sprite.width / frames;
     frameH = sprite.height;
   
-    // какой кадр рисуем
     let frameX = player.frame * frameW;
   
-    // 🔹 Центрируем спрайт по размеру персонажа
     let drawX = player.x - cameraX;
     let drawY = player.y;
     
-    // если идёт влево → зеркалим
     if (player.state === "walk-left") {
       ctx.save();
       ctx.scale(-1,1);
@@ -1166,16 +1005,14 @@ function drawBackground() {
     }
   }
   
-  // 🔹 Функция отрисовки компаньона
   function drawCompanion() {
-    // Отключаем сглаживание для пиксельной графики
     ctx.imageSmoothingEnabled = false;
     ctx.imageSmoothingQuality = 'high';
     
     let sprite, frames, frameW, frameH;
   
     if (companion.state === "idle") {
-      sprite = imgCompanionIdle; // используем спрайты компаньона
+      sprite = imgCompanionIdle;
       frames = 9;
     } else {
       sprite = imgCompanionWalk;
@@ -1206,15 +1043,13 @@ function drawBackground() {
       );
     }
     
-    // Возвращаем прозрачность
     ctx.globalAlpha = 1.0;
   }
   
 
   function draw() { window.drawFrame(); }
 
-function loop(currentTime) {
-  // Фиксированный временной шаг для стабильной работы
+   function loop(currentTime) {
   if (lastTime === 0) {
     lastTime = currentTime;
   }
@@ -1222,20 +1057,17 @@ function loop(currentTime) {
   const deltaTime = currentTime - lastTime;
   lastTime = currentTime;
   
-  // Накапливаем время
   accumulator += deltaTime;
   
-  // Обновляем игру с фиксированным временным шагом
   while (accumulator >= fixedTimeStep) {
     update();
     accumulator -= fixedTimeStep;
   }
   
-  // Отрисовка происходит с частотой обновления экрана
   draw();
   requestAnimationFrame(loop);
 }
-// ждём загрузки всех картинок
+
 let loaded = 0;
 const bgImages = [bgLayer0, bgLayer1, bgLayer2, bgLayer3, bgLayer4, bgLayer5, bgLayer6];
 const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2, imgMountain, imgThree, imgAlert, imgBush];
@@ -1246,8 +1078,7 @@ allImages.forEach(img => {
   img.onload = () => {
     loaded++;
     if (loaded === allImages.length) {
-      // когда все картинки загружены → запускаем игру
-      // Инициализируем камеру при запуске
+      
       let lvl = levels[currentLevel];
       cameraX = player.x - viewW/2;
       if(cameraX < 0) cameraX = 0;

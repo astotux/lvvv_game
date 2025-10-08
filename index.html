@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
-  <!-- iOS fullscreen/PWA hints -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
@@ -46,7 +45,6 @@
       overflow: hidden; 
       font-family: "Pixelify Sans", sans-serif;
       min-height: 100dvh;
-      /* Запрет масштабирования */
       -webkit-touch-callout: none;
       -webkit-user-select: none;
       -khtml-user-select: none;
@@ -58,7 +56,7 @@
     canvas {
       display: block;
       width: 100vw;
-      height: 100dvh; /* более надёжная высота на iOS 15+ */
+      height: 100dvh;
       background: transparent;
       position: relative;
       z-index: 1;
@@ -125,7 +123,6 @@
     #follow:active {
       background-image: url("img/button_follow.png");
     }
-    /* модальное окно */
     #modal {
       position: fixed;
       top: 0; left: 0;
@@ -145,10 +142,8 @@
     }
     #modalContent h2 { margin: 0 0 10px; color: orange; }
     #modalContent p { margin: 0 0 15px; }
-    /* Показывать переносы строк в тексте модалки */
     #modalText { width: max-content;white-space: pre-line; }
     #modalContent button {
-      /* padding: 10px 20px; */
       border: none;
       font-size: 16px;
       cursor: pointer;
@@ -178,13 +173,10 @@
     #coinCounter .counterLeft,
     #coinCounter .counterRight {
       height: 100%;
-      /* Ширина вычисляется из высоты по aspect-ratio */
       aspect-ratio: var(--edge-ar, 1);
       background-repeat: no-repeat;
-      /* Масштабируем по высоте, чтобы не искажать пропорции */
       background-size: auto 100%;
       background-position: center;
-      /* Авто-ширина на основании aspect-ratio */
       width: auto;
       flex: 0 0 auto;
     }
@@ -231,7 +223,6 @@
       right: 10%;
     }
     
-    /* Уведомление о повороте экрана */
     #rotateNotification {
       position: fixed;
       top: 0;
@@ -272,7 +263,6 @@
       100% { transform: rotate(0deg); }
     }
     
-    /* Показываем уведомление только в портретной ориентации */
     @media screen and (orientation: portrait) {
       #rotateNotification {
         display: flex;
@@ -284,7 +274,6 @@
         display: none !important;
       }
     }
-    /* Стартовое затемнение на 2 секунды */
     #introFade {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -303,21 +292,16 @@
 <body id="body">
 
   <canvas id="game" width="480" height="320"></canvas>
-  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 1.7_start_level_updates_1</p>
+  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 2.0 editor & level_updates_2</p>
   
-  <!-- Уведомление о повороте экрана -->
   <div id="rotateNotification">
     <img src="img/phone.png" class="rotateIcon">
     <h2>Поверни телефон</h2>
     <p>Для лучшего игрового опыта поверни устройство горизонтально и обнови страницу</p>
   </div>
 
-  <!-- Стартовый тёмный оверлей, плавно исчезающий за 2 секунды -->
   <div id="introFade"></div>
 
-  <!-- Счетчик монеток -->
-
-  
   <div class="containerTops">
     <div class="miniContainerTops">
       <img src="./img/levels.png">
@@ -344,9 +328,6 @@
     </div>
   </div>
 
-
-
-    <!-- модальное окно -->
   <div id="modal">
     <div id="coinCounter">
       <div class="counterLeft"></div>
@@ -366,11 +347,9 @@
   <div id="fade" class="fade"></div>
 
   <script>
-    // Дополнительная защита от масштабирования
     document.addEventListener('gesturestart', function (e) {
       e.preventDefault();
     });
-    // Попытка скрыть тулбары Safari с помощью скролла (в рамках возможностей браузера)
     function hideSafariBars() {
       setTimeout(() => {
         window.scrollTo(0, 1);
@@ -390,7 +369,6 @@
       e.preventDefault();
     });
     
-    // Запрет двойного тапа для масштабирования
     let lastTouchEnd = 0;
     document.addEventListener('touchend', function (event) {
       const now = (new Date()).getTime();
@@ -400,19 +378,16 @@
       lastTouchEnd = now;
     }, false);
     
-    // Запрет масштабирования колесиком мыши
     document.addEventListener('wheel', function (e) {
       if (e.ctrlKey) {
         e.preventDefault();
       }
     }, { passive: false });
     
-    // Запрет контекстного меню
     document.addEventListener('contextmenu', function (e) {
       e.preventDefault();
     });
     
-    // Управление уведомлением о повороте экрана
     function updateRotateNotification() {
       const notification = document.getElementById('rotateNotification');
       const isPortrait = window.innerHeight > window.innerWidth;
@@ -424,15 +399,12 @@
       }
     }
     
-    // Проверяем ориентацию при загрузке и изменении размера
     window.addEventListener('load', updateRotateNotification);
     window.addEventListener('resize', updateRotateNotification);
     window.addEventListener('orientationchange', function() {
-      // Небольшая задержка для корректного определения новой ориентации
       setTimeout(updateRotateNotification, 100);
     });
 
-    // Устанавливаем корректные размеры краёв таблички по высоте центра
     (function initCounterEdges(){
       const leftUrl = 'img/tabl1.png';
       const rightUrl = 'img/tabl3.png';
@@ -446,13 +418,11 @@
         arRight = imgR.naturalWidth && imgR.naturalHeight ? (imgR.naturalWidth / imgR.naturalHeight) : 1;
         updateCounterEdges();
       }
-      // Публичная функция пересчёта (вызываем при открытии модалки/ресайзе)
       window.updateCounterEdges = function updateCounterEdges(){
         const leftEl = document.querySelector('#coinCounter .counterLeft');
         const rightEl = document.querySelector('#coinCounter .counterRight');
         const centerEl = document.querySelector('#coinCounter .counterCenter');
         if (!leftEl || !rightEl || !centerEl) return;
-        // Если модалка скрыта, высота может быть 0. В таком случае делаем отложенный пересчёт.
         const h = centerEl.clientHeight;
         if (h === 0) {
           setTimeout(updateCounterEdges, 50);
@@ -467,18 +437,15 @@
       imgR.onload = ()=>{ ready++; applyAR(); };
       imgL.src = leftUrl;
       imgR.src = rightUrl;
-      // Пересчёт при ресайзе окна
       window.addEventListener('resize', ()=>{
         if (ready >= 2) window.updateCounterEdges();
       });
     })();
   </script>
   <script>
-    // Плавное исчезновение стартового оверлея
     window.addEventListener('load', function () {
       var fade = document.getElementById('introFade');
       if (!fade) return;
-      // Ждём один кадр, чтобы CSS применился, затем запускаем анимацию
       requestAnimationFrame(function () {
         fade.classList.add('hide');
         setTimeout(function () {

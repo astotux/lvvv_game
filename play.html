@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
-  <!-- iOS fullscreen/PWA hints -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
@@ -107,7 +106,6 @@
     </div>
   </div>
   <script>
-    // Функция для закрытия PWA модального окна
     function closePwaModal() {
       const modal = document.getElementById('pwaModal');
       if (modal) {
@@ -115,18 +113,13 @@
       }
     }
 
-    // Функция для проверки, запущено ли приложение в PWA режиме
     function isPwaMode() {
-      // Проверяем различные признаки PWA режима
       return (
-        // Проверка на iOS Safari в полноэкранном режиме
         (window.navigator.standalone === true) ||
-        // Дополнительная проверка для iOS
         (window.screen.height - window.innerHeight < 100 && window.screen.width - window.innerWidth < 100)
       );
     }
 
-    // Функция для определения iOS Safari
     function isIOSSafari() {
       const userAgent = navigator.userAgent;
       const isIOS = /iPad|iPhone|iPod/.test(userAgent);
@@ -134,7 +127,6 @@
       return isIOS && isSafari;
     }
 
-    // Функция для показа модального окна PWA
     function showPwaModal() {
       const modal = document.getElementById('pwaModal');
       if (modal) {
@@ -142,11 +134,7 @@
       }
     }
 
-    // Проверка при загрузке страницы
     window.addEventListener('load', function() {
-      // Показываем модальное окно только если:
-      // 1. НЕ в PWA режиме
-      // 2. Это iOS Safari
       if (!isPwaMode() && isIOSSafari()) {
         showPwaModal();
       }
@@ -165,11 +153,9 @@
     })();
   </script>
     <script>
-      // Плавное исчезновение стартового оверлея
       window.addEventListener('load', function () {
         var fade = document.getElementById('introFade');
         if (!fade) return;
-        // Ждём один кадр, чтобы CSS применился, затем запускаем анимацию
         requestAnimationFrame(function () {
           fade.classList.add('hide');
           setTimeout(function () {

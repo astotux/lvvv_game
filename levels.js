@@ -6,50 +6,50 @@ const levels = [
       {x: 0, y: 340, w: 850, h: 20, texture: "grass"},
       {x: 850, y: 340, w: 450, h: 20, texture: "grass"},
       {x: 1400, y: 340, w: 500, h: 20, texture: "grass"},
-      // ступени вверх
+
       {x: 1980, y: 310, w: 66, h: 22, texture: "stone2"},
       {x: 2090, y: 280, w: 66, h: 22, texture: "stone2"},
       {x: 2200, y: 250, w: 66, h: 22, texture: "stone2"},
-      // полка над ямой с шипами
+
       {x: 2350, y: 230, w: 220, h: 20, texture: "grass"},
-      // длинная полка с разрывами
+
       {x: 2650, y: 260, w: 66, h: 22, texture: "stone2"},
       {x: 2800, y: 240, w: 66, h: 22, texture: "stone2"},
       {x: 2950, y: 220, w: 66, h: 22, texture: "stone2"},
       {x: 3100, y: 200, w: 66, h: 22, texture: "stone2"}, 
-      // финальная площадка
+
       {x: 3300, y: 340, w: 500, h: 20, texture: "grass"},
       {x: 3500, y: 260, w: 300, h: 20, texture: "grass"},
 
     ],
     traps: [
-      // ранняя яма с шипами
+
       {x: 800, y: 325, w: 20, h: 22},
       {x: 820, y: 325, w: 20, h: 22},
-      // коридор шипов под полкой
+
       {x: 2425, y: 215, w: 20, h: 22},
       {x: 2450, y: 215, w: 20, h: 22},
       {x: 2475, y: 215, w: 20, h: 22},
     ],
     coins: [
-      // дорожка на старте
+
       {x: 120, y: 220, w: 20, h: 20, collected: false},
       {x: 170, y: 220, w: 20, h: 20, collected: false},
       {x: 270, y: 300, w: 20, h: 20, collected: false},
       {x: 320, y: 300, w: 20, h: 20, collected: false},
       {x: 370, y: 300, w: 20, h: 20, collected: false},
-      // над первой ямой
+
       {x: 810, y: 230, w: 20, h: 20, collected: false},
 
       {x: 1335, y: 230, w: 20, h: 20, collected: false},
       {x: 1635, y: 300, w: 20, h: 20, collected: false},
       {x: 1685, y: 300, w: 20, h: 20, collected: false},
       {x: 1735, y: 300, w: 20, h: 20, collected: false},
-      // серия над ступенями
+
       {x: 2005, y: 260, w: 20, h: 20, collected: false},
       {x: 2115, y: 230, w: 20, h: 20, collected: false},
       {x: 2225, y: 200, w: 20, h: 20, collected: false},
-      // над полкой с разрывами
+
       {x: 2825, y: 190, w: 20, h: 20, collected: false},
       {x: 3125, y: 150, w: 20, h: 20, collected: false}
     ],
@@ -125,114 +125,611 @@ const levels = [
     ]
   },
   {
-    width: 6000,
-    platforms: [
-      // стартовая зона
-      {x: 0, y: 360, w: 400, h: 20, texture: "grass"},
-      {x: 450, y: 320, w: 66, h: 22, texture: "stone2"},
-      {x: 700, y: 260, w: 66, h: 22, texture: "stone2"},
-      {x: 820, y: 280, w: 250, h: 20, texture: "grass"},
-      {x: 1310, y: 247, w: 66, h: 22, texture: "stone2"},
-      {x: 1420, y: 155, w: 66, h: 22, texture: "stone2"},
-      {x: 1720, y: 270, w: 400, h: 20, texture: "grass"},
-
+    "width": 6000,
+    "platforms": [
+      {
+        "x": 0,
+        "y": 360,
+        "w": 400,
+        "h": 20,
+        "texture": "grass"
+      },
+      {
+        "x": 450,
+        "y": 320,
+        "w": 66,
+        "h": 22,
+        "texture": "stone2"
+      },
+      {
+        "x": 700,
+        "y": 260,
+        "w": 66,
+        "h": 22,
+        "texture": "stone2"
+      },
+      {
+        "x": 820,
+        "y": 280,
+        "w": 250,
+        "h": 20,
+        "texture": "grass"
+      },
+      {
+        "x": 1310,
+        "y": 247,
+        "w": 66,
+        "h": 22,
+        "texture": "stone2"
+      },
+      {
+        "x": 1420,
+        "y": 155,
+        "w": 66,
+        "h": 22,
+        "texture": "stone2"
+      },
+      {
+        "x": 1720,
+        "y": 270,
+        "w": 400,
+        "h": 20,
+        "texture": "grass"
+      },
+      {
+        "x": 2168,
+        "y": 356,
+        "w": 67,
+        "h": 23,
+        "texture": "stone2"
+      },
+      {
+        "x": 1869,
+        "y": 438,
+        "w": 256,
+        "h": 20,
+        "texture": "grass"
+      },
+      {
+        "x": 2364,
+        "y": 163,
+        "w": 67,
+        "h": 23,
+        "texture": "stone2"
+      },
+      {
+        "x": 2522,
+        "y": 259,
+        "w": 381,
+        "h": 20,
+        "texture": "grass"
+      },
+      {
+        "x": 2898,
+        "y": 259,
+        "w": 191,
+        "h": 20,
+        "texture": "grass"
+      }
+    ],
+    "walls": [
+      {
+        "x": 1488,
+        "y": 0,
+        "w": 40,
+        "h": 152,
+        "texture": "stone"
+      }
+    ],
+    "doors": [],
+    "switches": [
+      {
+        "x": 330,
+        "y": 355,
+        "w": 26,
+        "h": 11,
+        "group": 1
+      },
+      {
+        "x": 1030,
+        "y": 277,
+        "w": 26,
+        "h": 11,
+        "group": 2
+      },
+      {
+        "x": 1443,
+        "y": 149,
+        "w": 26,
+        "h": 11,
+        "group": 3
+      },
+      {
+        "x": 1880,
+        "y": 433,
+        "w": 26,
+        "h": 11,
+        "group": 4
+      }
+    ],
+    "dynamicPlatforms": [
+      {
+        "x": 550,
+        "y": 290,
+        "w": 111,
+        "h": 22,
+        "texture": "danger_platform",
+        "group": 1,
+        "mode": "hold"
+      },
+      {
+        "x": 1120,
+        "y": 250,
+        "w": 111,
+        "h": 22,
+        "texture": "danger_platform",
+        "group": 2,
+        "mode": "hold"
+      },
+      {
+        "x": 1420,
+        "y": 330,
+        "w": 111,
+        "h": 22,
+        "texture": "danger_platform",
+        "group": 3,
+        "mode": "hold"
+      },
+      {
+        "x": 1565,
+        "y": 330,
+        "w": 111,
+        "h": 22,
+        "texture": "danger_platform",
+        "group": 3,
+        "mode": "hold"
+      },
+      {
+        "x": 2164,
+        "y": 167,
+        "w": 111,
+        "h": 22,
+        "texture": "danger_platform",
+        "group": 4,
+        "mode": "hold"
+      }
+    ],
+    "traps": [
+      {
+        "x": 910,
+        "y": 268,
+        "w": 20,
+        "h": 18
+      },
+      {
+        "x": 930,
+        "y": 268,
+        "w": 20,
+        "h": 18
+      },
+      {
+        "x": 1511,
+        "y": 315,
+        "w": 20,
+        "h": 18
+      },
+      {
+        "x": 1565,
+        "y": 315,
+        "w": 20,
+        "h": 18
+      },
+      {
+        "x": 1900,
+        "y": 257,
+        "w": 20,
+        "h": 18
+      },
+      {
+        "x": 1920,
+        "y": 257,
+        "w": 20,
+        "h": 18
+      },
+      {
+        "x": 1986,
+        "y": 427,
+        "w": 20,
+        "h": 22
+      },
+      {
+        "x": 2008,
+        "y": 427,
+        "w": 20,
+        "h": 22
+      }
+    ],
+    "coins": [
+      {
+        "x": 120,
+        "y": 320,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 170,
+        "y": 320,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 220,
+        "y": 320,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 270,
+        "y": 320,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 5150,
+        "y": 280,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 5250,
+        "y": 280,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 5350,
+        "y": 280,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 5450,
+        "y": 280,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 1447,
+        "y": 108,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 1882,
+        "y": 387,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 2894,
+        "y": 213,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 2942,
+        "y": 213,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 2989,
+        "y": 213,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 1537,
+        "y": 229,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 1907,
+        "y": 165,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 919,
+        "y": 191,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      }
+    ],
+    "finish": {
+      "x": 3041,
+      "y": 198,
+      "w": 24,
+      "h": 63
+    },
+    "gift": {
+      "title": "Ты прошла 2 уровень!",
+      "desc": "Умница, так держать! <3"
+    },
+    "decorations": [
+      {
+        "x": 205,
+        "y": 348,
+        "w": 55,
+        "h": 18,
+        "type": "rock",
+        "image": "flower2"
+      },
+      {
+        "x": 260,
+        "y": 348,
+        "w": 55,
+        "h": 18,
+        "type": "rock",
+        "image": "flower1"
+      },
+      {
+        "x": 950,
+        "y": 272,
+        "w": 73,
+        "h": 19,
+        "type": "grass",
+        "image": "grass1"
+      },
+      {
+        "x": 1922,
+        "y": 429,
+        "w": 56,
+        "h": 20,
+        "image": "flower2"
+      },
+      {
+        "x": 2032,
+        "y": 431,
+        "w": 56,
+        "h": 20,
+        "image": "flower2"
+      },
+      {
+        "x": 2067,
+        "y": 433,
+        "w": 56,
+        "h": 18,
+        "image": "flower1"
+      },
+      {
+        "x": 2390,
+        "y": 152,
+        "w": 39,
+        "h": 20,
+        "image": "rock1"
+      },
+      {
+        "x": 708,
+        "y": 251,
+        "w": 29,
+        "h": 15,
+        "image": "rock2"
+      },
+      {
+        "x": 1346,
+        "y": 240,
+        "w": 29,
+        "h": 15,
+        "image": "rock2"
+      },
       
+      {
+        "x": 1977,
+        "y": 145,
+        "w": 98,
+        "h": 132,
+        "image": "three"
+      },
+      {
+        "x": 1788,
+        "y": 257,
+        "w": 56,
+        "h": 20,
+        "image": "flower2"
+      },
+      {
+        "x": 1940,
+        "y": 257,
+        "w": 56,
+        "h": 20,
+        "image": "flower2"
+      },
+      {
+        "x": 1843,
+        "y": 257,
+        "w": 56,
+        "h": 18,
+        "image": "flower1"
+      },
+      {
+        "x": 1720,
+        "y": 262,
+        "w": 73,
+        "h": 19,
+        "image": "grass1"
+      },
+      {
+        "x": 2540,
+        "y": 227,
+        "w": 60,
+        "h": 40,
+        "image": "bush"
+      },
+      {
+        "x": 2591,
+        "y": 251,
+        "w": 73,
+        "h": 19,
+        "image": "grass1"
+      },
+      {
+        "x": 2661,
+        "y": 251,
+        "w": 73,
+        "h": 19,
+        "image": "grass1"
+      },
+      {
+        "x": 2733,
+        "y": 251,
+        "w": 73,
+        "h": 19,
+        "image": "grass1"
+      },
+      
+      {
+        "x": 290,
+        "y": 255,
+        "w": 78,
+        "h": 110,
+        "image": "three"
+      },
+      
+      {
+        "x": 2826,
+        "y": 156,
+        "w": 78,
+        "h": 110,
+        "image": "three"
+      },
+      {
+        "x": 2815,
+        "y": 248,
+        "w": 39,
+        "h": 20,
+        "image": "rock1"
+      },
+      {
+        "x": 2885,
+        "y": 248,
+        "w": 56,
+        "h": 18,
+        "image": "flower1"
+      },
+      {
+        "x": 2940,
+        "y": 248,
+        "w": 56,
+        "h": 20,
+        "image": "flower2"
+      },
+      {
+        "x": 2995,
+        "y": 248,
+        "w": 56,
+        "h": 18,
+        "image": "flower1"
+      },
+      {
+        "x": 2030,
+        "y": 238,
+        "w": 60,
+        "h": 40,
+        "image": "bush"
+      },
+      {
+        "x": 2094,
+        "y": 242,
+        "w": 20,
+        "h": 35,
+        "image": "alert"
+      }
     ],
-    // стены, двери и свитчи
-    walls: [
-      {x: 1488, y: 0, w: 40, h: 152, texture: "stone"},
-
-      // простая стена, блокирующая обход
+    "decorationsUndo": [
+      {
+        "x": 150,
+        "y": 350,
+        "w": 55,
+        "h": 18,
+        "type": "rock",
+        "image": "flower1"
+      }
     ],
-    doors: [
-      // вертикальная дверь у галереи, открывается удержанием кнопки 2
-      // {x: 3480, y: 200, w: 40, h: 120, texture: "stone2", group: 2, mode: "hold", open: false},
-      // {x: 1250, y: 249, w: 36, h: 111, texture: "danger_door", group: 3, mode: "hold", open: false}
-
-      // дверь-мост (горизонтальная переборка) у старта, открывается кнопкой 1
-    ],
-    switches: [
-      // первая кнопка у старта
-      {x: 330, y: 355, w: 26, h: 11, group: 1},
-      // вторая кнопка далеко далее
-      {x: 1030, y: 277, w: 26, h: 11, group: 2}, 
-      {x: 1443, y: 149, w: 26, h: 11, group: 3} 
-    ],
-    dynamicPlatforms: [
-      {x: 550, y: 290, w: 111, h: 22, texture: "danger_platform", group: 1, mode: "hold", open: false},
-      {x: 1120, y: 250, w: 111, h: 22, texture: "danger_platform", group: 2, mode: "hold", open: false},
-      {x: 1420, y: 330, w: 111, h: 22, texture: "danger_platform", group: 3, mode: "hold", open: false},
-      {x: 1565, y: 330, w: 111, h: 22, texture: "danger_platform", group: 3, mode: "hold", open: false},
-
-    ],
-    traps: [
-      // ранние ловушки
-
-      {x: 910, y: 268, w: 20, h: 18},
-      {x: 930, y: 268, w: 20, h: 18},
-
-      {x: 1511, y: 315, w: 20, h: 18},
-      {x: 1565, y: 315, w: 20, h: 18},
-
-      {x: 1900, y: 257, w: 20, h: 18},
-      {x: 1920, y: 257, w: 20, h: 18},
-
-    ],
-    coins: [
-      // стартовая дорожка
-      {x: 120, y: 320, w: 20, h: 20, collected: false},
-      {x: 170, y: 320, w: 20, h: 20, collected: false},
-      {x: 220, y: 320, w: 20, h: 20, collected: false},
-      {x: 270, y: 320, w: 20, h: 20, collected: false},
-      // лесные террасы
-      {x: 1550, y: 280, w: 20, h: 20, collected: false},
-      {x: 1800, y: 250, w: 20, h: 20, collected: false},
-      {x: 2030, y: 220, w: 20, h: 20, collected: false},
-      // над каменными уступами
-      {x: 2260, y: 260, w: 20, h: 20, collected: false},
-      {x: 2600, y: 230, w: 20, h: 20, collected: false},
-      {x: 2850, y: 200, w: 20, h: 20, collected: false},
-      // галерея
-      {x: 3100, y: 240, w: 20, h: 20, collected: false},
-      {x: 3360, y: 220, w: 20, h: 20, collected: false},
-      {x: 3600, y: 200, w: 20, h: 20, collected: false},
-      // финишная дорожка
-      {x: 5150, y: 280, w: 20, h: 20, collected: false},
-      {x: 5250, y: 280, w: 20, h: 20, collected: false},
-      {x: 5350, y: 280, w: 20, h: 20, collected: false},
-      {x: 5450, y: 280, w: 20, h: 20, collected: false}
-    ],
-    finish: {x: 5650, y: 260, w: 24, h: 63},
-    gift: {title: "Большое приключение", desc: "Красивый масштабный уровень пройден! ❤️"},
-    decorations: [
-      // цветы и трава
-      {x: 205, y: 348, w: 55, h: 18, type: "rock", image: "flower2"},
-      {x: 260, y: 348, w: 55, h: 18, type: "rock", image: "flower1"},
-      {x: 950, y: 272, w: 73, h: 19, type: "grass", image: "grass1"},
-
-      // скалы
-      {x: 1200, y: 344, w: 38, h: 20, type: "rock", image: "rock1"},
-      {x: 1700, y: 300, w: 29, h: 15, type: "rock2", image: "rock2"},
-      {x: 2100, y: 280, w: 38, h: 20, type: "rock", image: "rock1"},
-
-    ],
-    decorationsUndo: [
-      {x: 150, y: 350, w: 55, h: 18, type: "rock", image: "flower1"},
-      {x: 1800, y: 257, w: 73, h: 19, type: "grass", image: "grass1"},
-
-      {x: 3400, y: 262, w: 73, h: 19, type: "grass", image: "grass1"}
-    ],
-    decorationsUndoPlatform: [
-      {x: 1010, y: 255, w: 50, h: 35, type: "bush", image: "bush"},
-
-      {x: 380, y: 330, w: 20, h: 35, image: "alert"},
-      {x: 290, y: 255, w: 78, h: 110, image: "three"},
-      {x: 100, y: 255, w: 78, h: 110, image: "three"},
-      {x: 20, y: 220, w: 100, h: 150, image: "three"},
-      {x: 820, y: 140, w: 100, h: 150, image: "three"},
-
-      {x: 2100, y: 200, w: 78, h: 110, image: "three"},
-      {x: 3900, y: 260, w: 78, h: 110, image: "three"}
+    "decorationsUndoPlatform": [
+      {
+        "x": 380,
+        "y": 330,
+        "w": 20,
+        "h": 35,
+        "image": "alert"
+      },
+      {
+        "x": 100,
+        "y": 255,
+        "w": 78,
+        "h": 110,
+        "image": "three"
+      },
+      {
+        "x": 20,
+        "y": 220,
+        "w": 100,
+        "h": 150,
+        "image": "three"
+      },
+      {
+        "x": 820,
+        "y": 140,
+        "w": 100,
+        "h": 150,
+        "image": "three"
+      },
+      {
+        "x": 2777,
+        "y": 191,
+        "w": 48,
+        "h": 73,
+        "image": "three"
+      },
+      {
+        "x": 2608,
+        "y": 156,
+        "w": 78,
+        "h": 110,
+        "image": "three"
+      },
+      {
+        "x": 2678,
+        "y": 132,
+        "w": 103,
+        "h": 137,
+        "image": "three"
+      },
+      {
+        "x": 1735,
+        "y": 169,
+        "w": 78,
+        "h": 110,
+        "image": "three"
+      },
     ]
   }
 ];

@@ -1,5 +1,4 @@
 (function(){
-  // Функция прыжка доступна глобально
   window.jump = function(){
     if(window.activeCharacter === "player" && window.player.onGround && !window.gameOver) {
       window.player.dy = C.PLAYER.JUMP_VY;
@@ -14,7 +13,6 @@
     }
   };
 
-  // Клавиатура
   document.addEventListener('keydown', function(event) {
     if (event.code === 'KeyA') {
       window.keys.left = true;
@@ -37,7 +35,6 @@
       window.activeCharacter = window.activeCharacter === "player" ? "companion" : "player";
     }
   });
-
   document.addEventListener('keyup', function(event) {
     if (event.code === 'KeyA') {
       window.keys.left = false;
@@ -46,8 +43,6 @@
       window.keys.right = false;
     }
   });
-
-  // Кнопки на экране
   const leftBtn = document.getElementById("left");
   const rightBtn = document.getElementById("right");
   const jumpBtn = document.getElementById("jump");
@@ -81,9 +76,7 @@
       if (window.followEnabled) followBtn.classList.add('active');
       else followBtn.classList.remove('active');
     };
-    // followBtn.onmousedown = toggleFollow;
     followBtn.ontouchstart = toggleFollow;
   }
 })();
-
 

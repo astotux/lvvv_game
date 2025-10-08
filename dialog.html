@@ -23,7 +23,6 @@
   </style>
   <script>
     function pickImageForLevel(levelIndex) {
-      // маппинг уровней к изображениям, подставьте свои пути
       const map = {
         0: 'img/dialog_level_0.png',
         1: 'img/dialog_level_1.png',
@@ -39,20 +38,17 @@
       } catch (e) {}
       const img = document.getElementById('dialogImage');
       img.src = idx !== null ? pickImageForLevel(idx) : 'img/dialog_first.png';
-      // Навешиваем обработчик на next
       if (localStorage.getItem('love_game_dialog_level')) {
         const nextLink = document.getElementById('nextLink');
         if (nextLink) {
             nextLink.addEventListener('click', (e)=>{
             try { localStorage.setItem('love_game_go_next', '1'); } catch (err) {}
-            // позволяем перейти по ссылке на index.html
             });
         }
         const backLink = document.getElementById('backLink');
         if (backLink) {
             backLink.addEventListener('click', (e)=>{
             try { localStorage.setItem('love_game_go_next', '0'); } catch (err) {}
-            // позволяем перейти по ссылке на index.html
             });
         }
       } else {
@@ -88,11 +84,9 @@
       })();
     </script>
       <script>
-        // Плавное исчезновение стартового оверлея
         window.addEventListener('load', function () {
           var fade = document.getElementById('introFade');
           if (!fade) return;
-          // Ждём один кадр, чтобы CSS применился, затем запускаем анимацию
           requestAnimationFrame(function () {
             fade.classList.add('hide');
             setTimeout(function () {

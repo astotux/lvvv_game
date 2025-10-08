@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Редактор уровней</title>
+  <link rel="icon" href="img/favicon.ico">
+  <style>
+    html, body { margin:0; padding:0; height:100%; background:#1c1c1a; color:#eee; font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    .wrap { display:flex; height:100%; }
+    .sidebar { width:320px; border-right:1px solid #333; padding:12px; box-sizing:border-box; overflow:auto; }
+    .sidebar h3 { margin:8px 0; font-size:14px; color:#ddd; }
+    .grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+    .btn { background:#2c2c28; color:#eee; border:1px solid #444; padding:8px 10px; border-radius:6px; cursor:pointer; }
+    .btn:hover { background:#35352f; }
+    .row { display:flex; gap:8px; align-items:center; margin:6px 0; }
+    .row label { width:92px; font-size:12px; color:#bbb; }
+    .row input[type="number"], .row input[type="text"] { width:100%; padding:6px 8px; background:#111; border:1px solid #333; color:#eee; border-radius:6px; }
+    .canvas-wrap { flex:1; position:relative; display:flex; align-items:center; justify-content:center; }
+    canvas { background:#000; width:100%; height:100%; image-rendering: pixelated; }
+    .toolbar { position:absolute; top:8px; left:8px; right:8px; display:flex; gap:8px; pointer-events:none; }
+    .toolbar .btn { pointer-events:auto; }
+    .section { border:1px solid #333; border-radius:8px; padding:8px; margin-bottom:10px; }
+    .tile { border:1px solid #444; background:#111; height:48px; display:flex; align-items:center; justify-content:center; cursor:pointer; border-radius:6px; }
+    .tile.active { outline:2px solid #6cf; }
+    .hint { font-size:12px; color:#999; }
+    textarea { width:100%; min-height:140px; background:#111; border:1px solid #333; color:#eee; border-radius:6px; padding:8px; box-sizing:border-box; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <aside class="sidebar">
+      <div class="section">
+        <h3>Уровень</h3>
+        <div class="row"><label>Ширина</label><input id="inpWidth" type="number" value="3800" min="200" step="10"></div>
+        <div class="row"><button id="btnNew" class="btn">Новый уровень</button><button id="btnClear" class="btn">Очистить</button></div>
+      </div>
+
+      <div class="section">
+        <h3>Инструменты</h3>
+        <div class="grid" id="toolGrid"></div>
+        <div class="hint" style="margin-top:6px">ЛКМ — поставить, ПКМ — удалить. Колёсико/Shift+Колёсико — ширина/высота.</div>
+      </div>
+
+      <div class="section">
+        <h3>Размер кисти</h3>
+        <div class="row"><label>W</label><input id="brushW" type="number" value="100" min="1" step="1"></div>
+        <div class="row"><label>H</label><input id="brushH" type="number" value="20" min="1" step="1"></div>
+      </div>
+
+      <div class="section">
+        <h3>Экспорт</h3>
+        <div class="row"><button id="btnExport" class="btn" style="width:100%">Скопировать JSON уровня</button></div>
+        <textarea id="out" placeholder="Здесь появится JSON уровня для вставки в levels.js"></textarea>
+      </div>
+
+      <div class="section">
+        <h3>Импорт</h3>
+        <textarea id="in" placeholder="Вставьте сюда JSON уровня или объект уровня"></textarea>
+        <div class="row"><button id="btnImport" class="btn" style="width:100%">Импортировать из JSON</button></div>
+        <div class="row">
+          <label>Из levels.js</label>
+          <input id="inpLevelIndex" type="number" value="0" min="0" step="1" />
+        </div>
+        <div class="row"><button id="btnImportFromGame" class="btn" style="width:100%">Загрузить уровень по индексу</button></div>
+      </div>
+    </aside>
+    <main class="canvas-wrap">
+      <div class="toolbar">
+        <button id="btnFit" class="btn">По размеру уровня</button>
+        <a href="index.html" class="btn">Назад в игру</a>
+        <div id="coord" class="btn" style="margin-left:auto;opacity:0.85;cursor:default">X: 0 Y: 0</div>
+      </div>
+      <canvas id="ed"></canvas>
+    </main>
+  </div>
+
+  <script src="js/constants.js"></script>
+  <script src="js/assets.js"></script>
+  <script src="levels.js"></script>
+  <script src="js/editor.js"></script>
+</body>
+</html>
+
+

@@ -1,4 +1,3 @@
-// Global constants for the game. Loaded before other scripts.
 window.C = {
   LOGIC_WIDTH: 960,
   LOGIC_HEIGHT: 540,
