@@ -53,9 +53,9 @@ const levels = [
       {x: 2825, y: 190, w: 20, h: 20, collected: false},
       {x: 3125, y: 150, w: 20, h: 20, collected: false}
     ],
-    enemies: [
-      {platformX: 0, platformY: 340},
-    ],
+    // enemies: [
+    //   {platformX: 0, platformY: 340},
+    // ],
     finish: {x: 3660, y: 200, w: 24, h: 63},
     gift: {title: "Уровень 1", desc: "Супер! Первый пройден!"},
     decorations: [
