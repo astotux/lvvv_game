@@ -91,7 +91,7 @@ function stopLevelTimer() {
 }
 
 function updateLevelTimer() {
-  if (levelTimerActive) {
+  if (levelTimerActive && !gamePaused) {
     levelElapsedTime = performance.now() - levelStartTime;
   }
 }
@@ -116,6 +116,7 @@ let player = {
     state: "idle",
     idleTimer: 0,     
     prevState: "idle",
+    onDynamicPlatform: null,
   };
 
 
@@ -130,11 +131,18 @@ let companion = {
     targetY: 300,  
     followDelay: C.COMPANION.FOLLOW_DELAY,
     prevState: "idle",
+    onDynamicPlatform: null,
   };
   
 let keys = {left:false,right:false};
 let cameraX = 0;
+let targetCameraX = 0;
+let cameraTransitionStart = 0;
+let cameraTransitionDuration = 5000; // миллисекунды
+let isCameraTransitioning = false;
+let previousActiveCharacter = "player";
 let gameOver = false;
+let gamePaused = false;
 let activeCharacter = "player";
 
 
@@ -144,7 +152,18 @@ window.keys = keys;
 let followEnabled = true;
 Object.defineProperty(window, 'followEnabled', { get(){ return followEnabled; }, set(v){ followEnabled = !!v; } });
 Object.defineProperty(window, 'gameOver', { get(){ return gameOver; }, set(v){ gameOver = v; } });
-Object.defineProperty(window, 'activeCharacter', { get(){ return activeCharacter; }, set(v){ activeCharacter = v; } });
+Object.defineProperty(window, 'activeCharacter', { 
+  get(){ return activeCharacter; }, 
+  set(v){ 
+    if (activeCharacter !== v) {
+      // Запускаем анимацию камеры при переключении персонажа
+      cameraTransitionStart = performance.now();
+      isCameraTransitioning = true;
+      previousActiveCharacter = activeCharacter;
+    }
+    activeCharacter = v; 
+  } 
+});
 Object.defineProperty(window, 'companionLockToCenter', { get(){ return companionLockToCenter; }, set(v){ companionLockToCenter = v; } });
 
 let totalCoins = 0;
@@ -169,11 +188,13 @@ const modalText = document.getElementById("modalText");
 const modalBtn = document.getElementById("modalBtn");
 const modalNextBtn = document.getElementById("modalNextBtn");
 const modalRestartBtn = document.getElementById("modalRestartBtn");
+const modalResumeBtn = document.getElementById("modalResumeBtn");
+const modalHomeBtn = document.getElementById("modalHomeBtn");
 
 let modalNextCallback = ()=>{};
 let modalRestartCallback = ()=>{};
 
-function showModal(title, text, nextCallback = null, restartCallback = null) {
+function showModal(title, text, nextCallback = null, restartCallback = null, showHome = false, showResume = false) {
   modalTitle.textContent = title;
   modalText.textContent = text;
   modal.style.display = "flex";
@@ -193,7 +214,19 @@ function showModal(title, text, nextCallback = null, restartCallback = null) {
     modalRestartBtn.style.display = "none";
   }
   
-  if (!nextCallback && !restartCallback) {
+  if (showResume) {
+    modalResumeBtn.style.display = "inline-block";
+  } else {
+    modalResumeBtn.style.display = "none";
+  }
+  
+  if (showHome) {
+    modalHomeBtn.style.display = "inline-block";
+  } else {
+    modalHomeBtn.style.display = "none";
+  }
+  
+  if (!nextCallback && !restartCallback && !showHome && !showResume) {
     modalBtn.style.display = "inline-block";
   } else {
     modalBtn.style.display = "none";
@@ -203,27 +236,92 @@ function showModal(title, text, nextCallback = null, restartCallback = null) {
   }
 }
 
-modalBtn.onclick = ()=>{
+function showPauseModal() {
+  if (gamePaused) {
+    // Если уже на паузе, закрываем паузу
+    closePauseModal();
+    return;
+  }
+  gamePaused = true;
+  showModal("Пауза", "", null, ()=>{
+    closePauseModal();
+    resetPlayer();
+  }, true, true);
+}
+
+function closePauseModal() {
+  gamePaused = false;
   modal.style.display = "none";
+}
+
+window.showPauseModal = showPauseModal;
+
+modalBtn.onclick = ()=>{
+  if (gamePaused) {
+    closePauseModal();
+  } else {
+    modal.style.display = "none";
+  }
 };
 
 modalRestartBtn.onclick = ()=>{
   modal.style.display = "none";
+  gamePaused = false;
   modalRestartCallback();
 };
 
-loadLevelProgress();
-try {
-  const goNext = localStorage.getItem('love_game_go_next');
-  if (goNext === '1') {
-    localStorage.removeItem('love_game_go_next');
-    const nextLevel = Math.min(currentLevel + 1, levels.length - 1);
-    currentLevel = nextLevel;
-    saveLevelProgress(nextLevel);
+modalResumeBtn.onclick = ()=>{
+  closePauseModal();
+};
+
+modalHomeBtn.onclick = (e)=>{
+  e.preventDefault();
+  const fade = document.getElementById('fade');
+  if (fade) {
+    fade.classList.add('show');
+    setTimeout(() => {
+      window.location.href = 'play.html';
+    }, 1000);
   } else {
-    
+    window.location.href = 'play.html';
   }
-} catch (e) {}
+};
+
+// Проверяем, запущена ли игра из редактора
+try {
+  const editorMode = localStorage.getItem('love_game_editor_mode');
+  if (editorMode === '1') {
+    const editorLevelJson = localStorage.getItem('love_game_editor_level');
+    if (editorLevelJson) {
+      const editorLevel = JSON.parse(editorLevelJson);
+      // Временно заменяем первый уровень уровнем из редактора
+      if (levels.length > 0) {
+        levels[0] = editorLevel;
+      } else {
+        levels.push(editorLevel);
+      }
+      currentLevel = 0;
+      saveLevelProgress(0);
+      // НЕ очищаем флаг редактора - он должен оставаться для переключения
+    } else {
+      // Если флаг есть, но уровня нет - загружаем обычный прогресс
+      loadLevelProgress();
+    }
+  } else {
+    loadLevelProgress();
+    try {
+      const goNext = localStorage.getItem('love_game_go_next');
+      if (goNext === '1') {
+        localStorage.removeItem('love_game_go_next');
+        const nextLevel = Math.min(currentLevel + 1, levels.length - 1);
+        currentLevel = nextLevel;
+        saveLevelProgress(nextLevel);
+      }
+    } catch (e) {}
+  }
+} catch (e) {
+  loadLevelProgress();
+}
 
 const stats = getLevelStats(currentLevel);
 levelStats.bestTime = stats.bestTime;
@@ -288,15 +386,31 @@ window.updateEnemies = function() {
 function resetPlayer() {
   player.x=50; player.y=100; player.dy=0;
   player.idleTimer = 0;
+  player.onDynamicPlatform = null;
   gameOver=false;
+  gamePaused = false;
   totalCoins = 0;
   
   companion.x = 50; companion.y = 100; companion.dy = 0;
   companion.idleTimer = 0;
+  companion.onDynamicPlatform = null;
   companion.targetX = 50; companion.targetY = 250;
-
+  
   enemies = [];
   let lvl = levels[currentLevel];
+  
+  // Сброс состояния динамических платформ
+  if (lvl.dynamicPlatforms) {
+    lvl.dynamicPlatforms.forEach(dp => {
+      dp.initialized = false;
+      if (dp.type === 'moving') {
+        dp.x = dp.startX || dp.x;
+        dp.y = dp.startY || dp.y;
+        dp.offsetX = 0;
+        dp.offsetY = 0;
+      }
+    });
+  }
   if (lvl.enemies) {
     lvl.enemies.forEach(enemyData => {
       const platform = lvl.platforms.find(p => 
@@ -337,9 +451,10 @@ function updateStatsDisplay() {
 }
 
 function update() {
-  if(gameOver) return;
+  if(gameOver || gamePaused) return;
   
   processSwitchesAndDynamics();
+  updateDynamicPlatforms();
   updateEnemies();
 
   if (activeCharacter === "player") {
@@ -361,7 +476,22 @@ function update() {
            if(player.dy > 0 && player.y + player.h - player.dy <= p.y){
              player.y = p.y - player.h; 
              player.dy = 0; 
-             player.onGround = true; 
+             player.onGround = true;
+             
+             // Обработка подпрыгивающих платформ
+             if (p.type === 'bouncy') {
+               player.dy = (p.bounceStrength || -20);
+               if (window.followEnabled && companion.onGround) {
+                 companion.dy = (p.bounceStrength || -20);
+               }
+             }
+             
+             // Отслеживание движущихся платформ
+             if (p.type === 'moving') {
+               player.onDynamicPlatform = p;
+             } else {
+               player.onDynamicPlatform = null;
+             }
            }
       }
     });
@@ -417,8 +547,11 @@ function update() {
            resultText += `Лучшее время: ${formatTime(currentStats.bestTime)}\n`;
          }
          
-        showModal(lvl.gift.title, resultText, ()=>{
-        }, ()=>{
+         // В режиме редактора не показываем кнопку "Далее" (переход к диалогу)
+         const editorMode = localStorage.getItem('love_game_editor_mode');
+         const showNext = editorMode !== '1';
+         
+        showModal(lvl.gift.title, resultText, showNext ? ()=>{} : null, ()=>{
           resetPlayer();
         });
     }
@@ -470,11 +603,6 @@ function update() {
         }
     }
 
-    cameraX = player.x - viewW/2;
-    if(cameraX < 0) cameraX = 0;
-    if(cameraX > lvl.width - viewW) cameraX = lvl.width - viewW;
-    cameraX = Math.round(cameraX);
-
     if (player.y > viewH + C.FALL_OFF.Y_MARGIN || player.x < -C.FALL_OFF.X_MARGIN || player.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
       showModal("Игра окончена.","Ты упала в пропасть!", null, ()=>resetPlayer());
@@ -498,7 +626,19 @@ function update() {
            if(companion.dy > 0 && companion.y + companion.h - companion.dy <= p.y){ 
              companion.y = p.y - companion.h; 
              companion.dy = 0; 
-             companion.onGround = true; 
+             companion.onGround = true;
+             
+             // Обработка подпрыгивающих платформ
+             if (p.type === 'bouncy') {
+               companion.dy = (p.bounceStrength || -20);
+             }
+             
+             // Отслеживание движущихся платформ
+             if (p.type === 'moving') {
+               companion.onDynamicPlatform = p;
+             } else {
+               companion.onDynamicPlatform = null;
+             }
            }
       }
     });
@@ -557,8 +697,11 @@ function update() {
            resultText += `Лучшее время: ${formatTime(currentStats.bestTime)}\n`;
          }
          
-         showModal(lvl.gift.title, resultText, ()=>{
-         }, ()=>{
+         // В режиме редактора не показываем кнопку "Далее" (переход к диалогу)
+         const editorMode = localStorage.getItem('love_game_editor_mode');
+         const showNext = editorMode !== '1';
+         
+        showModal(lvl.gift.title, resultText, showNext ? ()=>{} : null, ()=>{
           resetPlayer();
          });
     }
@@ -611,11 +754,6 @@ function update() {
         }
     }
 
-    cameraX = companion.x - viewW/2;
-    if(cameraX < 0) cameraX = 0;
-    if(cameraX > lvl.width - viewW) cameraX = lvl.width - viewW;
-    cameraX = Math.round(cameraX);
-
     if (companion.y > viewH + C.FALL_OFF.Y_MARGIN || companion.x < -C.FALL_OFF.X_MARGIN || companion.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
       showModal("Игра окончена.","Арчик упал в пропасть!", null, ()=>resetPlayer());
@@ -666,6 +804,18 @@ function update() {
           companion.y = p.y - companion.h;
           companion.dy = 0;
           companion.onGround = true;
+          
+          // Обработка подпрыгивающих платформ
+          if (p.type === 'bouncy') {
+            companion.dy = (p.bounceStrength || -20);
+          }
+          
+          // Отслеживание движущихся платформ
+          if (p.type === 'moving') {
+            companion.onDynamicPlatform = p;
+          } else {
+            companion.onDynamicPlatform = null;
+          }
         }
       }
     });
@@ -754,6 +904,18 @@ function update() {
           player.y = p.y - player.h;
           player.dy = 0;
           player.onGround = true;
+          
+          // Обработка подпрыгивающих платформ
+          if (p.type === 'bouncy') {
+            player.dy = (p.bounceStrength || -20);
+          }
+          
+          // Отслеживание движущихся платформ
+          if (p.type === 'moving') {
+            player.onDynamicPlatform = p;
+          } else {
+            player.onDynamicPlatform = null;
+          }
         }
       }
     });
@@ -815,6 +977,9 @@ function drawDecorations() {
         case "mountain": img = imgMountain; break;
         case "three": img = imgThree; break;
         case "alert": img = imgAlert; break;
+        case "house_1": img = imgHouse1; break;
+        case "house_2": img = imgHouse2; break;
+        case "house_bg": img = imgHouseBg; break;
       }
       
       if (!img) return;
@@ -845,6 +1010,9 @@ function drawDecorationsUndo() {
         case "mountain": img = imgMountain; break;
         case "three": img = imgThree; break;
         case "alert": img = imgAlert; break;
+        case "house_1": img = imgHouse1; break;
+        case "house_2": img = imgHouse2; break;
+        case "house_bg": img = imgHouseBg; break;
       }
       
       if (!img) return;
@@ -875,6 +1043,9 @@ function drawDecorationsUndoPlatform() {
         case "mountain": img = imgMountain; break;
         case "three": img = imgThree; break;
         case "alert": img = imgAlert; break;
+        case "house_1": img = imgHouse1; break;
+        case "house_2": img = imgHouse2; break;
+        case "house_bg": img = imgHouseBg; break;
       }
       
       if (!img) return;
@@ -936,71 +1107,108 @@ window.drawEnemies = function() {
 function drawBackground() {
   const w = viewW;
   const groundY = getGroundY()+10;
-  const baseW = C.BACKGROUND.BASE_W;
-  const baseH = C.BACKGROUND.BASE_H;
-  const targetH = Math.max(groundY, 1);
-  const scale = targetH / baseH;
-  const tileW = Math.max(1, Math.round(baseW * scale));
+  let lvl = levels[currentLevel];
+  const backgroundType = lvl.background || "forest";
 
   ctx.imageSmoothingEnabled = false;
   ctx.imageSmoothingQuality = 'high';
 
-  let x0 = -(cameraX * C.PARALLAX[0]) % tileW;
-  for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
-    ctx.drawImage(bgLayer0, x0 + i * tileW, 0, tileW, targetH);
-  }
+  if (backgroundType === "home") {
+    // Однослойный фон для home
+    const bgW = imgBackgroundAnother.width;
+    const bgH = imgBackgroundAnother.height;
+    if (bgW && bgH) {
+      const targetH = Math.max(groundY, 1);
+      const scale = targetH / bgH;
+      const tileW = Math.max(1, Math.round(bgW * scale));
+      let startX = Math.floor(cameraX / tileW) * tileW - cameraX;
+      for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
+        ctx.drawImage(imgBackgroundAnother, startX + i * tileW, 0, tileW, targetH);
+      }
+    }
 
-  let x1 = -(cameraX * C.PARALLAX[1]) % tileW;
-  for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
-    ctx.drawImage(bgLayer1, x1 + i * tileW, 0, tileW, targetH);
-  }
+    // Пол из floor.png для home
+    const floorW = imgFloor.width;
+    const floorH = imgFloor.height;
+    if (floorW && floorH) {
+      let startX = Math.floor(cameraX / floorW) * floorW - cameraX;
+      for (let x = startX; x < w; x += floorW) {
+        for (let r = 0; r < C.DIRT.ROWS; r++) {
+          let y = groundY + r * floorH;
 
-  let x2 = -(cameraX * C.PARALLAX[2]) % tileW;
-  for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
-    ctx.drawImage(bgLayer2, x2 + i * tileW, 0, tileW, targetH);
-  }
+          ctx.save();
+          ctx.translate(x + floorW / 2, y + floorH / 2);
+          ctx.drawImage(imgFloor, -floorW / 2, -floorH / 2);
+          ctx.restore();
+        }
+      }
+    }
+  } else {
+    // Многослойный фон для forest (по умолчанию)
+    const baseW = C.BACKGROUND.BASE_W;
+    const baseH = C.BACKGROUND.BASE_H;
+    const targetH = Math.max(groundY, 1);
+    const scale = targetH / baseH;
+    const tileW = Math.max(1, Math.round(baseW * scale));
 
-  let x3 = -(cameraX * C.PARALLAX[3]) % tileW;
-  for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
-    ctx.drawImage(bgLayer3, x3 + i * tileW, 0, tileW, targetH);
-  }
+    let x0 = -(cameraX * C.PARALLAX[0]) % tileW;
+    for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
+      ctx.drawImage(bgLayer0, x0 + i * tileW, 0, tileW, targetH);
+    }
 
-  let x4 = -(cameraX * C.PARALLAX[4]) % tileW;
-  for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
-    ctx.drawImage(bgLayer4, x4 + i * tileW, 0, tileW, targetH);
-  }
+    let x1 = -(cameraX * C.PARALLAX[1]) % tileW;
+    for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
+      ctx.drawImage(bgLayer1, x1 + i * tileW, 0, tileW, targetH);
+    }
 
-  let x5 = -(cameraX * C.PARALLAX[5]) % tileW;
-  for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
-    ctx.drawImage(bgLayer5, x5 + i * tileW, 0, tileW, targetH);
-  }
+    let x2 = -(cameraX * C.PARALLAX[2]) % tileW;
+    for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
+      ctx.drawImage(bgLayer2, x2 + i * tileW, 0, tileW, targetH);
+    }
 
-  let x6 = -(cameraX * C.PARALLAX[6]) % tileW;
-  for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
-    ctx.drawImage(bgLayer6, x6 + i * tileW, 0, tileW, targetH);
-  }
+    let x3 = -(cameraX * C.PARALLAX[3]) % tileW;
+    for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
+      ctx.drawImage(bgLayer3, x3 + i * tileW, 0, tileW, targetH);
+    }
 
-  const dirtW = imgDirt.width;
-  const dirtH = imgDirt.height;
-  if (dirtW && dirtH) {
-    let startX = Math.floor(cameraX / dirtW) * dirtW - cameraX;
-    for (let x = startX; x < w; x += dirtW) {
-      const worldX = x + cameraX;
-      const tileXIndex = Math.floor(worldX / dirtW);
-      for (let r = 0; r < C.DIRT.ROWS; r++) {
-        let y = groundY + r * dirtH;
-        let seed = (tileXIndex * 73856093) ^ (r * 19349663);
-        let idx = (seed >>> 0) & 3;
-        let angle = 0;
-        if (idx === 1) angle = Math.PI / 2;
-        else if (idx === 2) angle = Math.PI;
-        else if (idx === 3) angle = 3 * Math.PI / 2;
+    let x4 = -(cameraX * C.PARALLAX[4]) % tileW;
+    for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
+      ctx.drawImage(bgLayer4, x4 + i * tileW, 0, tileW, targetH);
+    }
 
-        ctx.save();
-        ctx.translate(x + dirtW / 2, y + dirtH / 2);
-        ctx.rotate(angle);
-        ctx.drawImage(imgDirt, -dirtW / 2, -dirtH / 2);
-        ctx.restore();
+    let x5 = -(cameraX * C.PARALLAX[5]) % tileW;
+    for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
+      ctx.drawImage(bgLayer5, x5 + i * tileW, 0, tileW, targetH);
+    }
+
+    let x6 = -(cameraX * C.PARALLAX[6]) % tileW;
+    for (let i = -1; i <= Math.ceil(w / tileW) + 1; i++) {
+      ctx.drawImage(bgLayer6, x6 + i * tileW, 0, tileW, targetH);
+    }
+
+    // Пол из dirt.png для forest
+    const dirtW = imgDirt.width;
+    const dirtH = imgDirt.height;
+    if (dirtW && dirtH) {
+      let startX = Math.floor(cameraX / dirtW) * dirtW - cameraX;
+      for (let x = startX; x < w; x += dirtW) {
+        const worldX = x + cameraX;
+        const tileXIndex = Math.floor(worldX / dirtW);
+        for (let r = 0; r < C.DIRT.ROWS; r++) {
+          let y = groundY + r * dirtH;
+          let seed = (tileXIndex * 73856093) ^ (r * 19349663);
+          let idx = (seed >>> 0) & 3;
+          let angle = 0;
+          if (idx === 1) angle = Math.PI / 2;
+          else if (idx === 2) angle = Math.PI;
+          else if (idx === 3) angle = 3 * Math.PI / 2;
+
+          ctx.save();
+          ctx.translate(x + dirtW / 2, y + dirtH / 2);
+          ctx.rotate(angle);
+          ctx.drawImage(imgDirt, -dirtW / 2, -dirtH / 2);
+          ctx.restore();
+        }
       }
     }
   }
@@ -1013,7 +1221,24 @@ function drawBackground() {
   function getPlatformsArray(lvl){
     let arr = (lvl.platforms||[]).slice();
     if (lvl.dynamicPlatforms) {
-      lvl.dynamicPlatforms.forEach(dp=>{ if(dp.open) arr.push(dp); });
+      lvl.dynamicPlatforms.forEach(dp=>{ 
+        // Для платформ с переключателями проверяем open
+        if (dp.group !== undefined && dp.group !== null) {
+          if(dp.open) arr.push(dp);
+        } 
+        // Для движущихся платформ всегда добавляем
+        else if (dp.type === 'moving') {
+          arr.push(dp);
+        }
+        // Для подпрыгивающих платформ всегда добавляем
+        else if (dp.type === 'bouncy') {
+          arr.push(dp);
+        }
+        // Для старых платформ без типа проверяем open
+        else if(dp.open) {
+          arr.push(dp);
+        }
+      });
     }
     return arr;
   }
@@ -1051,13 +1276,17 @@ function drawBackground() {
     });
     if (lvl.dynamicPlatforms) {
       lvl.dynamicPlatforms.forEach(dp=>{
-        const related = lvl.switches.filter(sw=> sw.group === dp.group);
-        if (related.length === 0) return;
-        const anyPressed = related.some(sw=> sw.pressed);
-        if (dp.mode === 'hold') {
-          dp.open = anyPressed;
-        } else {
-          if (anyPressed) dp.open = true;
+        // Обработка платформ с переключателями (старая логика)
+        if (dp.group !== undefined && dp.group !== null) {
+          const related = lvl.switches.filter(sw=> sw.group === dp.group);
+          if (related.length > 0) {
+            const anyPressed = related.some(sw=> sw.pressed);
+            if (dp.mode === 'hold') {
+              dp.open = anyPressed;
+            } else {
+              if (anyPressed) dp.open = true;
+            }
+          }
         }
       });
     }
@@ -1073,6 +1302,77 @@ function drawBackground() {
         }
       });
     }
+  }
+
+  function updateDynamicPlatforms() {
+    const lvl = levels[currentLevel];
+    if (!lvl.dynamicPlatforms) return;
+    
+    const entities = [
+      {x: player.x, y: player.y, w: player.w, h: player.h, obj: player},
+      {x: companion.x, y: companion.y, w: companion.w, h: companion.h, obj: companion}
+    ];
+    
+    lvl.dynamicPlatforms.forEach(dp => {
+      // Инициализация для новых типов платформ
+      if (!dp.initialized) {
+        dp.initialized = true;
+        if (dp.type === 'moving') {
+          dp.startX = dp.x;
+          dp.startY = dp.y;
+          dp.offsetX = 0;
+          dp.offsetY = 0;
+          dp.directionX = dp.directionX || 1;
+          dp.directionY = dp.directionY || 0;
+          dp.speed = dp.speed || 1;
+          dp.distanceX = dp.distanceX || 100;
+          dp.distanceY = dp.distanceY || 0;
+        } else if (dp.type === 'bouncy') {
+          // Платформа-пружина уже готова
+        }
+      }
+      
+      // Движущиеся платформы
+      if (dp.type === 'moving' && dp.open !== false) {
+        const oldX = dp.x;
+        const oldY = dp.y;
+        
+        if (dp.distanceX > 0) {
+          dp.offsetX += dp.directionX * dp.speed;
+          if (dp.offsetX >= dp.distanceX) {
+            dp.offsetX = dp.distanceX;
+            dp.directionX = -1;
+          } else if (dp.offsetX <= 0) {
+            dp.offsetX = 0;
+            dp.directionX = 1;
+          }
+        }
+        if (dp.distanceY > 0) {
+          dp.offsetY += dp.directionY * dp.speed;
+          if (dp.offsetY >= dp.distanceY) {
+            dp.offsetY = dp.distanceY;
+            dp.directionY = -1;
+          } else if (dp.offsetY <= 0) {
+            dp.offsetY = 0;
+            dp.directionY = 1;
+          }
+        }
+        dp.x = dp.startX + dp.offsetX;
+        dp.y = dp.startY + dp.offsetY;
+        
+        // Перемещаем персонажей вместе с платформой, если они на ней стоят
+        const deltaX = dp.x - oldX;
+        const deltaY = dp.y - oldY;
+        entities.forEach(e => {
+          const entity = e.obj;
+          if (entity.onDynamicPlatform === dp) {
+            entity.x += deltaX;
+            entity.y += deltaY;
+          }
+        });
+      }
+      
+    });
   }
   function drawPlayer() {
     ctx.imageSmoothingEnabled = false;
@@ -1156,6 +1456,69 @@ function drawBackground() {
   }
   
 
+  function updateCamera(currentTime) {
+    // Система dead zone - камера двигается только когда персонаж выходит за зону
+    const activeChar = activeCharacter === "player" ? player : companion;
+    const charCenterX = activeChar.x + activeChar.w / 2;
+    
+    if (isCameraTransitioning) {
+      // При переключении персонажей - быстро устанавливаем камеру с учетом dead zone
+      const cameraCenterX = cameraX + viewW / 2;
+      const deadZoneLeft = cameraCenterX - C.CAMERA.DEAD_ZONE_WIDTH / 2;
+      const deadZoneRight = cameraCenterX + C.CAMERA.DEAD_ZONE_WIDTH / 2;
+      
+      // Если новый персонаж уже в dead zone - просто завершаем переход
+      if (charCenterX >= deadZoneLeft && charCenterX <= deadZoneRight) {
+        isCameraTransitioning = false;
+      } else {
+        // Если новый персонаж вне dead zone - быстро центрируем камеру с учетом dead zone
+        let targetX;
+        if (charCenterX < deadZoneLeft) {
+          targetX = charCenterX - viewW / 2 + C.CAMERA.DEAD_ZONE_WIDTH / 2;
+        } else {
+          targetX = charCenterX - viewW / 2 - C.CAMERA.DEAD_ZONE_WIDTH / 2;
+        }
+        
+        const elapsed = currentTime - cameraTransitionStart;
+        const transitionDuration = 2500; // Быстрый переход 200ms
+        const progress = Math.min(elapsed / transitionDuration, 1);
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+        cameraX = cameraX + (targetX - cameraX) * easedProgress;
+        
+        if (progress >= 1) {
+          isCameraTransitioning = false;
+          cameraX = targetX;
+        }
+      }
+    } else {
+      // Обычный режим с dead zone
+      const cameraCenterX = cameraX + viewW / 2;
+      const deadZoneLeft = cameraCenterX - C.CAMERA.DEAD_ZONE_WIDTH / 2;
+      const deadZoneRight = cameraCenterX + C.CAMERA.DEAD_ZONE_WIDTH / 2;
+      
+      // Проверяем, вышел ли персонаж за границы зоны
+      if (charCenterX < deadZoneLeft) {
+        // Персонаж слева от зоны - двигаем камеру влево
+        const targetX = charCenterX - viewW / 2 + C.CAMERA.DEAD_ZONE_WIDTH / 2;
+        const followSpeed = C.CAMERA.FOLLOW_SPEED;
+        cameraX = cameraX + (targetX - cameraX) * followSpeed;
+      } else if (charCenterX > deadZoneRight) {
+        // Персонаж справа от зоны - двигаем камеру вправо
+        const targetX = charCenterX - viewW / 2 - C.CAMERA.DEAD_ZONE_WIDTH / 2;
+        const followSpeed = C.CAMERA.FOLLOW_SPEED;
+        cameraX = cameraX + (targetX - cameraX) * followSpeed;
+      }
+      // Если персонаж в зоне - камера не двигается
+    }
+    
+    // Ограничиваем камеру границами уровня
+    let lvl = levels[currentLevel];
+    if (cameraX < 0) cameraX = 0;
+    if (cameraX > lvl.width - viewW) cameraX = lvl.width - viewW;
+    
+    cameraX = Math.round(cameraX);
+  }
+
   function draw() { window.drawFrame(); }
 
    function loop(currentTime) {
@@ -1166,33 +1529,59 @@ function drawBackground() {
   const deltaTime = currentTime - lastTime;
   lastTime = currentTime;
   
-  accumulator += deltaTime;
-  
-  while (accumulator >= fixedTimeStep) {
-    update();
-    accumulator -= fixedTimeStep;
+  if (!gamePaused) {
+    accumulator += deltaTime;
+    
+    while (accumulator >= fixedTimeStep) {
+      update();
+      accumulator -= fixedTimeStep;
+    }
   }
   
+  updateLevelTimer();
+  updateCamera(currentTime);
   draw();
   requestAnimationFrame(loop);
 }
 
 let loaded = 0;
-const bgImages = [bgLayer0, bgLayer1, bgLayer2, bgLayer3, bgLayer4, bgLayer5, bgLayer6];
-const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2, imgMountain, imgThree, imgAlert, imgBush];
-const platformImages = [imgPlatformGrass, imgPlatformStone, imgPlatformWood, imgPlatformStone2, imgPlatformDanger, imgDoorDanger];
-const groundImages = [imgDirt];
+const bgImages = [bgLayer0, bgLayer1, bgLayer2, bgLayer3, bgLayer4, bgLayer5, bgLayer6, imgBackgroundAnother];
+const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2, imgMountain, imgThree, imgAlert, imgBush, imgHouse1, imgHouse2, imgHouseBg];
+const platformImages = [imgPlatformGrass, imgPlatformStone, imgPlatformWood, imgPlatformStone2, imgPlatformDanger, imgPlatformSlime, imgDoorDanger, imgPlatformHouse];
+const groundImages = [imgDirt, imgFloor];
 const allImages = [...bgImages, ...decorationImages, ...platformImages, ...groundImages, imgPlayerIdle, imgPlayerWalk, imgCompanionIdle, imgCompanionWalk, imgTrap, imgFinish, imgBackgroundAll, imgEnemy];
 allImages.forEach(img => {
   img.onload = () => {
     loaded++;
     if (loaded === allImages.length) {
       
+      // Обновляем уровень из редактора, если режим активен
+      const editorMode = localStorage.getItem('love_game_editor_mode');
+      if (editorMode === '1') {
+        const editorLevelJson = localStorage.getItem('love_game_editor_level');
+        if (editorLevelJson) {
+          try {
+            const editorLevel = JSON.parse(editorLevelJson);
+            if (levels.length > 0) {
+              levels[0] = editorLevel;
+            } else {
+              levels.push(editorLevel);
+            }
+            currentLevel = 0;
+          } catch(e) {}
+        }
+      }
+      
       let lvl = levels[currentLevel];
-      cameraX = player.x - viewW/2;
+      // Инициализируем камеру с учетом dead zone
+      const activeChar = activeCharacter === "player" ? player : companion;
+      const charCenterX = activeChar.x + activeChar.w / 2;
+      cameraX = charCenterX - viewW / 2;
       if(cameraX < 0) cameraX = 0;
       if(cameraX > lvl.width - viewW) cameraX = lvl.width - viewW;
       cameraX = Math.round(cameraX);
+      isCameraTransitioning = false;
+      previousActiveCharacter = activeCharacter;
       
       enemies = [];
       if (lvl.enemies) {

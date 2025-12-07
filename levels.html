@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#282825">
+  <meta name="apple-mobile-web-app-title" content="УРОВНИ">
+  <meta name="application-name" content="УРОВНИ">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="apple-touch-icon" href="img/iconified/apple-touch-icon.png" />
+  <link rel="SHORTCUT ICON" href="img/favicon.ico" type="image/x-icon">
+  <link rel="manifest" href="manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+
+  <title>УРОВНИ</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      background: url('./img/levels_bg.png') no-repeat center center;
+      background-size: cover;
+      font-family: "Pixelify Sans", sans-serif;
+      overflow-x: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .container {
+      width: 100%;
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    .levels-grid {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+      width: 100%;
+      max-width: 1200px;
+      padding: 20px 0;
+    }
+    .level-button {
+      position: relative;
+      width: 64px;
+      aspect-ratio: 1;
+      background: none;
+      background-image: url('./img/level.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Pixelify Sans", sans-serif;
+      font-size: 32px;
+      font-weight: bold;
+      color: #277F74;
+      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
+      transition: transform 0.1s;
+    }
+    .level-button.level-center {
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .level-button.level-left {
+      transform: translateX(-80px);
+    }
+    .level-button.level-right {
+      transform: translateX(80px);
+    }
+    .level-button.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: brightness(0.5);
+    }
+    .level-number {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+    }
+    #modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+    #coinCounter {
+      white-space: nowrap;
+      width: min-content;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: stretch;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #coinCounter .counterLeft,
+    #coinCounter .counterRight {
+      height: 100%;
+      aspect-ratio: var(--edge-ar, 1);
+      background-repeat: no-repeat;
+      background-size: auto 100%;
+      background-position: center;
+      width: auto;
+      flex: 0 0 auto;
+    }
+    #coinCounter .counterLeft { background-image: url("img/tabl1.png"); }
+    #coinCounter .counterRight { background-image: url("img/tabl3.png"); }
+    #coinCounter .counterCenter {
+      flex: 1 1 auto;
+      background-image: url("img/tabl2.png");
+      background-repeat: repeat-x;
+      background-size: auto 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 30px 8px;
+    }
+    .counterCenter h2, .counterCenter p {
+      margin: 0;
+    }
+    #modalText { width: max-content; white-space: pre-line; }
+    .back-button {
+      background: none;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 100;
+      border: none;
+      cursor: pointer;
+    }
+    .back-button img {
+      width: 50px;
+      height: 50px;
+    }
+    .fade {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease;
+      z-index: 2000;
+    }
+    .fade.show {
+      opacity: 1;
+    }
+    #introFade {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #000;
+      z-index: 2000;
+      opacity: 1;
+      pointer-events: none;
+      transition: opacity 2s ease;
+    }
+    #introFade.hide {
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <button class="back-button" onclick="goBack()"><img src="./img/home.png" style="width: 50px; height: 50px;"></button>
+  
+  <div class="container">
+    <h1 style="color: #fff; margin-top: 60px; font-size: 32px;">уровни</h1>
+    <div class="levels-grid" id="levelsGrid"></div>
+  </div>
+
+  <div id="modal">
+    <div id="coinCounter">
+      <div class="counterLeft"></div>
+      <div class="counterCenter">
+        <h2 id="modalTitle"></h2>
+        <p id="modalText"></p>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+          <button id="modalHomeBtn" onclick="closeModal()" style="padding: 0; margin: 0; border: none; background: none; cursor: pointer;"><img src="./img/home.png" style="width: 50px; height: 50px;"></button>
+          <button id="modalResumeBtn" onclick="playLevel()" style="padding: 0; margin: 0; border: none; background: none; cursor: pointer;"><img src="./img/resume.png" style="width: 50px; height: 50px;"></button>
+        </div>
+      </div>
+      <div class="counterRight"></div>
+    </div>
+  </div>
+
+  <div id="introFade"></div>
+  <div id="fade" class="fade"></div>
+
+  <script src="levels.js"></script>
+  <script>
+    const STORAGE_KEY_LEVEL = 'love_game_unlocked_level';
+    const STORAGE_KEY_STATS = 'love_game_level_stats';
+
+    function loadLevelProgress() {
+      try {
+        const stored = parseInt(Object.keys(JSON.parse(localStorage.getItem(STORAGE_KEY_STATS))).length || '0', 10);
+        console.log(stored);
+        return Math.max(0, stored);
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    function loadLevelStats() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY_STATS);
+        if (stored) {
+          return JSON.parse(stored);
+        }
+      } catch (e) {}
+      return {};
+    }
+
+    function getLevelStats(levelIndex) {
+      const allStats = loadLevelStats();
+      return allStats[levelIndex] || { bestTime: null, bestCoins: 0 };
+    }
+
+    function formatTime(milliseconds) {
+      if (!milliseconds) return 'не пройдено';
+      const totalSeconds = Math.floor(milliseconds / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      const ms = Math.floor((milliseconds % 1000) / 10);
+      if (minutes > 0) {
+        return `${minutes}:${seconds.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+      }
+      return `${seconds}.${ms.toString().padStart(2, '0')}`;
+    }
+
+    let selectedLevelIndex = 0;
+    const unlockedLevel = loadLevelProgress();
+
+    function renderLevels() {
+      const grid = document.getElementById('levelsGrid');
+      grid.innerHTML = '';
+
+      // Всегда показываем 10 уровней
+      for (let i = 0; i < 10; i++) {
+        const button = document.createElement('button');
+        button.className = 'level-button';
+        button.innerHTML = `<span class="level-number">${i + 1}</span>`;
+        
+        // Позиционирование лесенкой
+        if (i === 0 || i === 9) {
+          // Первый и последний - по центру
+          button.classList.add('level-center');
+        } else if (i % 2 === 1) {
+          // Нечетные (2, 4, 6, 8) - левее
+          button.classList.add('level-left');
+        } else {
+          // Четные (3, 5, 7) - правее
+          button.classList.add('level-right');
+        }
+        
+        const isUnlocked = i <= unlockedLevel;
+        if (!isUnlocked) {
+          button.classList.add('disabled');
+        }
+
+        button.onclick = () => {
+          if (isUnlocked) {
+            openModal(i);
+          }
+        };
+
+        grid.appendChild(button);
+      }
+    }
+
+    function getLevelTitle(levelIndex) {
+      // Специальные названия для определенных уровней
+      if (levelIndex === 0) return "Коми";
+      if (levelIndex === 6) return "Киров";
+      if (levelIndex === 9) return "Удмуртия";
+      // Для остальных - "Уровень X"
+      return `Уровень ${levelIndex + 1}`;
+    }
+
+    function openModal(levelIndex) {
+      selectedLevelIndex = levelIndex;
+      const level = window.levels && window.levels[levelIndex] ? window.levels[levelIndex] : null;
+      const stats = getLevelStats(levelIndex);
+      
+      const levelTitle = getLevelTitle(levelIndex);
+      document.getElementById('modalTitle').textContent = levelTitle;
+      
+      let modalText = '';
+      if (stats.bestTime) {
+        modalText += `Лучшее время: ${formatTime(stats.bestTime)}\n`;
+      } else {
+        modalText += 'Лучшее время: не пройдено\n';
+      }
+      
+      const totalCoins = level && level.coins ? level.coins.length : 0;
+      modalText += `Лучший результат монет: ${stats.bestCoins}`;
+      
+      document.getElementById('modalText').textContent = modalText;
+      
+      // Обновляем размеры краев coinCounter
+      if (window.updateCounterEdges) {
+        window.updateCounterEdges();
+      }
+
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+    }
+
+    function playLevel() {
+      const fade = document.getElementById('fade');
+      if (fade) {
+        fade.classList.add('show');
+        setTimeout(() => {
+          localStorage.setItem(STORAGE_KEY_LEVEL, String(selectedLevelIndex));
+          window.location.href = 'index.html';
+        }, 1000);
+      } else {
+        localStorage.setItem(STORAGE_KEY_LEVEL, String(selectedLevelIndex));
+        window.location.href = 'index.html';
+      }
+    }
+
+    function goBack() {
+      const fade = document.getElementById('fade');
+      if (fade) {
+        fade.classList.add('show');
+        setTimeout(() => {
+          window.location.href = 'play.html';
+        }, 1000);
+      } else {
+        window.location.href = 'play.html';
+      }
+    }
+
+    // Закрытие модалки по клику вне её
+    document.getElementById('modal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeModal();
+      }
+    });
+
+    // Инициализация coinCounter
+    (function initCounterEdges(){
+      const leftUrl = 'img/tabl1.png';
+      const rightUrl = 'img/tabl3.png';
+      const imgL = new Image();
+      const imgR = new Image();
+      let ready = 0;
+      let arLeft = 1, arRight = 1;
+      function applyAR() {
+        if (ready < 2) return;
+        arLeft = imgL.naturalWidth && imgL.naturalHeight ? (imgL.naturalWidth / imgL.naturalHeight) : 1;
+        arRight = imgR.naturalWidth && imgR.naturalHeight ? (imgR.naturalWidth / imgR.naturalHeight) : 1;
+        updateCounterEdges();
+      }
+      window.updateCounterEdges = function updateCounterEdges(){
+        const leftEl = document.querySelector('#coinCounter .counterLeft');
+        const rightEl = document.querySelector('#coinCounter .counterRight');
+        const centerEl = document.querySelector('#coinCounter .counterCenter');
+        if (!leftEl || !rightEl || !centerEl) return;
+        const h = centerEl.clientHeight;
+        if (h === 0) {
+          setTimeout(updateCounterEdges, 50);
+          return;
+        }
+        leftEl.style.width = (h * arLeft) + 'px';
+        rightEl.style.width = (h * arRight) + 'px';
+        leftEl.style.height = h + 'px';
+        rightEl.style.height = h + 'px';
+      };
+      imgL.onload = ()=>{ ready++; applyAR(); };
+      imgR.onload = ()=>{ ready++; applyAR(); };
+      imgL.src = leftUrl;
+      imgR.src = rightUrl;
+      window.addEventListener('resize', ()=>{
+        if (ready >= 2) window.updateCounterEdges();
+      });
+    })();
+
+    // Инициализация
+    window.addEventListener('load', function() {
+      renderLevels();
+      
+      // Анимация появления страницы
+      var fade = document.getElementById('introFade');
+      if (fade) {
+        requestAnimationFrame(function () {
+          fade.classList.add('hide');
+          setTimeout(function () {
+            if (fade && fade.parentNode) fade.parentNode.removeChild(fade);
+          }, 2100);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
+

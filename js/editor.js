@@ -27,6 +27,7 @@
     doors: [],
     traps: [],
     coins: [],
+    enemies: [],
     finish: {x: 200, y: 300, w: 24, h: 63},
     gift: {title: "Новый уровень", desc: "Отличная работа!"},
     decorations: [],
@@ -45,12 +46,16 @@
     { id:'platform_stone', label:'Платформа stone', type:'platform', payload:{texture:'stone'} },
     { id:'platform_stone2', label:'Платформа stone2', type:'platform', payload:{texture:'stone2'} },
     { id:'platform_wood', label:'Платформа wood', type:'platform', payload:{texture:'wood'} },
+    { id:'platform_house', label:'Платформа house', type:'platform', payload:{texture:'house'} },
     { id:'trap', label:'Шипы', type:'trap' },
     { id:'coin', label:'Морошка', type:'coin' },
     { id:'wall', label:'Стена', type:'wall', payload:{texture:'stone'} },
     { id:'door', label:'Дверь', type:'door', payload:{texture:'danger_door', group:1, mode:'hold', open:false} },
     { id:'switch', label:'Кнопка', type:'switch', payload:{group:1} },
     { id:'dyn_plat', label:'Дин.платф.', type:'dynamicPlatform', payload:{texture:'danger_platform', group:1, mode:'hold', open:false} },
+    { id:'moving_platform', label:'Движ. платф.', type:'movingPlatform', payload:{texture:'danger_platform', distanceX:100, distanceY:0, speed:1} },
+    { id:'slime_platform', label:'Слизь', type:'slimePlatform', payload:{texture:'slime_platform', bounceStrength:-22} },
+    { id:'enemy', label:'Враг', type:'enemy' },
     { id:'finish', label:'Финиш', type:'finish' },
     { id:'decor_flower1', label:'Декор flower1', type:'decor', payload:{image:'flower1'} },
     { id:'decor_flower2', label:'Декор flower2', type:'decor', payload:{image:'flower2'} },
@@ -59,11 +64,24 @@
     { id:'decor_grass1', label:'Декор grass1', type:'decor', payload:{image:'grass1'} },
     { id:'decor_bush', label:'Декор bush', type:'decor', payload:{image:'bush'} },
     { id:'decor_three', label:'Декор three', type:'decor', payload:{image:'three'} },
-    { id:'decor_alert', label:'Декор alert', type:'decor', payload:{image:'alert'} }
+    { id:'decor_alert', label:'Декор alert', type:'decor', payload:{image:'alert'} },
+    { id:'decor_house1', label:'Декор house_1', type:'decor', payload:{image:'house_1'} },
+    { id:'decor_house2', label:'Декор house_2', type:'decor', payload:{image:'house_2'} },
+    { id:'decor_house_bg', label:'Декор house_bg', type:'decor', payload:{image:'house_bg'} }
   ];
 
   const toolGrid = document.getElementById('toolGrid');
   let currentTool = tools[0];
+  let decorLayer = 'decorations'; // Текущий слой для декораций
+  const movingPlatformParams = document.getElementById('movingPlatformParams');
+  const slimePlatformParams = document.getElementById('slimePlatformParams');
+  const decorLayerParams = document.getElementById('decorLayerParams');
+  const movingDistanceX = document.getElementById('movingDistanceX');
+  const movingDistanceY = document.getElementById('movingDistanceY');
+  const movingSpeed = document.getElementById('movingSpeed');
+  const slimeBounceStrength = document.getElementById('slimeBounceStrength');
+  const decorLayerSelect = document.getElementById('decorLayer');
+  
   function renderPalette(){
     toolGrid.innerHTML = '';
     tools.forEach(t=>{
@@ -71,10 +89,70 @@
       d.className = 'tile' + (t===currentTool?' active':'');
       d.textContent = t.label;
       d.title = t.label;
-      d.onclick = ()=>{ currentTool=t; applyBrushFromTool(currentTool); renderPalette(); };
+      d.onclick = ()=>{ 
+        currentTool=t; 
+        applyBrushFromTool(currentTool); 
+        updateParamsVisibility();
+        renderPalette(); 
+      };
       toolGrid.appendChild(d);
     });
   }
+  
+  function updateParamsVisibility(){
+    if (currentTool.type === 'movingPlatform') {
+      movingPlatformParams.style.display = 'block';
+      slimePlatformParams.style.display = 'none';
+      decorLayerParams.style.display = 'none';
+      if (currentTool.payload) {
+        movingDistanceX.value = currentTool.payload.distanceX || 100;
+        movingDistanceY.value = currentTool.payload.distanceY || 0;
+        movingSpeed.value = currentTool.payload.speed || 1;
+      }
+    } else if (currentTool.type === 'slimePlatform') {
+      movingPlatformParams.style.display = 'none';
+      slimePlatformParams.style.display = 'block';
+      decorLayerParams.style.display = 'none';
+      if (currentTool.payload) {
+        slimeBounceStrength.value = currentTool.payload.bounceStrength || -22;
+      }
+    } else if (currentTool.type === 'decor') {
+      movingPlatformParams.style.display = 'none';
+      slimePlatformParams.style.display = 'none';
+      decorLayerParams.style.display = 'block';
+      decorLayerSelect.value = decorLayer;
+    } else {
+      movingPlatformParams.style.display = 'none';
+      slimePlatformParams.style.display = 'none';
+      decorLayerParams.style.display = 'none';
+    }
+  }
+  
+  decorLayerSelect.addEventListener('change', ()=>{
+    decorLayer = decorLayerSelect.value;
+  });
+  
+  movingDistanceX.addEventListener('change', ()=>{
+    if (currentTool.type === 'movingPlatform' && currentTool.payload) {
+      currentTool.payload.distanceX = parseFloat(movingDistanceX.value) || 100;
+    }
+  });
+  movingDistanceY.addEventListener('change', ()=>{
+    if (currentTool.type === 'movingPlatform' && currentTool.payload) {
+      currentTool.payload.distanceY = parseFloat(movingDistanceY.value) || 0;
+    }
+  });
+  movingSpeed.addEventListener('change', ()=>{
+    if (currentTool.type === 'movingPlatform' && currentTool.payload) {
+      currentTool.payload.speed = parseFloat(movingSpeed.value) || 1;
+    }
+  });
+  slimeBounceStrength.addEventListener('change', ()=>{
+    if (currentTool.type === 'slimePlatform' && currentTool.payload) {
+      currentTool.payload.bounceStrength = parseFloat(slimeBounceStrength.value) || -22;
+    }
+  });
+  
   renderPalette();
 
   const brushWEl = document.getElementById('brushW');
@@ -94,7 +172,10 @@
     let img = null;
     switch (tool.type){
       case 'platform':
-        img = pickPlatformTexture(tool.payload && tool.payload.texture);
+        const platformTexture = tool.payload && tool.payload.texture;
+        // Автоматические размеры для platform_house
+        if (platformTexture === 'house') return { w: 100, h: 20 };
+        img = pickPlatformTexture(platformTexture);
         return { w: (img && img.width) || 100, h: (img && img.height) || 20 };
       case 'wall':
         img = pickPlatformTexture((tool.payload && tool.payload.texture) || 'stone');
@@ -111,6 +192,15 @@
       case 'dynamicPlatform':
         img = pickPlatformTexture((tool.payload && tool.payload.texture) || 'danger_platform');
         return { w: (img && img.width) || 111, h: (img && img.height) || 22 };
+      case 'movingPlatform':
+        img = pickPlatformTexture((tool.payload && tool.payload.texture) || 'danger_platform');
+        return { w: (img && img.width) || 111, h: (img && img.height) || 22 };
+      case 'slimePlatform':
+        img = window.imgPlatformSlime;
+        return { w: (img && img.width) || 46, h: (img && img.height) || 16 };
+      case 'enemy':
+        img = window.imgEnemy;
+        return { w: 46, h: 38 };
       case 'trap':
         img = window.imgTrap; return { w: (img && img.width) || 20, h: (img && img.height) || 22 };
       case 'coin':
@@ -118,7 +208,12 @@
       case 'finish':
         img = window.imgFinish; return { w: (img && img.width) || 24, h: (img && img.height) || 63 };
       case 'decor':
-        img = pickDecor(tool.payload && tool.payload.image);
+        const decorName = tool.payload && tool.payload.image;
+        // Автоматические размеры для новых декораций
+        if (decorName === 'house_1') return { w: 244.5, h: 413 };
+        if (decorName === 'house_2') return { w: 72.5, h: 406.5 };
+        if (decorName === 'house_bg') return { w: 305, h: 406.5 };
+        img = pickDecor(decorName);
         return { w: (img && img.width) || 32, h: (img && img.height) || 32 };
       default:
         return null;
@@ -135,6 +230,7 @@
   const inpLevelIndex = document.getElementById('inpLevelIndex');
   const btnImportFromGame = document.getElementById('btnImportFromGame');
   const btnFit = document.getElementById('btnFit');
+  const btnPlay = document.getElementById('btnPlay');
   const coordEl = document.getElementById('coord');
   inpWidth.addEventListener('change', ()=>{ level.width = Math.max(200, parseInt(inpWidth.value||'200',10)); draw(); });
   btnNew.onclick = ()=>{ resetLevel(); draw(); };
@@ -143,9 +239,44 @@
   btnFit.onclick = ()=>{ fitToLevel(); draw(); };
   btnImport.onclick = ()=>{ tryImportFromText(); };
   btnImportFromGame.onclick = ()=>{ tryImportFromLevelsArray(); };
+  
+  function updatePlayButton() {
+    const editorMode = localStorage.getItem('love_game_editor_mode');
+    if (editorMode === '1') {
+      btnPlay.textContent = 'Прекратить проверку';
+    } else {
+      btnPlay.textContent = 'Запустить игру';
+    }
+  }
+  
+  btnPlay.onclick = ()=>{ 
+    try {
+      const editorMode = localStorage.getItem('love_game_editor_mode');
+      if (editorMode === '1') {
+        // Прекращаем проверку - очищаем флаг
+        localStorage.removeItem('love_game_editor_mode');
+        localStorage.removeItem('love_game_editor_level');
+        updatePlayButton();
+        alert('Режим проверки отключен. Теперь можно проходить обычные уровни.');
+      } else {
+        // Запускаем проверку - сохраняем уровень
+        const levelToPlay = normalizeLevel(level);
+        localStorage.setItem('love_game_editor_level', JSON.stringify(levelToPlay));
+        localStorage.setItem('love_game_editor_mode', '1');
+        updatePlayButton();
+        // Открываем игру в новой вкладке
+        window.open('index.html', '_blank');
+      }
+    } catch(e) {
+      alert('Ошибка: ' + e.message);
+    }
+  };
+  
+  // Обновляем кнопку при загрузке
+  updatePlayButton();
 
   function resetLevel(){
-    level = { width: Math.max(200, parseInt(inpWidth.value||'3800',10)), platforms: [], walls: [], doors: [], switches: [], dynamicPlatforms: [], traps: [], coins: [], finish: {x:200,y:300,w:24,h:63}, gift:{title:"Новый уровень", desc:"Отличная работа!"}, decorations: [], decorationsUndo: [], decorationsUndoPlatform: [] };
+    level = { width: Math.max(200, parseInt(inpWidth.value||'3800',10)), platforms: [], walls: [], doors: [], switches: [], dynamicPlatforms: [], traps: [], coins: [], enemies: [], finish: {x:200,y:300,w:24,h:63}, gift:{title:"Новый уровень", desc:"Отличная работа!"}, decorations: [], decorationsUndo: [], decorationsUndoPlatform: [] };
   }
   function normalizeLevel(obj){
     const safe = {
@@ -167,7 +298,21 @@
     safe.walls.forEach(w=>{ if (w.texture==null) w.texture='stone'; });
     safe.doors.forEach(d=>{ if (d.texture==null) d.texture='danger_door'; if (d.group==null) d.group=1; if (d.mode==null) d.mode='hold'; d.open = !!d.open; });
     safe.switches.forEach(s=>{ if (s.w==null) s.w=26; if (s.h==null) s.h=11; if (s.group==null) s.group=1; });
-    safe.dynamicPlatforms.forEach(dp=>{ if (dp.texture==null) dp.texture='danger_platform'; if (dp.group==null) dp.group=1; if (dp.mode==null) dp.mode='hold'; dp.open = !!dp.open; });
+    safe.enemies = Array.isArray(obj.enemies)? obj.enemies:[];
+    safe.dynamicPlatforms.forEach(dp=>{ 
+      if (dp.texture==null) dp.texture='danger_platform'; 
+      if (dp.type === 'moving') {
+        if (dp.distanceX==null) dp.distanceX=100;
+        if (dp.distanceY==null) dp.distanceY=0;
+        if (dp.speed==null) dp.speed=1;
+      } else if (dp.type === 'bouncy') {
+        if (dp.bounceStrength==null) dp.bounceStrength=-22;
+      } else {
+        if (dp.group==null) dp.group=1; 
+        if (dp.mode==null) dp.mode='hold'; 
+        dp.open = !!dp.open; 
+      }
+    });
     safe.traps.forEach(t=>{ if (t.w==null) t.w=20; if (t.h==null) t.h=22; });
     safe.coins.forEach(c=>{ if (c.w==null) c.w=20; if (c.h==null) c.h=20; if (c.collected==null) c.collected=false; });
     safe.decorations.forEach(d=>{ if (d.image==null) d.image='flower1'; });
@@ -208,7 +353,12 @@
       case 'wall': level.walls = []; break;
       case 'door': level.doors = []; break;
       case 'switch': level.switches = []; break;
-      case 'dynamicPlatform': level.dynamicPlatforms = []; break;
+      case 'dynamicPlatform': 
+      case 'movingPlatform': 
+      case 'slimePlatform': 
+        level.dynamicPlatforms = []; 
+        break;
+      case 'enemy': level.enemies = []; break;
       case 'trap': level.traps = []; break;
       case 'coin': level.coins = []; break;
       case 'decor': level.decorations = []; level.decorationsUndo = []; level.decorationsUndoPlatform = []; break;
@@ -223,8 +373,51 @@
     }
     const world = screenToWorld(e.offsetX, e.offsetY);
     if (e.button === 2) { removeAt(world.x, world.y); draw(); return; }
+    
+    // Для декораций: если клик по существующей декорации - переключаем слой
+    if (currentTool.type === 'decor') {
+      const existingDecor = findDecorAt(world.x, world.y);
+      if (existingDecor) {
+        moveDecorToLayer(existingDecor.decor, existingDecor.layer);
+        draw();
+        return;
+      }
+    }
+    
     placeAt(world.x, world.y); draw();
   });
+  
+  function findDecorAt(x, y) {
+    // Ищем декорацию во всех слоях
+    const allLayers = [
+      { arr: level.decorations, name: 'decorations' },
+      { arr: level.decorationsUndo, name: 'decorationsUndo' },
+      { arr: level.decorationsUndoPlatform, name: 'decorationsUndoPlatform' }
+    ];
+    
+    for (let layer of allLayers) {
+      for (let decor of layer.arr) {
+        if (x >= decor.x && x <= decor.x + decor.w && 
+            y >= decor.y && y <= decor.y + decor.h) {
+          return { decor, layer: layer.name };
+        }
+      }
+    }
+    return null;
+  }
+  
+  function moveDecorToLayer(decor, fromLayer) {
+    // Удаляем из текущего слоя
+    const fromArr = level[fromLayer];
+    const index = fromArr.indexOf(decor);
+    if (index !== -1) {
+      fromArr.splice(index, 1);
+    }
+    
+    // Добавляем в новый слой
+    const toArr = level[decorLayer];
+    toArr.push(decor);
+  }
   canvas.addEventListener('mousemove', (e)=>{
     if (isPanning){ cameraX = camStartX - (e.clientX - panStartX)/zoom; cameraY = camStartY - (e.clientY - panStartY)/zoom; draw(); }
   });
@@ -258,10 +451,56 @@
       case 'door': level.doors.push({ x, y, w, h, texture: currentTool.payload.texture, group: currentTool.payload.group, mode: currentTool.payload.mode, open:false }); break;
       case 'switch': level.switches.push({ x, y, w: 26, h: 11, group: currentTool.payload.group }); break;
       case 'dynamicPlatform': level.dynamicPlatforms.push({ x, y, w, h, texture: currentTool.payload.texture, group: currentTool.payload.group, mode: currentTool.payload.mode, open:false }); break;
+      case 'movingPlatform': {
+        const payload = currentTool.payload || {};
+        level.dynamicPlatforms.push({ 
+          x, y, w, h, 
+          texture: payload.texture || 'danger_platform',
+          type: 'moving',
+          distanceX: payload.distanceX || 100,
+          distanceY: payload.distanceY || 0,
+          speed: payload.speed || 1
+        }); 
+        break;
+      }
+      case 'slimePlatform': {
+        const payload = currentTool.payload || {};
+        level.dynamicPlatforms.push({ 
+          x, y, w, h, 
+          texture: payload.texture || 'slime_platform',
+          type: 'bouncy',
+          bounceStrength: payload.bounceStrength || -22
+        }); 
+        break;
+      }
+      case 'enemy': {
+        // Находим ближайшую платформу для прикрепления врага
+        let nearestPlatform = null;
+        let minDist = Infinity;
+        level.platforms.forEach(p => {
+          const dist = Math.abs(y - (p.y - 38));
+          if (dist < minDist && x >= p.x && x <= p.x + p.w) {
+            minDist = dist;
+            nearestPlatform = p;
+          }
+        });
+        if (nearestPlatform) {
+          level.enemies.push({ 
+            platformX: nearestPlatform.x, 
+            platformY: nearestPlatform.y,
+            platformW: nearestPlatform.w
+          });
+        }
+        break;
+      }
       case 'trap': level.traps.push({ x, y, w: 20, h: 22 }); break;
       case 'coin': level.coins.push({ x, y, w: 20, h: 20, collected: false }); break;
       case 'finish': level.finish = { x, y, w: 24, h: 63 }; break;
-      case 'decor': level.decorations.push({ x, y, w, h, image: currentTool.payload.image }); break;
+      case 'decor': {
+        const decor = { x, y, w, h, image: currentTool.payload.image };
+        level[decorLayer].push(decor);
+        break;
+      }
     }
   }
   function removeAt(x, y){
@@ -274,7 +513,23 @@
       case 'wall': removeFrom(level.walls); break;
       case 'door': removeFrom(level.doors); break;
       case 'switch': removeFrom(level.switches); break;
-      case 'dynamicPlatform': removeFrom(level.dynamicPlatforms); break;
+      case 'dynamicPlatform': 
+      case 'movingPlatform': 
+      case 'slimePlatform': 
+        removeFrom(level.dynamicPlatforms); 
+        break;
+      case 'enemy': {
+        // Удаляем врага по позиции платформы
+        for (let i=level.enemies.length-1;i>=0;i--){
+          const e = level.enemies[i];
+          const platform = level.platforms.find(p => p.x === e.platformX && p.y === e.platformY);
+          if (platform && x >= platform.x && x <= platform.x + platform.w && y >= platform.y - 38 && y <= platform.y) {
+            level.enemies.splice(i, 1);
+            break;
+          }
+        }
+        break;
+      }
       case 'trap': removeFrom(level.traps); break;
       case 'coin': removeFrom(level.coins); break;
       case 'decor': if(!removeFrom(level.decorations)) if(!removeFrom(level.decorationsUndo)) removeFrom(level.decorationsUndoPlatform); break;
@@ -298,10 +553,14 @@
     ctx.fillStyle = '#202020';
     ctx.fillRect(0, 0, Math.max(level.width, 1), C.LOGIC_HEIGHT);
 
+    // Декорации под платформами (decorationsUndoPlatform) должны отрисовываться ДО платформ
+    drawDecorArray(level.decorationsUndoPlatform, 'decorationsUndoPlatform');
+
     drawPlatforms(level.platforms);
     drawWalls(level.walls);
     drawDoors(level.doors);
     drawDynamicPlatforms(level.dynamicPlatforms);
+    drawEnemies(level.enemies);
 
     level.switches.forEach(sw=>{ ctx.drawImage(window.imgButton || new Image(), sw.x, sw.y, sw.w||26, sw.h||11); });
 
@@ -309,9 +568,9 @@
     level.coins.forEach(c=>{ ctx.drawImage(window.imgCoin || new Image(), c.x, c.y, c.w, c.h); });
     const f = level.finish; if (f) ctx.drawImage(window.imgFinish || new Image(), f.x, f.y, f.w, f.h);
 
-    drawDecorArray(level.decorationsUndoPlatform);
-    drawDecorArray(level.decorationsUndo);
-    drawDecorArray(level.decorations);
+    // Декорации за игроком и перед всем
+    drawDecorArray(level.decorationsUndo, 'decorationsUndo');
+    drawDecorArray(level.decorations, 'decorations');
 
     const mx = lastMouse.x, my = lastMouse.y;
     if (mx !== null) {
@@ -356,18 +615,90 @@
   }
   function drawDynamicPlatforms(arr){
     arr.forEach(p=>{
-      const tex = pickPlatformTexture(p.texture||'danger_platform');
-      if (!p.open) { ctx.save(); ctx.globalAlpha = 0.6; }
-      if (tex && tex.width && tex.height){ tileRect(tex, p.x, p.y, p.w, p.h); }
-      else { ctx.fillStyle = '#c77'; ctx.fillRect(p.x, p.y, p.w, p.h); }
-      if (!p.open) { ctx.restore(); }
+      if (p.type === 'moving') {
+        // Рисуем платформу
+        const tex = pickPlatformTexture(p.texture||'danger_platform');
+        if (tex && tex.width && tex.height){ tileRect(tex, p.x, p.y, p.w, p.h); }
+        else { ctx.fillStyle = '#c77'; ctx.fillRect(p.x, p.y, p.w, p.h); }
+        
+        // Рисуем траекторию движения
+        const distanceX = p.distanceX || 100;
+        const distanceY = p.distanceY || 0;
+        ctx.strokeStyle = '#ff6';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(p.x + p.w/2, p.y + p.h/2);
+        ctx.lineTo(p.x + p.w/2 + distanceX, p.y + p.h/2 + distanceY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Рисуем конечную точку
+        ctx.fillStyle = '#ff6';
+        ctx.fillRect(p.x + distanceX - 2, p.y + distanceY - 2, 4, 4);
+      } else if (p.type === 'bouncy') {
+        // Рисуем слизь
+        const tex = window.imgPlatformSlime;
+        if (tex && tex.width && tex.height){ tileRect(tex, p.x, p.y, p.w, p.h); }
+        else { ctx.fillStyle = '#6c6'; ctx.fillRect(p.x, p.y, p.w, p.h); }
+        
+        // Визуальная индикация подпрыгивания
+        ctx.strokeStyle = '#6f6';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([3, 3]);
+        ctx.strokeRect(p.x - 2, p.y - 2, p.w + 4, p.h + 4);
+        ctx.setLineDash([]);
+      } else {
+        // Старые динамические платформы с переключателями
+        const tex = pickPlatformTexture(p.texture||'danger_platform');
+        if (!p.open) { ctx.save(); ctx.globalAlpha = 0.6; }
+        if (tex && tex.width && tex.height){ tileRect(tex, p.x, p.y, p.w, p.h); }
+        else { ctx.fillStyle = '#c77'; ctx.fillRect(p.x, p.y, p.w, p.h); }
+        if (!p.open) { ctx.restore(); }
+      }
     });
   }
-  function drawDecorArray(arr){
+  
+  function drawEnemies(arr){
+    arr.forEach(e=>{
+      const platform = level.platforms.find(p => p.x === e.platformX && p.y === e.platformY);
+      if (platform) {
+        const enemyX = platform.x + 10;
+        const enemyY = platform.y - 38;
+        const img = window.imgEnemy;
+        if (img && img.width) {
+          const frameW = img.width / 11;
+          const frameH = img.height;
+          ctx.drawImage(img, 0, 0, frameW, frameH, enemyX, enemyY, 46, 38);
+        } else {
+          ctx.fillStyle = '#f44';
+          ctx.fillRect(enemyX, enemyY, 46, 38);
+        }
+      }
+    });
+  }
+  function drawDecorArray(arr, layerName){
     arr.forEach(dec=>{
       const img = pickDecor(dec.image);
-      if (img && img.width) ctx.drawImage(img, dec.x, dec.y, dec.w, dec.h);
-      else { ctx.fillStyle = '#6a6'; ctx.fillRect(dec.x, dec.y, dec.w, dec.h); }
+      if (img && img.width) {
+        ctx.drawImage(img, dec.x, dec.y, dec.w, dec.h);
+        // Визуальная индикация слоя
+        if (currentTool.type === 'decor') {
+          let color = '#6a6';
+          if (layerName === 'decorations') color = '#6f6'; // Зеленый - перед всем
+          else if (layerName === 'decorationsUndo') color = '#ff6'; // Желтый - за игроком
+          else if (layerName === 'decorationsUndoPlatform') color = '#f66'; // Красный - за платформами
+          
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([4, 4]);
+          ctx.strokeRect(dec.x - 1, dec.y - 1, dec.w + 2, dec.h + 2);
+          ctx.setLineDash([]);
+        }
+      } else { 
+        ctx.fillStyle = '#6a6'; 
+        ctx.fillRect(dec.x, dec.y, dec.w, dec.h); 
+      }
     });
   }
 
@@ -387,7 +718,9 @@
       case 'stone': return window.imgPlatformStone;
       case 'stone2': return window.imgPlatformStone2;
       case 'wood': return window.imgPlatformWood;
+      case 'house': return window.imgPlatformHouse;
       case 'danger_platform': return window.imgPlatformDanger;
+      case 'slime_platform': return window.imgPlatformSlime;
       default: return window.imgPlatformGrass;
     }
   }
@@ -402,6 +735,9 @@
       case 'mountain': return window.imgMountain;
       case 'three': return window.imgThree;
       case 'alert': return window.imgAlert;
+      case 'house_1': return window.imgHouse1;
+      case 'house_2': return window.imgHouse2;
+      case 'house_bg': return window.imgHouseBg;
       default: return null;
     }
   }
@@ -421,6 +757,7 @@
   });
   canvas.addEventListener('mouseleave', ()=>{ lastMouse.x = null; lastMouse.y = null; draw(); });
 
+  updateParamsVisibility();
   fitToLevel();
   draw();
 })();

@@ -80,7 +80,6 @@
       justify-content: space-between;
     }
     .btn {
-
       width: 70px; height: 70px;
       font-size: 24px;
       border: none;
@@ -89,17 +88,67 @@
       background-repeat: no-repeat;
       background-position: center;
     }
-    #left {
-      background-image: url("img/button_left.png");
+    /* Горизонтальный слайдер */
+    #joystick {
+      position: relative;
+      width: 200px;
+      height: 70px;
+      touch-action: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    #left:active {
-      background-image: url("img/button_left_click.png");
+    #sliderCounter {
+      white-space: nowrap;
+      width: min-content;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: stretch;
+      border-radius: 10px;
+      overflow: visible;
+      position: relative;
+      height: 70px;
     }
-    #right {
-      background-image: url("img/button_right.png");
+    #sliderCounter .sliderLeft,
+    #sliderCounter .sliderRight {
+      height: 100%;
+      aspect-ratio: var(--slider-edge-ar, 1);
+      background-repeat: no-repeat;
+      background-size: auto 100%;
+      background-position: center;
+      width: auto;
+      flex: 0 0 auto;
     }
-    #right:active {
-      background-image: url("img/button_right_click.png");
+    #sliderCounter .sliderLeft { background-image: url("img/slider1.png"); }
+    #sliderCounter .sliderRight { background-image: url("img/slider3.png"); }
+    #sliderCounter .sliderCenter {
+      flex: 1 1 auto;
+      background-image: url("img/slider2.png");
+      background-repeat: repeat-x;
+      background-size: auto 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      min-width: 100px;
+    }
+    #joystickStick {
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      background-image: url("img/level.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s ease-out;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #joystick.active #joystickStick {
+      transition: none;
     }
     #jump {
       background-image: url("img/button_top.png");
@@ -292,7 +341,10 @@
 <body id="body">
 
   <canvas id="game" width="480" height="320"></canvas>
-  <p style="color: #fff; position: fixed; top: 5px; left: 5px; z-index: 100; margin: 0;">v. 2.2.1</p>
+  <button id="pauseBtn" style="position: fixed; top: 5px; left: 5px; z-index: 100; padding: 0; margin: 0; border: none; background: none; cursor: pointer; width: 40px; height: 40px;">
+    <img src="./img/pause.png" style="width: 40px; height: 40px;">
+  </button>
+  <p style="color: #fff; position: fixed; top: 5px; left: 50px; z-index: 100; margin: 0;">v. 2.3 global</p>
   
   <div id="rotateNotification">
     <img src="img/phone.png" class="rotateIcon">
@@ -313,12 +365,18 @@
     </div>
   </div>
 
-  <div class="bottom" style="margin: 0 0px;">
+    <div class="bottom" style="margin: 0 0px;">
     
     <div class="controls">
       <div class="btn-group" style="margin-left: 20px;">
-        <button class="btn" id="left" style="margin-right: 20px;"></button>
-        <button class="btn" id="right"></button>
+        <div id="joystick">
+          <div id="sliderCounter">
+            <div class="sliderLeft"></div>
+            <div class="sliderCenter"></div>
+            <div class="sliderRight"></div>
+          </div>
+          <div id="joystickStick"></div>
+        </div>
       </div>
       <div class="btn-group" style="margin-right: 20px;">
         <button class="btn active" id="follow" style="margin-right: 10px;"></button>
@@ -336,7 +394,9 @@
         <p id="modalText"></p>
         <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
           <button id="modalBtn" style="display: none;">OK</button>
+          <a href="play.html" id="modalHomeBtn" style="display: none; padding: 0; margin: 0; border: none; background: none; text-decoration: none; "><img src="./img/home.png" style="width: 50px; height: 50px;"></a>
           <button id="modalRestartBtn" style="display: none; padding: 0; margin: 0; border: none; background: none; cursor: pointer;"><img src="./img/restart.png" style="width: 50px; height: 50px;"></button>
+          <button id="modalResumeBtn" style="display: none; padding: 0; margin: 0; border: none; background: none; cursor: pointer;"><img src="./img/resume.png" style="width: 50px; height: 50px;"></button>
           <a href="#" id="modalNextBtn" style="display: none; padding: 0; margin: 0; border: none; background: none; text-decoration: none; "><img src="./img/next.png" style="width: 50px; height: 50px;"></a>
         </div>
       </div>
@@ -441,6 +501,43 @@
         if (ready >= 2) window.updateCounterEdges();
       });
     })();
+    
+    (function initSliderEdges(){
+      const leftUrl = 'img/slider1.png';
+      const rightUrl = 'img/slider3.png';
+      const imgL = new Image();
+      const imgR = new Image();
+      let ready = 0;
+      let arLeft = 1, arRight = 1;
+      function applyAR() {
+        if (ready < 2) return;
+        arLeft = imgL.naturalWidth && imgL.naturalHeight ? (imgL.naturalWidth / imgL.naturalHeight) : 1;
+        arRight = imgR.naturalWidth && imgR.naturalHeight ? (imgR.naturalWidth / imgR.naturalHeight) : 1;
+        updateSliderEdges();
+      }
+      window.updateSliderEdges = function updateSliderEdges(){
+        const leftEl = document.querySelector('#sliderCounter .sliderLeft');
+        const rightEl = document.querySelector('#sliderCounter .sliderRight');
+        const centerEl = document.querySelector('#sliderCounter .sliderCenter');
+        if (!leftEl || !rightEl || !centerEl) return;
+        const h = centerEl.clientHeight || 70;
+        if (h === 0) {
+          setTimeout(updateSliderEdges, 50);
+          return;
+        }
+        leftEl.style.width = (h * arLeft) + 'px';
+        rightEl.style.width = (h * arRight) + 'px';
+        leftEl.style.height = h + 'px';
+        rightEl.style.height = h + 'px';
+      };
+      imgL.onload = ()=>{ ready++; applyAR(); };
+      imgR.onload = ()=>{ ready++; applyAR(); };
+      imgL.src = leftUrl;
+      imgR.src = rightUrl;
+      window.addEventListener('resize', ()=>{
+        if (ready >= 2) window.updateSliderEdges();
+      });
+    })();
   </script>
   <script>
     window.addEventListener('load', function () {
@@ -471,6 +568,23 @@
         fade.classList.add('show');
         setTimeout(function() { window.location.href = link.getAttribute('href'); }, 1100);
       });
+    })();
+    
+    (function() {
+      var pauseBtn = document.getElementById('pauseBtn');
+      if (pauseBtn) {
+        pauseBtn.addEventListener('click', function() {
+          if (typeof window.showPauseModal === 'function') {
+            window.showPauseModal();
+          }
+        });
+        pauseBtn.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+          if (typeof window.showPauseModal === 'function') {
+            window.showPauseModal();
+          }
+        });
+      }
     })();
   </script>
 </body>

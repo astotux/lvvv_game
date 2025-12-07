@@ -48,6 +48,31 @@
         <div class="row"><label>H</label><input id="brushH" type="number" value="20" min="1" step="1"></div>
       </div>
 
+      <div class="section" id="movingPlatformParams" style="display: none;">
+        <h3>Параметры движущейся платформы</h3>
+        <div class="row"><label>Расстояние X</label><input id="movingDistanceX" type="number" value="100" min="0" step="10"></div>
+        <div class="row"><label>Расстояние Y</label><input id="movingDistanceY" type="number" value="0" min="0" step="10"></div>
+        <div class="row"><label>Скорость</label><input id="movingSpeed" type="number" value="1" min="0.1" step="0.1"></div>
+      </div>
+
+      <div class="section" id="slimePlatformParams" style="display: none;">
+        <h3>Параметры слизи</h3>
+        <div class="row"><label>Сила прыжка</label><input id="slimeBounceStrength" type="number" value="-22" max="0" step="1"></div>
+      </div>
+
+      <div class="section" id="decorLayerParams" style="display: none;">
+        <h3>Слой декорации</h3>
+        <div class="row">
+          <label>Слой</label>
+          <select id="decorLayer" style="width: 100%; padding: 6px 8px; background: #111; border: 1px solid #333; color: #eee; border-radius: 6px;">
+            <option value="decorations">Перед всем</option>
+            <option value="decorationsUndo">За игроком</option>
+            <option value="decorationsUndoPlatform">За платформами</option>
+          </select>
+        </div>
+        <div class="hint" style="margin-top: 6px; font-size: 11px;">ЛКМ по существующей декорации переключает слой</div>
+      </div>
+
       <div class="section">
         <h3>Экспорт</h3>
         <div class="row"><button id="btnExport" class="btn" style="width:100%">Скопировать JSON уровня</button></div>
@@ -68,6 +93,7 @@
     <main class="canvas-wrap">
       <div class="toolbar">
         <button id="btnFit" class="btn">По размеру уровня</button>
+        <button id="btnPlay" class="btn">Запустить игру</button>
         <a href="index.html" class="btn">Назад в игру</a>
         <div id="coord" class="btn" style="margin-left:auto;opacity:0.85;cursor:default">X: 0 Y: 0</div>
       </div>

@@ -21,10 +21,12 @@
       const platformH = p.h;
       
       let textureImg = imgPlatformGrass;
-      if (p.texture === "grass") textureImg = imgPlatformGrass;
+      if (p.type === "bouncy") textureImg = imgPlatformSlime;
+      else if (p.texture === "grass") textureImg = imgPlatformGrass;
       else if (p.texture === "stone") textureImg = imgPlatformStone;
       else if (p.texture === "stone2") textureImg = imgPlatformStone2;
       else if (p.texture === "wood") textureImg = imgPlatformWood;
+      else if (p.texture === "house") textureImg = imgPlatformHouse;
       else if (p.texture === "danger_platform") textureImg = imgPlatformDanger;
       
       const textureW = textureImg.width;

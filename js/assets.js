@@ -20,6 +20,8 @@
   imgPlatformWood.src = "img/platform_wood.png";
   window.imgPlatformDanger = new Image();
   imgPlatformDanger.src = "img/danger_platform.png";
+  window.imgPlatformSlime = new Image();
+  imgPlatformSlime.src = "img/slime_platform.png";
   window.imgDoorDanger = new Image();
   imgDoorDanger.src = "img/danger_door.png";
 
@@ -54,6 +56,14 @@
   imgThree.src = "img/three.png";
   window.imgAlert = new Image();
   imgAlert.src = "img/alert.png";
+  window.imgHouse1 = new Image();
+  imgHouse1.src = "img/house_1.png";
+  window.imgHouse2 = new Image();
+  imgHouse2.src = "img/house_2.png";
+  window.imgHouseBg = new Image();
+  imgHouseBg.src = "img/house_bg.png";
+  window.imgPlatformHouse = new Image();
+  imgPlatformHouse.src = "img/platform_house.png";
 
   // Фоны
   window.bgLayer0 = new Image(); bgLayer0.src = "img/background_0.png";
@@ -63,6 +73,10 @@
   window.bgLayer4 = new Image(); bgLayer4.src = "img/background_4.png";
   window.bgLayer5 = new Image(); bgLayer5.src = "img/background_6.png";
   window.bgLayer6 = new Image(); bgLayer6.src = "img/background_5.png";
+  window.imgBackgroundAnother = new Image();
+  imgBackgroundAnother.src = "img/background_another.png";
+  window.imgFloor = new Image();
+  imgFloor.src = "img/floor.png";
 
   // Монета
   window.imgCoin = new Image();
