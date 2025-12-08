@@ -18,8 +18,8 @@ window.C = {
   },
 
   COMPANION: {
-    W: 56,
-    H: 49,
+    W: 46,
+    H: 38,
     SPEED: 4,
     GRAVITY: 1,
     JUMP_VY: -15,
@@ -33,7 +33,7 @@ window.C = {
     IDLE_FRAME_TICK: 24,
     WALK_FRAME_TICK: 2,
     WALK_FRAMES: 11,
-    IDLE_FRAMES: 9
+    IDLE_FRAMES: 11
   },
 
   BACKGROUND: {

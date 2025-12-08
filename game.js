@@ -741,7 +741,7 @@ function update() {
             companion.frameTick = 0;
             if (companion.idleTimer > 600) {
                 companion.frame++;
-                if (companion.frame > 8) companion.frame = 0;
+                if (companion.frame > C.COMPANION.IDLE_FRAMES - 1) companion.frame = 0;
             } else {
                 companion.frame = 0;
             }
@@ -750,7 +750,7 @@ function update() {
         if (companion.frameTick > 2) {
             companion.frameTick = 0;
             companion.frame++;
-            if (companion.frame > 10) companion.frame = 0;
+            if (companion.frame > C.COMPANION.WALK_FRAMES - 1) companion.frame = 0;
         }
     }
 
@@ -775,7 +775,8 @@ function update() {
     }
     let distanceToPlayer = Math.abs(companion.x - player.x);
     let maxDistance = C.COMPANION.MAX_HORIZONTAL_DISTANCE;
-    if (followEnabled) companion.targetY = player.y;
+    // Тянем кота к уровню ног игрока, чтобы не пытаться залезть на голову
+    if (followEnabled) companion.targetY = player.y + player.h - companion.h;
     
     if (followEnabled && distanceToPlayer > maxDistance) {
       if (companion.x < player.x) {
@@ -827,8 +828,10 @@ function update() {
         companion.x += (centerX - companion.x) * followStrength;
       }
       const maxVerticalLag = C.COMPANION.MAX_VERTICAL_LAG;
-      if (companion.y - player.y > maxVerticalLag) {
-        companion.y = player.y - 2;
+      const companionBottom = companion.y + companion.h;
+      const playerBottom = player.y + player.h;
+      if (companionBottom - playerBottom > maxVerticalLag) {
+        companion.y = playerBottom - companion.h - 2;
         companion.dy = 0;
       }
       if (player.onGround && companion.onGround && companionLockToCenter) {
@@ -1422,10 +1425,10 @@ function drawBackground() {
   
     if (companion.state === "idle") {
       sprite = imgCompanionIdle;
-      frames = 9;
+      frames = C.COMPANION.IDLE_FRAMES;
     } else {
       sprite = imgCompanionWalk;
-      frames = 11;
+      frames = C.COMPANION.WALK_FRAMES;
     }
   
     frameW = sprite.width / frames;
