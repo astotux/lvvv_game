@@ -54,7 +54,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 3000;
+      z-index: 3001;
     }
     #pwaModalContent {
       position: relative;
@@ -86,9 +86,55 @@
       width: 80px;
       height: auto;
     }
+    #rotateNotification {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(#282825 33%, #222220 33% 66%, #1d1d1b 66% 100%);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 3000;
+      color: white;
+      font-family: "Pixelify Sans", sans-serif;
+      text-align: center;
+    }
+    #rotateNotification .rotateIcon {
+      width: 120px;
+      margin-bottom: 20px;
+      animation: rotate 2s linear infinite;
+    }
+    #rotateNotification h2 {
+      font-size: 24px;
+      margin: 0 0 10px 0;
+    }
+    #rotateNotification p {
+      font-size: 16px;
+      margin: 0;
+      opacity: 0.8;
+    }
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      90% { transform: rotate(95deg); }
+      100% { transform: rotate(0deg); }
+    }
+    @media screen and (orientation: portrait) {
+      #rotateNotification { display: flex; }
+    }
+    @media screen and (orientation: landscape) {
+      #rotateNotification { display: none !important; }
+    }
   </style>
   </head>
 <body>
+  <div id="rotateNotification">
+    <img src="img/phone.png" class="rotateIcon" alt="">
+    <h2>Поверни телефон</h2>
+    <p>Для лучшего игрового опыта поверни устройство горизонтально и обнови страницу</p>
+  </div>
   <div class="wrap">
     <img id="dialogImage" src="./img/play_bg.png" alt="play_bg">
     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px;">
@@ -138,6 +184,18 @@
       if (!isPwaMode() && isIOSSafari()) {
         showPwaModal();
       }
+    });
+
+    function updateRotateNotification() {
+      const notification = document.getElementById('rotateNotification');
+      const isPortrait = window.innerHeight > window.innerWidth;
+      notification.style.display = isPortrait ? 'flex' : 'none';
+    }
+
+    window.addEventListener('load', updateRotateNotification);
+    window.addEventListener('resize', updateRotateNotification);
+    window.addEventListener('orientationchange', function() {
+      setTimeout(updateRotateNotification, 100);
     });
   </script>
   <script>
