@@ -20,6 +20,7 @@
 
   let level = {
     width: 3800,
+    background: "forest",
     platforms: [],
     walls: [],
     switches: [],
@@ -67,7 +68,12 @@
     { id:'decor_alert', label:'Декор alert', type:'decor', payload:{image:'alert'} },
     { id:'decor_house1', label:'Декор house_1', type:'decor', payload:{image:'house_1'} },
     { id:'decor_house2', label:'Декор house_2', type:'decor', payload:{image:'house_2'} },
-    { id:'decor_house_bg', label:'Декор house_bg', type:'decor', payload:{image:'house_bg'} }
+    { id:'decor_house_bg', label:'Декор house_bg', type:'decor', payload:{image:'house_bg'} },
+    { id:'decor_bake', label:'Декор bake', type:'decor', payload:{image:'bake'} },
+    { id:'decor_bench', label:'Декор bench', type:'decor', payload:{image:'bench'} },
+    { id:'decor_clock', label:'Декор clock', type:'decor', payload:{image:'clock'} },
+    { id:'decor_window', label:'Декор window', type:'decor', payload:{image:'window'} },
+    { id:'decor_vis', label:'Декор vis', type:'decor', payload:{image:'vis'} }
   ];
 
   const toolGrid = document.getElementById('toolGrid');
@@ -213,6 +219,11 @@
         if (decorName === 'house_1') return { w: 244.5, h: 413 };
         if (decorName === 'house_2') return { w: 72.5, h: 406.5 };
         if (decorName === 'house_bg') return { w: 305, h: 406.5 };
+        if (decorName === 'bake') return { w: 125, h: 362.3 };
+        if (decorName === 'bench') return { w: 285, h: 88 };
+        if (decorName === 'clock') return { w: 76, h: 168 };
+        if (decorName === 'window') return { w: 139, h: 157 };
+        if (decorName === 'vis') return { w: 368, h: 291 };
         img = pickDecor(decorName);
         return { w: (img && img.width) || 32, h: (img && img.height) || 32 };
       default:
@@ -221,6 +232,7 @@
   }
 
   const inpWidth = document.getElementById('inpWidth');
+  const backgroundSelect = document.getElementById('backgroundSelect');
   const btnNew = document.getElementById('btnNew');
   const btnClear = document.getElementById('btnClear');
   const btnExport = document.getElementById('btnExport');
@@ -233,6 +245,7 @@
   const btnPlay = document.getElementById('btnPlay');
   const coordEl = document.getElementById('coord');
   inpWidth.addEventListener('change', ()=>{ level.width = Math.max(200, parseInt(inpWidth.value||'200',10)); draw(); });
+  backgroundSelect.addEventListener('change', ()=>{ level.background = backgroundSelect.value; draw(); });
   btnNew.onclick = ()=>{ resetLevel(); draw(); };
   btnClear.onclick = ()=>{ clearActiveLayer(); draw(); };
   btnExport.onclick = ()=>{ out.value = exportLevelJSON(level); out.select(); document.execCommand('copy'); };
@@ -276,11 +289,12 @@
   updatePlayButton();
 
   function resetLevel(){
-    level = { width: Math.max(200, parseInt(inpWidth.value||'3800',10)), platforms: [], walls: [], doors: [], switches: [], dynamicPlatforms: [], traps: [], coins: [], enemies: [], finish: {x:200,y:300,w:24,h:63}, gift:{title:"Новый уровень", desc:"Отличная работа!"}, decorations: [], decorationsUndo: [], decorationsUndoPlatform: [] };
+    level = { width: Math.max(200, parseInt(inpWidth.value||'3800',10)), background: backgroundSelect.value || "forest", platforms: [], walls: [], doors: [], switches: [], dynamicPlatforms: [], traps: [], coins: [], enemies: [], finish: {x:200,y:300,w:24,h:63}, gift:{title:"Новый уровень", desc:"Отличная работа!"}, decorations: [], decorationsUndo: [], decorationsUndoPlatform: [] };
   }
   function normalizeLevel(obj){
     const safe = {
       width: Math.max(200, Number(obj.width)||3800),
+      background: obj.background === "house" || obj.background === "home" ? "house" : "forest",
       platforms: Array.isArray(obj.platforms)? obj.platforms:[],
       walls: Array.isArray(obj.walls)? obj.walls:[],
       doors: Array.isArray(obj.doors)? obj.doors:[],
@@ -327,12 +341,14 @@
       const obj = JSON.parse(txt);
       level = normalizeLevel(obj);
       inpWidth.value = String(level.width);
+      backgroundSelect.value = level.background || "forest";
       draw();
     } catch(e){
       try {
         const val = Function('return ('+txt+')')();
         level = normalizeLevel(val);
         inpWidth.value = String(level.width);
+        backgroundSelect.value = level.background || "forest";
         draw();
       } catch(_){}
     }
@@ -343,6 +359,7 @@
       if (Array.isArray(window.levels) && window.levels[idx]){
         level = normalizeLevel(window.levels[idx]);
         inpWidth.value = String(level.width);
+        backgroundSelect.value = level.background || "forest";
         draw();
       }
     } catch(e){}
@@ -738,6 +755,11 @@
       case 'house_1': return window.imgHouse1;
       case 'house_2': return window.imgHouse2;
       case 'house_bg': return window.imgHouseBg;
+      case 'bake': return window.imgBake;
+      case 'bench': return window.imgBench;
+      case 'clock': return window.imgClock;
+      case 'window': return window.imgWindow;
+      case 'vis': return window.imgVis;
       default: return null;
     }
   }
@@ -757,6 +779,9 @@
   });
   canvas.addEventListener('mouseleave', ()=>{ lastMouse.x = null; lastMouse.y = null; draw(); });
 
+  // Инициализация селекта фона
+  backgroundSelect.value = level.background || "forest";
+  
   updateParamsVisibility();
   fitToLevel();
   draw();

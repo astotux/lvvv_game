@@ -64,6 +64,16 @@
   imgHouseBg.src = "img/house_bg.png";
   window.imgPlatformHouse = new Image();
   imgPlatformHouse.src = "img/platform_house.png";
+  window.imgBake = new Image();
+  imgBake.src = "img/bake.png";
+  window.imgBench = new Image();
+  imgBench.src = "img/bench.png";
+  window.imgClock = new Image();
+  imgClock.src = "img/clock.png";
+  window.imgWindow = new Image();
+  imgWindow.src = "img/window.png";
+  window.imgVis = new Image();
+  imgVis.src = "img/vis.png";
 
   // Фоны
   window.bgLayer0 = new Image(); bgLayer0.src = "img/background_0.png";

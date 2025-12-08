@@ -983,6 +983,11 @@ function drawDecorations() {
         case "house_1": img = imgHouse1; break;
         case "house_2": img = imgHouse2; break;
         case "house_bg": img = imgHouseBg; break;
+        case "bake": img = imgBake; break;
+        case "bench": img = imgBench; break;
+        case "clock": img = imgClock; break;
+        case "window": img = imgWindow; break;
+        case "vis": img = imgVis; break;
       }
       
       if (!img) return;
@@ -1007,7 +1012,6 @@ function drawDecorationsUndo() {
         case "flower2": img = imgFlower2; break;
         case "rock1": img = imgRock1; break;
         case "rock2": img = imgRock2; break;
-
         case "grass1": img = imgGrass1; break;
         case "bush": img = imgBush; break;
         case "mountain": img = imgMountain; break;
@@ -1016,6 +1020,11 @@ function drawDecorationsUndo() {
         case "house_1": img = imgHouse1; break;
         case "house_2": img = imgHouse2; break;
         case "house_bg": img = imgHouseBg; break;
+        case "bake": img = imgBake; break;
+        case "bench": img = imgBench; break;
+        case "clock": img = imgClock; break;
+        case "window": img = imgWindow; break;
+        case "vis": img = imgVis; break;
       }
       
       if (!img) return;
@@ -1040,7 +1049,6 @@ function drawDecorationsUndoPlatform() {
         case "flower2": img = imgFlower2; break;
         case "rock1": img = imgRock1; break;
         case "rock2": img = imgRock2; break;
-
         case "grass1": img = imgGrass1; break;
         case "bush": img = imgBush; break;
         case "mountain": img = imgMountain; break;
@@ -1049,6 +1057,11 @@ function drawDecorationsUndoPlatform() {
         case "house_1": img = imgHouse1; break;
         case "house_2": img = imgHouse2; break;
         case "house_bg": img = imgHouseBg; break;
+        case "bake": img = imgBake; break;
+        case "bench": img = imgBench; break;
+        case "clock": img = imgClock; break;
+        case "window": img = imgWindow; break;
+        case "vis": img = imgVis; break;
       }
       
       if (!img) return;
@@ -1116,7 +1129,7 @@ function drawBackground() {
   ctx.imageSmoothingEnabled = false;
   ctx.imageSmoothingQuality = 'high';
 
-  if (backgroundType === "home") {
+  if (backgroundType === "home" || backgroundType === "house") {
     // Однослойный фон для home
     const bgW = imgBackgroundAnother.width;
     const bgH = imgBackgroundAnother.height;

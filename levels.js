@@ -4355,25 +4355,11 @@ const levels = [
         "texture": "stone2"
       },
       {
-        "x": 608,
-        "y": 409,
-        "w": 226,
-        "h": 20,
-        "texture": "grass"
-      },
-      {
         "x": 2877,
         "y": 395,
         "w": 67,
         "h": 23,
         "texture": "stone2"
-      },
-      {
-        "x": 3004,
-        "y": 449,
-        "w": 271,
-        "h": 20,
-        "texture": "grass"
       },
       {
         "x": 3317,
@@ -4428,6 +4414,20 @@ const levels = [
         "x": 0,
         "y": 376,
         "w": 206,
+        "h": 20,
+        "texture": "grass"
+      },
+      {
+        "x": 590,
+        "y": 397,
+        "w": 236,
+        "h": 20,
+        "texture": "grass"
+      },
+      {
+        "x": 3004,
+        "y": 422,
+        "w": 271,
         "h": 20,
         "texture": "grass"
       }
@@ -4493,13 +4493,6 @@ const levels = [
     ],
     "switches": [
       {
-        "x": 655,
-        "y": 406,
-        "w": 26,
-        "h": 11,
-        "group": 1
-      },
-      {
         "x": 1204,
         "y": 400,
         "w": 26,
@@ -4526,18 +4519,16 @@ const levels = [
         "w": 26,
         "h": 11,
         "group": 5
+      },
+      {
+        "x": 655,
+        "y": 393,
+        "w": 26,
+        "h": 11,
+        "group": 1
       }
     ],
     "dynamicPlatforms": [
-      {
-        "x": 376,
-        "y": 408,
-        "w": 46,
-        "h": 16,
-        "texture": "slime_platform",
-        "type": "bouncy",
-        "bounceStrength": -22
-      },
       {
         "x": 880,
         "y": 140,
@@ -4575,6 +4566,15 @@ const levels = [
         "texture": "danger_platform",
         "group": 5,
         "mode": "hold"
+      },
+      {
+        "x": 393,
+        "y": 400,
+        "w": 46,
+        "h": 16,
+        "texture": "slime_platform",
+        "type": "bouncy",
+        "bounceStrength": -22
       }
     ],
     "traps": [
@@ -4591,20 +4591,13 @@ const levels = [
         "h": 22
       },
       {
-        "x": 256,
-        "y": 456,
+        "x": 244,
+        "y": 455,
         "w": 20,
         "h": 22
       }
     ],
     "coins": [
-      {
-        "x": 656,
-        "y": 360,
-        "w": 20,
-        "h": 20,
-        "collected": false
-      },
       {
         "x": 1748,
         "y": 88,
@@ -4648,13 +4641,6 @@ const levels = [
         "collected": false
       },
       {
-        "x": 3132,
-        "y": 380,
-        "w": 20,
-        "h": 20,
-        "collected": false
-      },
-      {
         "x": 4200,
         "y": 276,
         "w": 20,
@@ -4678,6 +4664,20 @@ const levels = [
       {
         "x": 924,
         "y": 52,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 659,
+        "y": 349,
+        "w": 20,
+        "h": 20,
+        "collected": false
+      },
+      {
+        "x": 3135,
+        "y": 375,
         "w": 20,
         "h": 20,
         "collected": false
@@ -4877,20 +4877,6 @@ const levels = [
         "image": "flower1"
       },
       {
-        "x": 3077,
-        "y": 442,
-        "w": 143,
-        "h": 19,
-        "image": "grass1"
-      },
-      {
-        "x": 3023,
-        "y": 439,
-        "w": 56,
-        "h": 20,
-        "image": "flower2"
-      },
-      {
         "x": 2321,
         "y": 333,
         "w": 56,
@@ -4903,13 +4889,6 @@ const levels = [
         "w": 60,
         "h": 40,
         "image": "bush"
-      },
-      {
-        "x": 3219,
-        "y": 439,
-        "w": 56,
-        "h": 18,
-        "image": "flower1"
       },
       {
         "x": 3786,
@@ -4945,6 +4924,27 @@ const levels = [
         "w": 73,
         "h": 19,
         "image": "grass1"
+      },
+      {
+        "x": 3023,
+        "y": 411,
+        "w": 56,
+        "h": 18,
+        "image": "flower1"
+      },
+      {
+        "x": 3084,
+        "y": 415,
+        "w": 133,
+        "h": 19,
+        "image": "grass1"
+      },
+      {
+        "x": 3219,
+        "y": 411,
+        "w": 56,
+        "h": 18,
+        "image": "flower1"
       }
     ],
     "decorationsUndo": [
@@ -5036,8 +5036,14 @@ const levels = [
         "platformX": 3004,
         "platformY": 449,
         "platformW": 271
+      },
+      {
+        "platformX": 3004,
+        "platformY": 422,
+        "platformW": 271
       }
     ]
-  }
+  },
+  
 ];
   
