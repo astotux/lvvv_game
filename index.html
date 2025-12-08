@@ -164,7 +164,7 @@
     }
     #follow {
       padding: 0;
-      width: 140px;
+      width: 120px;
       height: 70px;
       background-image: url("img/button_follow_disable.png");
     }
@@ -250,12 +250,23 @@
       display: flex;
       gap: 10px;
       position: fixed;
+      flex-direction: column;
       top: 5px;
       right: 50px;
       z-index: 100;
     }
     .miniContainerTops {
       position: relative;
+    }
+    .miniContainerTopsLeft {
+      display: flex;
+      gap: 10px;
+    }
+    .miniContainerTopsRight {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
     }
     .miniContainerTops img {
       height: 40px;
@@ -355,13 +366,19 @@
   <div id="introFade"></div>
 
   <div class="containerTops">
-    <div class="miniContainerTops">
-      <img src="./img/levels.png">
-      <p class="textTops" id="level">0</p>
+    <div class="miniContainerTopsLeft"> 
+      <div class="miniContainerTops">
+        <img src="./img/levels.png">
+        <p class="textTops" id="level">0</p>
+      </div>
+      <div class="miniContainerTops">
+        <img src="./img/coins.png">
+        <p class="textRightTops textTops" id="totalCoins">0/0</p>
+      </div>
     </div>
-    <div class="miniContainerTops">
-      <img src="./img/coins.png">
-      <p class="textRightTops textTops" id="totalCoins">0/0</p>
+    <div class="miniContainerTopsRight">
+      <button class="btn active" id="follow"></button>
+      <button class="btn" id="switch"></button>
     </div>
   </div>
 
@@ -378,9 +395,7 @@
           <div id="joystickStick"></div>
         </div>
       </div>
-      <div class="btn-group" style="margin-right: 20px;">
-        <button class="btn active" id="follow" style="margin-right: 10px;"></button>
-        <button class="btn" id="switch" style="margin-right: 20px;"></button>
+      <div class="btn-group" style="margin-right: 50px;">
         <button class="btn" id="jump"></button>
       </div>
     </div>
