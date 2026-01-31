@@ -24,10 +24,11 @@
     SOUND_POOL_SIZE: 1,
     _heavyAudioScheduled: false,
     
-    // iOS: тяжёлая декодировка и много Audio вызывают фризы — используем облегчённый режим
     _isIOS: function() {
       return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     },
+    // На iOS — один общий Audio для всех эффектов (макс. 3 элемента: меню, уровень, эффекты). Без пулов — без лагов.
+    _singleSfxEl: null,
     
     // Флаги состояния
     musicEnabled: true,
@@ -83,6 +84,7 @@
     
     applySoundVolume: function() {
       var v = this.soundVolume;
+      if (this._isIOS() && this._singleSfxEl) this._singleSfxEl.volume = v;
       var pools = this.soundPools;
       Object.keys(pools || {}).forEach(function(name) {
         var arr = pools[name];
@@ -314,15 +316,29 @@
       this.isWalking = false;
     },
     
-    // Лениво создать пул для одного звука, если ещё не загружен
     _ensureSoundPool: function(name) {
       if (!this.soundPools[name] || !this.soundPools[name].length) {
         this.soundPools[name] = this._createSoundPool(this.SOUND_URLS[name], this.SOUND_POOL_SIZE);
       }
     },
     
-    // Воспроизведение из пула (лениво создаём пул при первом воспроизведении)
+    // На iOS: один общий Audio — меняем src и play(). Нет пулов, нет множества декодеров — без фризов.
     _playFromPool: function(name, onEnded) {
+      if (this._isIOS()) {
+        var url = this.SOUND_URLS[name];
+        if (!url) return;
+        if (!this._singleSfxEl) {
+          this._singleSfxEl = new Audio();
+          this._singleSfxEl.preload = 'none';
+          this._singleSfxEl.volume = this.soundVolume;
+        }
+        this._singleSfxEl.onended = onEnded || null;
+        this._singleSfxEl.src = url;
+        this._singleSfxEl.currentTime = 0;
+        this._singleSfxEl.volume = this.soundVolume;
+        this._singleSfxEl.play().catch(function() { if (onEnded) onEnded(); });
+        return;
+      }
       this._ensureSoundPool(name);
       var pool = this.soundPools[name];
       if (!pool || !pool.length) return;
@@ -333,7 +349,6 @@
       chosen.play().catch(function() { if (onEnded) onEnded(); });
     },
     
-    // Универсальное воспроизведение звука (из пула, без запросов)
     playSound: function(name) {
       if (!this.soundEnabled) return;
       this._playFromPool(name);
