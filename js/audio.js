@@ -21,15 +21,21 @@
       walk2: 'sounds/sound_walk_2.mp3',
       button: 'sounds/sound_button.mp3'
     },
-    SOUND_POOL_SIZE: 1, // один экземпляр на звук — меньше нагрузка на iPhone
-    _heavyAudioScheduled: false, // отложенная загрузка музыки уровней и звуков после первого тапа
+    SOUND_POOL_SIZE: 1,
+    _heavyAudioScheduled: false,
+    
+    // iOS: тяжёлая декодировка и много Audio вызывают фризы — используем облегчённый режим
+    _isIOS: function() {
+      return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    },
     
     // Флаги состояния
     musicEnabled: true,
     soundEnabled: true,
-    currentWalkSound: 1, // Для чередования звуков ходьбы
+    currentWalkSound: 1,
     isWalking: false,
     walkSoundPlaying: false,
+    _lastWalkTime: 0, // на iOS — троттлинг, чтобы не фризить
     
     // Громкость 0..1 (сохраняется в localStorage)
     musicVolume: 0.5,
@@ -47,8 +53,8 @@
         if (sv !== null) { v = parseFloat(sv); if (!isNaN(v)) this.soundVolume = Math.max(0, Math.min(1, v)); }
       } catch (e) {}
       
-      // Только музыка меню при загрузке (и только на страницах меню) — один элемент
-      if (this.isMenuPage()) {
+      // На iOS при загрузке не создаём ни одного Audio — нулевая нагрузка, без фризов
+      if (!this._isIOS() && this.isMenuPage()) {
         this.menuMusic = new Audio('sounds/music_menu.mp3');
         this.menuMusic.loop = true;
         this.menuMusic.volume = this.musicVolume;
@@ -56,24 +62,19 @@
         this.menuMusic.load();
       }
       
-      // Музыка уровней и звуки НЕ грузим здесь — отложенная загрузка после первого тапа (см. setupAudioUnlock)
-      
-      // Звук при нажатии кнопок
       this.setupButtonSound();
-      
-      // Разблокировка аудио после взаимодействия пользователя
       this.setupAudioUnlock();
-      // Сохранение позиции меню-музыки при переходе между страницами
       this.setupMenuMusicPersist();
     },
     
-    // Создать пул предзагруженных Audio (те же запросы, что у музыки — без CORS)
+    // На iOS: preload="none" и без load() — декодировка только при первом play(), без фризов
     _createSoundPool: function(src, count) {
       var list = [];
+      var noPreload = this._isIOS();
       for (var i = 0; i < count; i++) {
         var a = new Audio(src);
-        a.preload = 'auto';
-        a.load();
+        a.preload = noPreload ? 'none' : 'auto';
+        if (!noPreload) a.load();
         a.volume = this.soundVolume;
         list.push(a);
       }
@@ -131,8 +132,9 @@
       return href.includes('play.html') || href.includes('levels.html') || href.includes('dialog.html');
     },
     
-    // Отложенная загрузка: по одному элементу за раз, без пиковой нагрузки на iPhone
+    // Отложенная загрузка (только не-iOS): по одному элементу за раз
     _staggerLoadHeavyAudio: function() {
+      if (this._isIOS()) return;
       var self = this;
       if (self._heavyAudioScheduled) return;
       self._heavyAudioScheduled = true;
@@ -158,7 +160,6 @@
       setTimeout(next, 0);
     },
     
-    // Разблокировка аудио + запуск отложенной загрузки музыки уровней и звуков
     setupAudioUnlock: function() {
       var self = this;
       function unlockAudio() {
@@ -170,7 +171,7 @@
             }
           }).catch(function() {});
         }
-        self._staggerLoadHeavyAudio();
+        if (!self._isIOS()) self._staggerLoadHeavyAudio();
         document.removeEventListener('touchstart', unlockAudio);
         document.removeEventListener('click', unlockAudio);
         document.removeEventListener('keydown', unlockAudio);
@@ -199,37 +200,38 @@
       });
     },
     
-    // Воспроизведение музыки меню (продолжение с сохранённой позиции при переходах play/levels/dialog)
     playMenuMusic: function() {
       if (!this.musicEnabled) return;
-      
-      // Останавливаем только если играла музыка уровня (на игре мы не вызываем playMenuMusic)
       this.stopCurrentMusic();
-      
-      if (this.menuMusic) {
-        try {
-          const saved = sessionStorage.getItem('menuMusicTime');
-          if (saved !== null) {
-            const t = parseFloat(saved);
-            if (!isNaN(t) && t >= 0) this.menuMusic.currentTime = t;
-          }
-        } catch (e) {}
-        this.menuMusic.play().catch(e => console.log('Menu music autoplay blocked'));
-        this.currentMusic = this.menuMusic;
+      if (!this.menuMusic) {
+        this.menuMusic = new Audio('sounds/music_menu.mp3');
+        this.menuMusic.loop = true;
+        this.menuMusic.volume = this.musicVolume;
+        this.menuMusic.preload = this._isIOS() ? 'none' : 'auto';
+        if (!this._isIOS()) this.menuMusic.load();
       }
+      try {
+        var saved = sessionStorage.getItem('menuMusicTime');
+        if (saved !== null) {
+          var t = parseFloat(saved);
+          if (!isNaN(t) && t >= 0) this.menuMusic.currentTime = t;
+        }
+      } catch (e) {}
+      this.menuMusic.play().catch(function() {});
+      this.currentMusic = this.menuMusic;
     },
     
-    // Воспроизведение музыки уровня (лениво создаём трек, если ещё не загружен)
+    // На iOS: один трек (music_1), без предзагрузки — меньше декодировки и фризов
     playLevelMusic: function() {
       if (!this.musicEnabled) return;
       this.stopCurrentMusic();
-      var trackNum = Math.floor(Math.random() * 3);
+      var trackNum = this._isIOS() ? 0 : Math.floor(Math.random() * 3);
       if (!this.levelMusicTracks[trackNum]) {
         var track = new Audio('sounds/music_' + (trackNum + 1) + '.mp3');
         track.loop = true;
         track.volume = this.musicVolume;
-        track.preload = 'auto';
-        track.load();
+        track.preload = this._isIOS() ? 'none' : 'auto';
+        if (!this._isIOS()) track.load();
         this.levelMusicTracks[trackNum] = track;
       }
       this.levelMusic = this.levelMusicTracks[trackNum];
@@ -292,9 +294,14 @@
       this.playSound('victory');
     },
     
-    // Воспроизведение звуков ходьбы (чередование)
+    // Воспроизведение звуков ходьбы; на iOS — троттлинг (не чаще раз в 180 ms)
     playWalk: function() {
       if (!this.soundEnabled || this.walkSoundPlaying) return;
+      if (this._isIOS()) {
+        var now = Date.now();
+        if (now - this._lastWalkTime < 180) return;
+        this._lastWalkTime = now;
+      }
       this.walkSoundPlaying = true;
       var name = this.currentWalkSound === 1 ? 'walk1' : 'walk2';
       this.currentWalkSound = this.currentWalkSound === 1 ? 2 : 1;
