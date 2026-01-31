@@ -6,18 +6,22 @@
     menuMusic: null,
     levelMusic: null,
     currentMusic: null,
+    // Предзагруженные треки музыки уровней (1–3)
+    levelMusicTracks: [null, null, null],
     
-    // Звуковые эффекты
-    sounds: {
-      jump: null,
-      money: null,
-      slime: null,
-      defeat: null,
-      victory: null,
-      walk1: null,
-      walk2: null,
-      button: null
+    // Пул предзагруженных HTML Audio для звуков (без fetch — нет CORS, один запрос при load())
+    soundPools: {},
+    SOUND_URLS: {
+      jump: 'sounds/sound_jump.mp3',
+      money: 'sounds/sound_money.mp3',
+      slime: 'sounds/sound_slime.mp3',
+      defeat: 'sounds/sound_defeat.mp3',
+      victory: 'sounds/sound_victory.mp3',
+      walk1: 'sounds/sound_walk_1.mp3',
+      walk2: 'sounds/sound_walk_2.mp3',
+      button: 'sounds/sound_button.mp3'
     },
+    SOUND_POOL_SIZE: 2, // экземпляров на звук для перекрытия (без новых запросов)
     
     // Флаги состояния
     musicEnabled: true,
@@ -42,20 +46,28 @@
         if (sv !== null) { const v = parseFloat(sv); if (!isNaN(v)) this.soundVolume = Math.max(0, Math.min(1, v)); }
       } catch (e) {}
       
-      // Загрузка музыки меню
+      // Предзагрузка музыки меню (один раз, без повторных запросов)
       this.menuMusic = new Audio('sounds/music_menu.mp3');
       this.menuMusic.loop = true;
       this.menuMusic.volume = this.musicVolume;
+      this.menuMusic.preload = 'auto';
+      this.menuMusic.load();
       
-      // Загрузка звуковых эффектов
-      this.sounds.jump = new Audio('sounds/sound_jump.mp3');
-      this.sounds.money = new Audio('sounds/sound_money.mp3');
-      this.sounds.slime = new Audio('sounds/sound_slime.mp3');
-      this.sounds.defeat = new Audio('sounds/sound_defeat.mp3');
-      this.sounds.victory = new Audio('sounds/sound_victory.mp3');
-      this.sounds.walk1 = new Audio('sounds/sound_walk_1.mp3');
-      this.sounds.walk2 = new Audio('sounds/sound_walk_2.mp3');
-      this.sounds.button = new Audio('sounds/sound_button.mp3');
+      // Предзагрузка музыки уровней (все 3 трека сразу)
+      for (var i = 0; i < 3; i++) {
+        var track = new Audio('sounds/music_' + (i + 1) + '.mp3');
+        track.loop = true;
+        track.volume = this.musicVolume;
+        track.preload = 'auto';
+        track.load();
+        this.levelMusicTracks[i] = track;
+      }
+      
+      // Звуки: пул предзагруженных Audio (как музыка — без fetch, без CORS)
+      var self = this;
+      Object.keys(this.SOUND_URLS).forEach(function(name) {
+        self.soundPools[name] = self._createSoundPool(self.SOUND_URLS[name], self.SOUND_POOL_SIZE);
+      });
       this.applySoundVolume();
       
       // Звук при нажатии кнопок
@@ -67,16 +79,26 @@
       this.setupMenuMusicPersist();
     },
     
+    // Создать пул предзагруженных Audio (те же запросы, что у музыки — без CORS)
+    _createSoundPool: function(src, count) {
+      var list = [];
+      for (var i = 0; i < count; i++) {
+        var a = new Audio(src);
+        a.preload = 'auto';
+        a.load();
+        a.volume = this.soundVolume;
+        list.push(a);
+      }
+      return list;
+    },
+    
     applySoundVolume: function() {
-      const v = this.soundVolume;
-      if (this.sounds.jump) this.sounds.jump.volume = v;
-      if (this.sounds.money) this.sounds.money.volume = v;
-      if (this.sounds.slime) this.sounds.slime.volume = v;
-      if (this.sounds.defeat) this.sounds.defeat.volume = v;
-      if (this.sounds.victory) this.sounds.victory.volume = v;
-      if (this.sounds.walk1) this.sounds.walk1.volume = v;
-      if (this.sounds.walk2) this.sounds.walk2.volume = v;
-      if (this.sounds.button) this.sounds.button.volume = v;
+      var v = this.soundVolume;
+      var pools = this.soundPools;
+      Object.keys(pools || {}).forEach(function(name) {
+        var arr = pools[name];
+        if (arr) arr.forEach(function(a) { a.volume = v; });
+      });
     },
     
     getMusicVolume: function() { return this.musicVolume; },
@@ -86,6 +108,7 @@
       this.musicVolume = Math.max(0, Math.min(1, v));
       if (this.menuMusic) this.menuMusic.volume = this.musicVolume;
       if (this.levelMusic) this.levelMusic.volume = this.musicVolume;
+      this.levelMusicTracks.forEach(function(t) { if (t) t.volume = this.musicVolume; }.bind(this));
       try { localStorage.setItem(this.STORAGE_MUSIC_VOL, String(this.musicVolume)); } catch (e) {}
     },
     
@@ -122,21 +145,18 @@
     setupAudioUnlock: function() {
       const self = this;
       const unlockAudio = function() {
-        // На странице игры (index.html) не трогаем меню-музыку — разблокировка произойдёт при воспроизведении музыки уровня
         if (self.isMenuPage() && self.menuMusic) {
-          self.menuMusic.play().then(() => {
+          self.menuMusic.play().then(function() {
             if (!self.currentMusic) {
               self.menuMusic.pause();
               self.menuMusic.currentTime = 0;
             }
-          }).catch(() => {});
+          }).catch(function() {});
         }
-        
         document.removeEventListener('touchstart', unlockAudio);
         document.removeEventListener('click', unlockAudio);
         document.removeEventListener('keydown', unlockAudio);
       };
-      
       document.addEventListener('touchstart', unlockAudio, { once: true });
       document.addEventListener('click', unlockAudio, { once: true });
       document.addEventListener('keydown', unlockAudio, { once: true });
@@ -181,19 +201,18 @@
       }
     },
     
-    // Воспроизведение музыки уровня (рандомная из 3)
+    // Воспроизведение музыки уровня (рандомная из предзагруженных 3 треков)
     playLevelMusic: function() {
       if (!this.musicEnabled) return;
       
-      // Останавливаем текущую музыку
       this.stopCurrentMusic();
       
-      // Выбираем случайный трек
-      const trackNum = Math.floor(Math.random() * 3) + 1;
-      this.levelMusic = new Audio('sounds/music_' + trackNum + '.mp3');
-      this.levelMusic.loop = true;
+      var trackNum = Math.floor(Math.random() * 3);
+      this.levelMusic = this.levelMusicTracks[trackNum];
+      if (!this.levelMusic) return;
+      this.levelMusic.currentTime = 0;
       this.levelMusic.volume = this.musicVolume;
-      this.levelMusic.play().catch(e => console.log('Level music autoplay blocked'));
+      this.levelMusic.play().catch(function(e) { console.log('Level music autoplay blocked'); });
       this.currentMusic = this.levelMusic;
     },
     
@@ -253,24 +272,11 @@
     // Воспроизведение звуков ходьбы (чередование)
     playWalk: function() {
       if (!this.soundEnabled || this.walkSoundPlaying) return;
-      
       this.walkSoundPlaying = true;
-      
-      const sound = this.currentWalkSound === 1 ? this.sounds.walk1 : this.sounds.walk2;
-      if (sound) {
-        sound.currentTime = 0;
-        sound.play().then(() => {
-          // Переключаем на следующий звук
-          this.currentWalkSound = this.currentWalkSound === 1 ? 2 : 1;
-        }).catch(() => {});
-        
-        // Сбрасываем флаг после воспроизведения
-        sound.onended = () => {
-          this.walkSoundPlaying = false;
-        };
-      } else {
-        this.walkSoundPlaying = false;
-      }
+      var name = this.currentWalkSound === 1 ? 'walk1' : 'walk2';
+      this.currentWalkSound = this.currentWalkSound === 1 ? 2 : 1;
+      var self = this;
+      this._playFromPool(name, function() { self.walkSoundPlaying = false; });
     },
     
     // Остановка звуков ходьбы
@@ -278,15 +284,26 @@
       this.isWalking = false;
     },
     
-    // Универсальное воспроизведение звука
-    playSound: function(name) {
-      const sound = this.sounds[name];
-      if (sound) {
-        // Создаем клон для возможности воспроизведения нескольких звуков одновременно
-        const clone = sound.cloneNode();
-        clone.volume = sound.volume;
-        clone.play().catch(() => {});
+    // Воспроизведение из пула предзагруженных Audio (без новых запросов и без CORS)
+    _playFromPool: function(name, onEnded) {
+      var pool = this.soundPools[name];
+      if (!pool || !pool.length) return;
+      var chosen = null;
+      for (var i = 0; i < pool.length; i++) {
+        var a = pool[i];
+        if (a.paused || a.ended) { chosen = a; break; }
       }
+      if (!chosen) chosen = pool[0];
+      chosen.currentTime = 0;
+      chosen.volume = this.soundVolume;
+      if (onEnded) chosen.onended = onEnded;
+      chosen.play().catch(function() { if (onEnded) onEnded(); });
+    },
+    
+    // Универсальное воспроизведение звука (из пула, без запросов)
+    playSound: function(name) {
+      if (!this.soundEnabled) return;
+      this._playFromPool(name);
     },
     
     // Включение/выключение музыки
