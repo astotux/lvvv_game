@@ -225,6 +225,7 @@
       #rotateNotification { display: none !important; }
     }
   </style>
+  <script src="js/audio.js"></script>
 </head>
 <body>
   <button class="back-button" onclick="goBack()"><img src="./img/home.png" style="width: 50px; height: 50px;"></button>
@@ -516,6 +517,11 @@
     // Инициализация
     window.addEventListener('load', function() {
       renderLevels();
+      
+      // Запускаем музыку меню
+      if (window.AudioManager) {
+        window.AudioManager.playMenuMusic();
+      }
       
       // Анимация появления страницы
       var fade = document.getElementById('introFade');

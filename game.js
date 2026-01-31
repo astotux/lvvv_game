@@ -200,6 +200,10 @@ function showModal(title, text, nextCallback = null, restartCallback = null, sho
   modal.style.display = "flex";
   modalRestartCallback = restartCallback || (()=>{});
   
+  // Скрываем ползунки громкости (показываются только в паузе)
+  var volSliders = document.getElementById('modalVolumeSliders');
+  if (volSliders) volSliders.classList.remove('visible');
+  
   if (nextCallback) {
     modalNextBtn.style.display = "inline-block";
     modalNextBtn.setAttribute('href', 'dialog.html');
@@ -247,6 +251,18 @@ function showPauseModal() {
     closePauseModal();
     resetPlayer();
   }, true, true);
+  
+  // Показываем ползунки громкости и синхронизируем с AudioManager
+  var volSliders = document.getElementById('modalVolumeSliders');
+  if (volSliders) {
+    volSliders.classList.add('visible');
+    var mv = document.getElementById('modalMusicVol');
+    var sv = document.getElementById('modalSoundVol');
+    if (window.AudioManager && mv && sv) {
+      mv.value = Math.round(window.AudioManager.getMusicVolume() * 100);
+      sv.value = Math.round(window.AudioManager.getSoundVolume() * 100);
+    }
+  }
 }
 
 function closePauseModal() {
@@ -371,6 +387,7 @@ window.updateEnemies = function() {
     if (player.x < enemy.x + enemy.w && player.x + player.w > enemy.x &&
         player.y < enemy.y + enemy.h && player.y + player.h > enemy.y) {
       gameOver = true;
+      if (window.AudioManager) { window.AudioManager.playDefeat(); window.AudioManager.stopLevelMusic(); }
       showModal("Игра окончена.", "Ты столкнулась с врагом!", null, ()=>resetPlayer());
     }
     
@@ -378,12 +395,16 @@ window.updateEnemies = function() {
         companion.x < enemy.x + enemy.w && companion.x + companion.w > enemy.x &&
         companion.y < enemy.y + enemy.h && companion.y + companion.h > enemy.y) {
       gameOver = true;
+      if (window.AudioManager) { window.AudioManager.playDefeat(); window.AudioManager.stopLevelMusic(); }
       showModal("Игра окончена.", "Арчик столкнулся с врагом!", null, ()=>resetPlayer());
     }
   });
 }
 
 function resetPlayer() {
+  // Запускаем музыку уровня заново при перезапуске
+  if (window.AudioManager) window.AudioManager.playLevelMusic();
+  
   player.x=50; player.y=100; player.dy=0;
   player.idleTimer = 0;
   player.onDynamicPlatform = null;
@@ -443,7 +464,9 @@ function resetPlayer() {
 
 function updateCoins () {
   totalCoins++;
-  document.getElementById('totalCoins').innerText = `${totalCoins} | ${levels[currentLevel].coins.length}`
+  document.getElementById('totalCoins').innerText = `${totalCoins} | ${levels[currentLevel].coins.length}`;
+  // Воспроизводим звук сбора монетки
+  if (window.AudioManager) window.AudioManager.playMoney();
 }
 
 function updateStatsDisplay() {
@@ -484,6 +507,8 @@ function update() {
                if (window.followEnabled && companion.onGround) {
                  companion.dy = (p.bounceStrength || -20);
                }
+               // Воспроизводим звук прыжка на слизи
+               if (window.AudioManager) window.AudioManager.playSlime();
              }
              
              // Отслеживание движущихся платформ
@@ -510,6 +535,7 @@ function update() {
       if(player.x < t.x+t.w && player.x+player.w > t.x &&
          player.y < t.y+t.h && player.y+player.h > t.y){
            gameOver = true;
+           if (window.AudioManager) { window.AudioManager.playDefeat(); window.AudioManager.stopLevelMusic(); }
            showModal("Игра окончена.","Ты наступила на шипы!", null, ()=>resetPlayer());
       }
     });
@@ -518,6 +544,7 @@ function update() {
     if(player.x < f.x+f.w && player.x+player.w > f.x &&
        player.y < f.y+f.h && player.y+player.h > f.y){
          gameOver = true;
+         if (window.AudioManager) { window.AudioManager.playVictory(); window.AudioManager.stopLevelMusic(); }
          
          const finishTime = stopLevelTimer();
          const currentStats = getLevelStats(currentLevel);
@@ -570,9 +597,13 @@ function update() {
     if (player.dx > 0) {
         player.state = "walk-right";
         player.idleTimer = 0;
+        // Звук ходьбы
+        if (player.onGround && window.AudioManager) window.AudioManager.playWalk();
     } else if (player.dx < 0) {
         player.state = "walk-left";
         player.idleTimer = 0;
+        // Звук ходьбы
+        if (player.onGround && window.AudioManager) window.AudioManager.playWalk();
     } else {
         player.state = "idle";
         player.idleTimer++;
@@ -605,6 +636,7 @@ function update() {
 
     if (player.y > viewH + C.FALL_OFF.Y_MARGIN || player.x < -C.FALL_OFF.X_MARGIN || player.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
+      if (window.AudioManager) { window.AudioManager.playDefeat(); window.AudioManager.stopLevelMusic(); }
       showModal("Игра окончена.","Ты упала в пропасть!", null, ()=>resetPlayer());
     }
   } else {
@@ -631,6 +663,8 @@ function update() {
              // Обработка подпрыгивающих платформ
              if (p.type === 'bouncy') {
                companion.dy = (p.bounceStrength || -20);
+               // Воспроизводим звук прыжка на слизи
+               if (window.AudioManager) window.AudioManager.playSlime();
              }
              
              // Отслеживание движущихся платформ
@@ -657,6 +691,7 @@ function update() {
       if(companion.x < t.x+t.w && companion.x+companion.w > t.x &&
          companion.y < t.y+t.h && companion.y+companion.h > t.y){
            gameOver = true;
+           if (window.AudioManager) { window.AudioManager.playDefeat(); window.AudioManager.stopLevelMusic(); }
            showModal("Игра окончена.","Арчик наступил на шипы!", null, ()=>resetPlayer());
       }
     });
@@ -665,6 +700,7 @@ function update() {
     if(companion.x < f.x+f.w && companion.x+companion.w > f.x &&
        companion.y < f.y+f.h && companion.y+companion.h > f.y){
          gameOver = true;
+         if (window.AudioManager) { window.AudioManager.playVictory(); window.AudioManager.stopLevelMusic(); }
          
          const finishTime = stopLevelTimer();
          const currentStats = getLevelStats(currentLevel);
@@ -721,9 +757,13 @@ function update() {
     if (companion.dx > 0) {
         companion.state = "walk-right";
         companion.idleTimer = 0;
+        // Звук ходьбы для companion когда он активен
+        if (companion.onGround && window.AudioManager) window.AudioManager.playWalk();
     } else if (companion.dx < 0) {
         companion.state = "walk-left";
         companion.idleTimer = 0;
+        // Звук ходьбы для companion когда он активен
+        if (companion.onGround && window.AudioManager) window.AudioManager.playWalk();
     } else {
         companion.state = "idle";
         companion.idleTimer++;
@@ -756,6 +796,7 @@ function update() {
 
     if (companion.y > viewH + C.FALL_OFF.Y_MARGIN || companion.x < -C.FALL_OFF.X_MARGIN || companion.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
+      if (window.AudioManager) { window.AudioManager.playDefeat(); window.AudioManager.stopLevelMusic(); }
       showModal("Игра окончена.","Арчик упал в пропасть!", null, ()=>resetPlayer());
     }
   }
@@ -809,6 +850,8 @@ function update() {
           // Обработка подпрыгивающих платформ
           if (p.type === 'bouncy') {
             companion.dy = (p.bounceStrength || -20);
+            // Воспроизводим звук прыжка на слизи
+            if (window.AudioManager) window.AudioManager.playSlime();
           }
           
           // Отслеживание движущихся платформ
@@ -911,6 +954,8 @@ function update() {
           // Обработка подпрыгивающих платформ
           if (p.type === 'bouncy') {
             player.dy = (p.bounceStrength || -20);
+            // Воспроизводим звук прыжка на слизи
+            if (window.AudioManager) window.AudioManager.playSlime();
           }
           
           // Отслеживание движущихся платформ
@@ -925,6 +970,7 @@ function update() {
     
     if (player.y > viewH + C.FALL_OFF.Y_MARGIN || player.x < -C.FALL_OFF.X_MARGIN || player.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
+      if (window.AudioManager) { window.AudioManager.playDefeat(); window.AudioManager.stopLevelMusic(); }
       showModal("Игра окончена.","Ты упала в пропасть!", null, ()=>resetPlayer());
     }
     
