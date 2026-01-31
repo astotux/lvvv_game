@@ -21,7 +21,8 @@
       walk2: 'sounds/sound_walk_2.mp3',
       button: 'sounds/sound_button.mp3'
     },
-    SOUND_POOL_SIZE: 2, // экземпляров на звук для перекрытия (без новых запросов)
+    SOUND_POOL_SIZE: 1, // один экземпляр на звук — меньше нагрузка на iPhone
+    _heavyAudioScheduled: false, // отложенная загрузка музыки уровней и звуков после первого тапа
     
     // Флаги состояния
     musicEnabled: true,
@@ -36,39 +37,26 @@
     STORAGE_MUSIC_VOL: 'love_game_music_volume',
     STORAGE_SOUND_VOL: 'love_game_sound_volume',
     
-    // Инициализация аудиосистемы
+    // Инициализация аудиосистемы (минимум при загрузке — без лагов на iPhone)
     init: function() {
-      // Загружаем сохранённую громкость
+      var self = this;
       try {
-        const mv = localStorage.getItem(this.STORAGE_MUSIC_VOL);
-        if (mv !== null) { const v = parseFloat(mv); if (!isNaN(v)) this.musicVolume = Math.max(0, Math.min(1, v)); }
-        const sv = localStorage.getItem(this.STORAGE_SOUND_VOL);
-        if (sv !== null) { const v = parseFloat(sv); if (!isNaN(v)) this.soundVolume = Math.max(0, Math.min(1, v)); }
+        var mv = localStorage.getItem(this.STORAGE_MUSIC_VOL);
+        if (mv !== null) { var v = parseFloat(mv); if (!isNaN(v)) this.musicVolume = Math.max(0, Math.min(1, v)); }
+        var sv = localStorage.getItem(this.STORAGE_SOUND_VOL);
+        if (sv !== null) { v = parseFloat(sv); if (!isNaN(v)) this.soundVolume = Math.max(0, Math.min(1, v)); }
       } catch (e) {}
       
-      // Предзагрузка музыки меню (один раз, без повторных запросов)
-      this.menuMusic = new Audio('sounds/music_menu.mp3');
-      this.menuMusic.loop = true;
-      this.menuMusic.volume = this.musicVolume;
-      this.menuMusic.preload = 'auto';
-      this.menuMusic.load();
-      
-      // Предзагрузка музыки уровней (все 3 трека сразу)
-      for (var i = 0; i < 3; i++) {
-        var track = new Audio('sounds/music_' + (i + 1) + '.mp3');
-        track.loop = true;
-        track.volume = this.musicVolume;
-        track.preload = 'auto';
-        track.load();
-        this.levelMusicTracks[i] = track;
+      // Только музыка меню при загрузке (и только на страницах меню) — один элемент
+      if (this.isMenuPage()) {
+        this.menuMusic = new Audio('sounds/music_menu.mp3');
+        this.menuMusic.loop = true;
+        this.menuMusic.volume = this.musicVolume;
+        this.menuMusic.preload = 'auto';
+        this.menuMusic.load();
       }
       
-      // Звуки: пул предзагруженных Audio (как музыка — без fetch, без CORS)
-      var self = this;
-      Object.keys(this.SOUND_URLS).forEach(function(name) {
-        self.soundPools[name] = self._createSoundPool(self.SOUND_URLS[name], self.SOUND_POOL_SIZE);
-      });
-      this.applySoundVolume();
+      // Музыка уровней и звуки НЕ грузим здесь — отложенная загрузка после первого тапа (см. setupAudioUnlock)
       
       // Звук при нажатии кнопок
       this.setupButtonSound();
@@ -108,7 +96,9 @@
       this.musicVolume = Math.max(0, Math.min(1, v));
       if (this.menuMusic) this.menuMusic.volume = this.musicVolume;
       if (this.levelMusic) this.levelMusic.volume = this.musicVolume;
-      this.levelMusicTracks.forEach(function(t) { if (t) t.volume = this.musicVolume; }.bind(this));
+      for (var i = 0; i < (this.levelMusicTracks && this.levelMusicTracks.length); i++) {
+        if (this.levelMusicTracks[i]) this.levelMusicTracks[i].volume = this.musicVolume;
+      }
       try { localStorage.setItem(this.STORAGE_MUSIC_VOL, String(this.musicVolume)); } catch (e) {}
     },
     
@@ -141,10 +131,37 @@
       return href.includes('play.html') || href.includes('levels.html') || href.includes('dialog.html');
     },
     
-    // Разблокировка аудио на мобильных устройствах (только на страницах меню — не запускаем меню-музыку в игре)
+    // Отложенная загрузка: по одному элементу за раз, без пиковой нагрузки на iPhone
+    _staggerLoadHeavyAudio: function() {
+      var self = this;
+      if (self._heavyAudioScheduled) return;
+      self._heavyAudioScheduled = true;
+      var list = [];
+      for (var i = 0; i < 3; i++) list.push({ type: 'level', index: i });
+      Object.keys(self.SOUND_URLS).forEach(function(name) { list.push({ type: 'sound', name: name }); });
+      var idx = 0;
+      function next() {
+        if (idx >= list.length) { self.applySoundVolume(); return; }
+        var item = list[idx++];
+        if (item.type === 'level') {
+          var track = new Audio('sounds/music_' + (item.index + 1) + '.mp3');
+          track.loop = true;
+          track.volume = self.musicVolume;
+          track.preload = 'auto';
+          track.load();
+          self.levelMusicTracks[item.index] = track;
+        } else {
+          self.soundPools[item.name] = self._createSoundPool(self.SOUND_URLS[item.name], self.SOUND_POOL_SIZE);
+        }
+        setTimeout(next, 0);
+      }
+      setTimeout(next, 0);
+    },
+    
+    // Разблокировка аудио + запуск отложенной загрузки музыки уровней и звуков
     setupAudioUnlock: function() {
-      const self = this;
-      const unlockAudio = function() {
+      var self = this;
+      function unlockAudio() {
         if (self.isMenuPage() && self.menuMusic) {
           self.menuMusic.play().then(function() {
             if (!self.currentMusic) {
@@ -153,10 +170,11 @@
             }
           }).catch(function() {});
         }
+        self._staggerLoadHeavyAudio();
         document.removeEventListener('touchstart', unlockAudio);
         document.removeEventListener('click', unlockAudio);
         document.removeEventListener('keydown', unlockAudio);
-      };
+      }
       document.addEventListener('touchstart', unlockAudio, { once: true });
       document.addEventListener('click', unlockAudio, { once: true });
       document.addEventListener('keydown', unlockAudio, { once: true });
@@ -201,18 +219,23 @@
       }
     },
     
-    // Воспроизведение музыки уровня (рандомная из предзагруженных 3 треков)
+    // Воспроизведение музыки уровня (лениво создаём трек, если ещё не загружен)
     playLevelMusic: function() {
       if (!this.musicEnabled) return;
-      
       this.stopCurrentMusic();
-      
       var trackNum = Math.floor(Math.random() * 3);
+      if (!this.levelMusicTracks[trackNum]) {
+        var track = new Audio('sounds/music_' + (trackNum + 1) + '.mp3');
+        track.loop = true;
+        track.volume = this.musicVolume;
+        track.preload = 'auto';
+        track.load();
+        this.levelMusicTracks[trackNum] = track;
+      }
       this.levelMusic = this.levelMusicTracks[trackNum];
-      if (!this.levelMusic) return;
       this.levelMusic.currentTime = 0;
       this.levelMusic.volume = this.musicVolume;
-      this.levelMusic.play().catch(function(e) { console.log('Level music autoplay blocked'); });
+      this.levelMusic.play().catch(function() {});
       this.currentMusic = this.levelMusic;
     },
     
@@ -284,16 +307,19 @@
       this.isWalking = false;
     },
     
-    // Воспроизведение из пула предзагруженных Audio (без новых запросов и без CORS)
+    // Лениво создать пул для одного звука, если ещё не загружен
+    _ensureSoundPool: function(name) {
+      if (!this.soundPools[name] || !this.soundPools[name].length) {
+        this.soundPools[name] = this._createSoundPool(this.SOUND_URLS[name], this.SOUND_POOL_SIZE);
+      }
+    },
+    
+    // Воспроизведение из пула (лениво создаём пул при первом воспроизведении)
     _playFromPool: function(name, onEnded) {
+      this._ensureSoundPool(name);
       var pool = this.soundPools[name];
       if (!pool || !pool.length) return;
-      var chosen = null;
-      for (var i = 0; i < pool.length; i++) {
-        var a = pool[i];
-        if (a.paused || a.ended) { chosen = a; break; }
-      }
-      if (!chosen) chosen = pool[0];
+      var chosen = pool[0];
       chosen.currentTime = 0;
       chosen.volume = this.soundVolume;
       if (onEnded) chosen.onended = onEnded;
