@@ -7,6 +7,14 @@
     musicEnabled: true,
     musicVolume: 0.5,
     STORAGE_MUSIC_VOL: 'love_game_music_volume',
+    _levelMusicScheduled: false,
+    _iosCtx: null,
+    _iosGain: null,
+    _iosSource: null,
+
+    _isIOS: function() {
+      return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    },
 
     init: function() {
       try {
@@ -43,11 +51,50 @@
 
     setMusicVolume: function(v) {
       this.musicVolume = Math.max(0, Math.min(1, v));
+      if (this._isIOS() && this._iosGain) {
+        this._iosGain.gain.value = this.musicVolume;
+      }
       for (var i = 0; i < 4; i++) {
         if (this.levelMusicTracks[i]) this.levelMusicTracks[i].volume = this.musicVolume;
       }
       if (this.levelMusic) this.levelMusic.volume = this.musicVolume;
       try { localStorage.setItem(this.STORAGE_MUSIC_VOL, String(this.musicVolume)); } catch (e) {}
+    },
+
+    _ensureIOSAudioContext: function() {
+      if (this._iosCtx) return true;
+      try {
+        var Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return false;
+        this._iosCtx = new Ctx();
+        this._iosGain = this._iosCtx.createGain();
+        this._iosGain.gain.value = this.musicVolume;
+        this._iosGain.connect(this._iosCtx.destination);
+        if (this._iosCtx.resume) this._iosCtx.resume();
+        return true;
+      } catch (e) { return false; }
+    },
+
+    _connectIOS: function(audioEl) {
+      if (!this._isIOS() || !audioEl) return;
+      this._ensureIOSAudioContext();
+      if (!this._iosCtx || !this._iosGain) return;
+      try {
+        if (this._iosSource) {
+          try { this._iosSource.disconnect(); } catch (e) {}
+          this._iosSource = null;
+        }
+        this._iosSource = this._iosCtx.createMediaElementSource(audioEl);
+        this._iosSource.connect(this._iosGain);
+        this._iosGain.gain.value = this.musicVolume;
+      } catch (e) {}
+    },
+
+    _disconnectIOS: function() {
+      if (this._iosSource) {
+        try { this._iosSource.disconnect(); } catch (e) {}
+        this._iosSource = null;
+      }
     },
 
     playLevelMusic: function() {
@@ -65,17 +112,41 @@
       this.levelMusic = this.levelMusicTracks[trackNum];
       this.levelMusic.currentTime = 0;
       this.levelMusic.volume = this.musicVolume;
+      if (this._isIOS()) this._connectIOS(this.levelMusic);
       this.levelMusic.play().catch(function() {});
       this.currentMusic = this.levelMusic;
     },
 
     stopLevelMusic: function() {
+      if (this._isIOS()) this._disconnectIOS();
       if (this.levelMusic) {
         this.levelMusic.pause();
         this.levelMusic.currentTime = 0;
         this.currentMusic = null;
         this.levelMusic = null;
       }
+    },
+
+    scheduleLevelMusicOnFirstInteraction: function() {
+      var self = this;
+      if (self._levelMusicScheduled) return;
+      self._levelMusicScheduled = true;
+      function start() {
+        if (self._isIOS()) self._ensureIOSAudioContext();
+        if (self._isIOS() && self._iosCtx && self._iosCtx.state === 'suspended') {
+          self._iosCtx.resume().then(function() { self.playLevelMusic(); }).catch(function() { self.playLevelMusic(); });
+        } else {
+          self.playLevelMusic();
+        }
+        document.removeEventListener('touchstart', start, true);
+        document.removeEventListener('touchend', start, true);
+        document.removeEventListener('click', start, true);
+        document.removeEventListener('keydown', start, true);
+      }
+      document.addEventListener('touchstart', start, { once: true, capture: true });
+      document.addEventListener('touchend', start, { once: true, capture: true });
+      document.addEventListener('click', start, { once: true, capture: true });
+      document.addEventListener('keydown', start, { once: true, capture: true });
     },
 
     toggleMusic: function() {
