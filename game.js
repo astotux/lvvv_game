@@ -715,10 +715,10 @@ function update() {
          resultText += `Собрано морошки: ${totalCoins}/${lvl.coins.length}\n\n`;
          
          if (isNewBestTime) {
-           resultText += `🏆 Новый рекорд времени!\n`;
+           resultText += `Новый рекорд времени!\n`;
          }
          if (isNewBestCoins) {
-           resultText += `🏆 Новый рекорд монет!\n`;
+           resultText += `Новый рекорд монет!\n`;
          }
          
          if (currentStats.bestTime) {
@@ -1022,6 +1022,11 @@ function drawDecorations() {
         case "clock": img = imgClock; break;
         case "window": img = imgWindow; break;
         case "vis": img = imgVis; break;
+        case "vis2": img = imgVis2; break;
+        case "vis3": img = imgVis3; break;
+        case "vis4": img = imgVis4; break;
+        case "vis5": img = imgVis5; break;
+        case "vis6": img = imgVis6; break;
       }
       
       if (!img) return;
@@ -1059,6 +1064,11 @@ function drawDecorationsUndo() {
         case "clock": img = imgClock; break;
         case "window": img = imgWindow; break;
         case "vis": img = imgVis; break;
+        case "vis2": img = imgVis2; break;
+        case "vis3": img = imgVis3; break;
+        case "vis4": img = imgVis4; break;
+        case "vis5": img = imgVis5; break;
+        case "vis6": img = imgVis6; break;
       }
       
       if (!img) return;
@@ -1096,6 +1106,11 @@ function drawDecorationsUndoPlatform() {
         case "clock": img = imgClock; break;
         case "window": img = imgWindow; break;
         case "vis": img = imgVis; break;
+        case "vis2": img = imgVis2; break;
+        case "vis3": img = imgVis3; break;
+        case "vis4": img = imgVis4; break;
+        case "vis5": img = imgVis5; break;
+        case "vis6": img = imgVis6; break;
       }
       
       if (!img) return;

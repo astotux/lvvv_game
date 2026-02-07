@@ -73,7 +73,12 @@
     { id:'decor_bench', label:'Декор bench', type:'decor', payload:{image:'bench'} },
     { id:'decor_clock', label:'Декор clock', type:'decor', payload:{image:'clock'} },
     { id:'decor_window', label:'Декор window', type:'decor', payload:{image:'window'} },
-    { id:'decor_vis', label:'Декор vis', type:'decor', payload:{image:'vis'} }
+    { id:'decor_vis', label:'Декор vis', type:'decor', payload:{image:'vis'} },
+    { id:'decor_vis2', label:'Декор vis2', type:'decor', payload:{image:'vis2'} },
+    { id:'decor_vis3', label:'Декор vis3', type:'decor', payload:{image:'vis3'} },
+    { id:'decor_vis4', label:'Декор vis4', type:'decor', payload:{image:'vis4'} },
+    { id:'decor_vis5', label:'Декор vis5', type:'decor', payload:{image:'vis5'} },
+    { id:'decor_vis6', label:'Декор vis6', type:'decor', payload:{image:'vis6'} }
   ];
 
   const toolGrid = document.getElementById('toolGrid');
@@ -224,6 +229,11 @@
         if (decorName === 'clock') return { w: 76, h: 168 };
         if (decorName === 'window') return { w: 139, h: 157 };
         if (decorName === 'vis') return { w: 368, h: 291 };
+        if (decorName === 'vis2') return { w: 192, h: 59 };
+        if (decorName === 'vis3') return { w: 30, h: 82 };
+        if (decorName === 'vis4') return { w: 47, h: 58 };
+        if (decorName === 'vis5') return { w: 132, h: 100 };
+        if (decorName === 'vis6') return { w: 86, h: 13 };
         img = pickDecor(decorName);
         return { w: (img && img.width) || 32, h: (img && img.height) || 32 };
       default:
@@ -760,6 +770,11 @@
       case 'clock': return window.imgClock;
       case 'window': return window.imgWindow;
       case 'vis': return window.imgVis;
+      case 'vis2': return window.imgVis2;
+      case 'vis3': return window.imgVis3;
+      case 'vis4': return window.imgVis4;
+      case 'vis5': return window.imgVis5;
+      case 'vis6': return window.imgVis6;
       default: return null;
     }
   }
