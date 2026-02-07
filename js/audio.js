@@ -131,22 +131,25 @@
       var self = this;
       if (self._levelMusicScheduled) return;
       self._levelMusicScheduled = true;
-      function start() {
-        if (self._isIOS()) self._ensureIOSAudioContext();
-        if (self._isIOS() && self._iosCtx && self._iosCtx.state === 'suspended') {
-          self._iosCtx.resume().then(function() { self.playLevelMusic(); }).catch(function() { self.playLevelMusic(); });
+      function tryStart() {
+        if (!self.musicEnabled) return;
+        if (self.currentMusic && !self.currentMusic.paused) return;
+        if (self._isIOS()) {
+          self._ensureIOSAudioContext();
+          if (self._iosCtx && self._iosCtx.resume) self._iosCtx.resume();
+          self.playLevelMusic();
         } else {
           self.playLevelMusic();
+          document.removeEventListener('touchstart', tryStart, true);
+          document.removeEventListener('touchend', tryStart, true);
+          document.removeEventListener('click', tryStart, true);
+          document.removeEventListener('keydown', tryStart, true);
         }
-        document.removeEventListener('touchstart', start, true);
-        document.removeEventListener('touchend', start, true);
-        document.removeEventListener('click', start, true);
-        document.removeEventListener('keydown', start, true);
       }
-      document.addEventListener('touchstart', start, { once: true, capture: true });
-      document.addEventListener('touchend', start, { once: true, capture: true });
-      document.addEventListener('click', start, { once: true, capture: true });
-      document.addEventListener('keydown', start, { once: true, capture: true });
+      document.addEventListener('touchstart', tryStart, { capture: true });
+      document.addEventListener('touchend', tryStart, { capture: true });
+      document.addEventListener('click', tryStart, { capture: true });
+      document.addEventListener('keydown', tryStart, { capture: true });
     },
 
     toggleMusic: function() {
