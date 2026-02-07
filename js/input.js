@@ -7,13 +7,9 @@
         window.companionLockToCenter = true;
       }
       window.player.idleTimer = 0;
-      // Воспроизводим звук прыжка
-      if (window.AudioManager) window.AudioManager.playJump();
     } else if(window.activeCharacter === "companion" && window.companion.onGround && !window.gameOver) {
       window.companion.dy = C.COMPANION.JUMP_VY;
       window.companion.idleTimer = 0;
-      // Воспроизводим звук прыжка
-      if (window.AudioManager) window.AudioManager.playJump();
     }
   };
 

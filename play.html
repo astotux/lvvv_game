@@ -194,10 +194,6 @@
           <label for="playMusicVol">Музыка</label>
           <input type="range" id="playMusicVol" min="0" max="100" value="50">
         </div>
-        <div class="volumeRow">
-          <label for="playSoundVol">Звуки</label>
-          <input type="range" id="playSoundVol" min="0" max="100" value="80">
-        </div>
       </div>
     </div>
     </div>
@@ -243,33 +239,14 @@
       if (!isPwaMode() && isIOSSafari()) {
         showPwaModal();
       }
-      // Запускаем музыку меню
-      if (window.AudioManager) {
-        window.AudioManager.playMenuMusic();
-      }
-      // Синхронизируем ползунки громкости с сохранёнными значениями
       var playMusicVol = document.getElementById('playMusicVol');
-      var playSoundVol = document.getElementById('playSoundVol');
-      if (window.AudioManager && playMusicVol && playSoundVol) {
+      if (window.AudioManager && playMusicVol) {
         playMusicVol.value = Math.round(window.AudioManager.getMusicVolume() * 100);
-        playSoundVol.value = Math.round(window.AudioManager.getSoundVolume() * 100);
         playMusicVol.addEventListener('input', function() {
           window.AudioManager.setMusicVolume(parseInt(this.value, 10) / 100);
         });
         playMusicVol.addEventListener('change', function() {
           window.AudioManager.setMusicVolume(parseInt(this.value, 10) / 100);
-        });
-        playSoundVol.addEventListener('input', function() {
-          window.AudioManager.setSoundVolume(parseInt(this.value, 10) / 100);
-        });
-        playSoundVol.addEventListener('change', function() {
-          window.AudioManager.setSoundVolume(parseInt(this.value, 10) / 100);
-        });
-        playSoundVol.addEventListener('mouseup', function() {
-          window.AudioManager.playButtonSound();
-        });
-        playSoundVol.addEventListener('touchend', function() {
-          window.AudioManager.playButtonSound();
         });
       }
     });

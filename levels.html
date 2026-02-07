@@ -518,11 +518,6 @@
     window.addEventListener('load', function() {
       renderLevels();
       
-      // Запускаем музыку меню
-      if (window.AudioManager) {
-        window.AudioManager.playMenuMusic();
-      }
-      
       // Анимация появления страницы
       var fade = document.getElementById('introFade');
       if (fade) {

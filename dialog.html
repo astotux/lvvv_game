@@ -35,10 +35,6 @@
       return map[levelIndex] || 'img/dialog_first.png';
     }
     window.addEventListener('DOMContentLoaded', ()=>{
-      // Запускаем музыку меню
-      if (window.AudioManager) {
-        window.AudioManager.playMenuMusic();
-      }
       let idx = null;
       try {
         const stored = localStorage.getItem('love_game_dialog_level');
