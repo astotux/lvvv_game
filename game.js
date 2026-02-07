@@ -1027,6 +1027,8 @@ function drawDecorations() {
         case "vis4": img = imgVis4; break;
         case "vis5": img = imgVis5; break;
         case "vis6": img = imgVis6; break;
+        case "vis7": img = imgVis7; break;
+        case "vis8": img = imgVis8; break;
       }
       
       if (!img) return;
@@ -1069,6 +1071,8 @@ function drawDecorationsUndo() {
         case "vis4": img = imgVis4; break;
         case "vis5": img = imgVis5; break;
         case "vis6": img = imgVis6; break;
+        case "vis7": img = imgVis7; break;
+        case "vis8": img = imgVis8; break;
       }
       
       if (!img) return;
@@ -1111,6 +1115,8 @@ function drawDecorationsUndoPlatform() {
         case "vis4": img = imgVis4; break;
         case "vis5": img = imgVis5; break;
         case "vis6": img = imgVis6; break;
+        case "vis7": img = imgVis7; break;
+        case "vis8": img = imgVis8; break;
       }
       
       if (!img) return;

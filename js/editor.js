@@ -78,7 +78,9 @@
     { id:'decor_vis3', label:'Декор vis3', type:'decor', payload:{image:'vis3'} },
     { id:'decor_vis4', label:'Декор vis4', type:'decor', payload:{image:'vis4'} },
     { id:'decor_vis5', label:'Декор vis5', type:'decor', payload:{image:'vis5'} },
-    { id:'decor_vis6', label:'Декор vis6', type:'decor', payload:{image:'vis6'} }
+    { id:'decor_vis6', label:'Декор vis6', type:'decor', payload:{image:'vis6'} },
+    { id:'decor_vis7', label:'Декор vis7', type:'decor', payload:{image:'vis7'} },
+    { id:'decor_vis8', label:'Декор vis8', type:'decor', payload:{image:'vis8'} }
   ];
 
   const toolGrid = document.getElementById('toolGrid');
@@ -234,6 +236,8 @@
         if (decorName === 'vis4') return { w: 47, h: 58 };
         if (decorName === 'vis5') return { w: 132, h: 100 };
         if (decorName === 'vis6') return { w: 86, h: 13 };
+        if (decorName === 'vis7') return { w: 40, h: 9 };
+        if (decorName === 'vis8') return { w: 43, h: 7 };
         img = pickDecor(decorName);
         return { w: (img && img.width) || 32, h: (img && img.height) || 32 };
       default:
@@ -775,6 +779,8 @@
       case 'vis4': return window.imgVis4;
       case 'vis5': return window.imgVis5;
       case 'vis6': return window.imgVis6;
+      case 'vis7': return window.imgVis7;
+      case 'vis8': return window.imgVis8;
       default: return null;
     }
   }

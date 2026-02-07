@@ -84,6 +84,10 @@
   imgVis5.src = "img/vis_5.png";
   window.imgVis6 = new Image();
   imgVis6.src = "img/vis_6.png";
+  window.imgVis7 = new Image();
+  imgVis7.src = "img/vis_7.png";
+  window.imgVis8 = new Image();
+  imgVis8.src = "img/vis_8.png";
 
   // Фоны
   window.bgLayer0 = new Image(); bgLayer0.src = "img/background_0.png";
