@@ -88,6 +88,24 @@
   imgVis7.src = "img/vis_7.png";
   window.imgVis8 = new Image();
   imgVis8.src = "img/vis_8.png";
+  window.imgVis9 = new Image();
+  imgVis9.src = "img/vis_9.png";
+  window.imgVis10 = new Image();
+  imgVis10.src = "img/vis_10.png";
+  window.imgVis11 = new Image();
+  imgVis11.src = "img/vis_11.png";
+  window.imgVis12 = new Image();
+  imgVis12.src = "img/vis_12.png";
+  window.imgVis13 = new Image();
+  imgVis13.src = "img/vis_13.png";
+  window.imgVaz = new Image();
+  imgVaz.src = "img/vaz.png";
+  window.imgVaz2 = new Image();
+  imgVaz2.src = "img/vaz_2.png";
+  window.imgVaz3 = new Image();
+  imgVaz3.src = "img/vaz_3.png";
+  window.imgVaz4 = new Image();
+  imgVaz4.src = "img/vaz_4.png";
 
   // Фоны
   window.bgLayer0 = new Image(); bgLayer0.src = "img/background_0.png";

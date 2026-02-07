@@ -80,7 +80,16 @@
     { id:'decor_vis5', label:'Декор vis5', type:'decor', payload:{image:'vis5'} },
     { id:'decor_vis6', label:'Декор vis6', type:'decor', payload:{image:'vis6'} },
     { id:'decor_vis7', label:'Декор vis7', type:'decor', payload:{image:'vis7'} },
-    { id:'decor_vis8', label:'Декор vis8', type:'decor', payload:{image:'vis8'} }
+    { id:'decor_vis8', label:'Декор vis8', type:'decor', payload:{image:'vis8'} },
+    { id:'decor_vis9', label:'Декор vis9', type:'decor', payload:{image:'vis9'} },
+    { id:'decor_vis10', label:'Декор vis10', type:'decor', payload:{image:'vis10'} },
+    { id:'decor_vis11', label:'Декор vis11', type:'decor', payload:{image:'vis11'} },
+    { id:'decor_vis12', label:'Декор vis12', type:'decor', payload:{image:'vis12'} },
+    { id:'decor_vis13', label:'Декор vis13', type:'decor', payload:{image:'vis13'} },
+    { id:'decor_vaz', label:'Декор vaz', type:'decor', payload:{image:'vaz'} },
+    { id:'decor_vaz2', label:'Декор vaz2', type:'decor', payload:{image:'vaz2'} },
+    { id:'decor_vaz3', label:'Декор vaz3', type:'decor', payload:{image:'vaz3'} },
+    { id:'decor_vaz4', label:'Декор vaz4', type:'decor', payload:{image:'vaz4'} },
   ];
 
   const toolGrid = document.getElementById('toolGrid');
@@ -238,6 +247,15 @@
         if (decorName === 'vis6') return { w: 86, h: 13 };
         if (decorName === 'vis7') return { w: 40, h: 9 };
         if (decorName === 'vis8') return { w: 43, h: 7 };
+        if (decorName === 'vis9') return { w: 176, h: 109 };
+        if (decorName === 'vis10') return { w: 48, h: 47 };
+        if (decorName === 'vis11') return { w: 173, h: 104 };
+        if (decorName === 'vis12') return { w: 191, h: 64 };
+        if (decorName === 'vis13') return { w: 24, h: 64 };
+        if (decorName === 'vaz') return { w: 170, h: 72 };
+        if (decorName === 'vaz2') return { w: 170, h: 46 };
+        if (decorName === 'vaz3') return { w: 181, h: 72 };
+        if (decorName === 'vaz4') return { w: 168, h: 49 };
         img = pickDecor(decorName);
         return { w: (img && img.width) || 32, h: (img && img.height) || 32 };
       default:
@@ -781,6 +799,15 @@
       case 'vis6': return window.imgVis6;
       case 'vis7': return window.imgVis7;
       case 'vis8': return window.imgVis8;
+      case 'vis9': return window.imgVis9;
+      case 'vis10': return window.imgVis10;
+      case 'vis11': return window.imgVis11;
+      case 'vis12': return window.imgVis12;
+      case 'vis13': return window.imgVis13;
+      case 'vaz': return window.imgVaz;
+      case 'vaz2': return window.imgVaz2;
+      case 'vaz3': return window.imgVaz3;
+      case 'vaz4': return window.imgVaz4;
       default: return null;
     }
   }

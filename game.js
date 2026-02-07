@@ -1029,6 +1029,15 @@ function drawDecorations() {
         case "vis6": img = imgVis6; break;
         case "vis7": img = imgVis7; break;
         case "vis8": img = imgVis8; break;
+        case "vis9": img = imgVis9; break;
+        case "vis10": img = imgVis10; break;
+        case "vis11": img = imgVis11; break;
+        case "vis12": img = imgVis12; break;
+        case "vis13": img = imgVis13; break;
+        case "vaz": img = imgVaz; break;
+        case "vaz2": img = imgVaz2; break;
+        case "vaz3": img = imgVaz3; break;
+        case "vaz4": img = imgVaz4; break;
       }
       
       if (!img) return;
@@ -1073,6 +1082,15 @@ function drawDecorationsUndo() {
         case "vis6": img = imgVis6; break;
         case "vis7": img = imgVis7; break;
         case "vis8": img = imgVis8; break;
+        case "vis9": img = imgVis9; break;
+        case "vis10": img = imgVis10; break;
+        case "vis11": img = imgVis11; break;
+        case "vis12": img = imgVis12; break;
+        case "vis13": img = imgVis13; break;
+        case "vaz": img = imgVaz; break;
+        case "vaz2": img = imgVaz2; break;
+        case "vaz3": img = imgVaz3; break;
+        case "vaz4": img = imgVaz4; break;
       }
       
       if (!img) return;
@@ -1117,6 +1135,15 @@ function drawDecorationsUndoPlatform() {
         case "vis6": img = imgVis6; break;
         case "vis7": img = imgVis7; break;
         case "vis8": img = imgVis8; break;
+        case "vis9": img = imgVis9; break;
+        case "vis10": img = imgVis10; break;
+        case "vis11": img = imgVis11; break;
+        case "vis12": img = imgVis12; break;
+        case "vis13": img = imgVis13; break;
+        case "vaz": img = imgVaz; break;
+        case "vaz2": img = imgVaz2; break;
+        case "vaz3": img = imgVaz3; break;
+        case "vaz4": img = imgVaz4; break;
       }
       
       if (!img) return;
