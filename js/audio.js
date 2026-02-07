@@ -152,6 +152,15 @@
       document.addEventListener('keydown', tryStart, { capture: true });
     },
 
+    startLevelMusicFromUserGesture: function() {
+      if (!this.musicEnabled) return;
+      if (this._isIOS()) {
+        this._ensureIOSAudioContext();
+        if (this._iosCtx && this._iosCtx.resume) this._iosCtx.resume();
+      }
+      this.playLevelMusic();
+    },
+
     toggleMusic: function() {
       this.musicEnabled = !this.musicEnabled;
       if (!this.musicEnabled && this.currentMusic) {

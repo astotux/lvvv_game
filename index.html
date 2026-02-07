@@ -397,10 +397,31 @@
     #introFade.hide { opacity: 0; }
     .fade { z-index: 2000; position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 1s ease; }
     .fade.show { opacity: 1; }
+    #tapToStartOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1500;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #tapToStartOverlay.hidden { display: none; }
+    #tapToStartOverlay span {
+      font-family: "Pixelify Sans", sans-serif;
+      font-size: clamp(18px, 5vw, 28px);
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
   </style>
   
 </head>
 <body id="body">
+
+  <div id="tapToStartOverlay" aria-label="Нажмите чтобы начать"><span>Нажми чтобы начать</span></div>
 
   <canvas id="game" width="480" height="320"></canvas>
   <button id="pauseBtn" style="position: fixed; top: 5px; left: 50px; z-index: 100; padding: 0; margin: 0; border: none; background: none; cursor: pointer; width: 40px; height: 40px;">
@@ -632,11 +653,24 @@
   <script src="js/input.js"></script>
   <script src="game.js"></script>
   <script>
-    window.addEventListener('load', function() {
-      if (window.AudioManager && typeof window.AudioManager.scheduleLevelMusicOnFirstInteraction === 'function') {
-        window.AudioManager.scheduleLevelMusicOnFirstInteraction();
+    (function() {
+      var overlay = document.getElementById('tapToStartOverlay');
+      if (!overlay) return;
+      function onTap(e) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        overlay.classList.add('hidden');
+        overlay.onclick = null;
+        overlay.ontouchstart = null;
+        if (window.AudioManager && typeof window.AudioManager.startLevelMusicFromUserGesture === 'function') {
+          window.AudioManager.startLevelMusicFromUserGesture();
+        }
       }
-    });
+      overlay.onclick = onTap;
+      overlay.ontouchstart = function(e) {
+        e.preventDefault();
+        onTap(e);
+      };
+    })();
   </script>
   <script>
     (function() {
