@@ -228,6 +228,12 @@
       }
     }
 
+    window.addEventListener('load', function() {
+      if (!isPwaMode() && isIOSSafari()) {
+        showPwaModal();
+      }
+    });
+
     function updateRotateNotification() {
       const notification = document.getElementById('rotateNotification');
       const isPortrait = window.innerHeight > window.innerWidth;
