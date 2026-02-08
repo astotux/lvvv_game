@@ -200,10 +200,6 @@ function showModal(title, text, nextCallback = null, restartCallback = null, sho
   modal.style.display = "flex";
   modalRestartCallback = restartCallback || (()=>{});
   
-  // Скрываем ползунки громкости (показываются только в паузе)
-  var volSliders = document.getElementById('modalVolumeSliders');
-  if (volSliders) volSliders.classList.remove('visible');
-  
   if (nextCallback) {
     modalNextBtn.style.display = "inline-block";
     modalNextBtn.setAttribute('href', 'dialog.html');
@@ -251,15 +247,6 @@ function showPauseModal() {
     closePauseModal();
     resetPlayer();
   }, true, true);
-  
-  var volSliders = document.getElementById('modalVolumeSliders');
-  if (volSliders) {
-    volSliders.classList.add('visible');
-    var mv = document.getElementById('modalMusicVol');
-    if (window.AudioManager && mv) {
-      mv.value = Math.round(window.AudioManager.getMusicVolume() * 100);
-    }
-  }
 }
 
 function closePauseModal() {
@@ -384,7 +371,6 @@ window.updateEnemies = function() {
     if (player.x < enemy.x + enemy.w && player.x + player.w > enemy.x &&
         player.y < enemy.y + enemy.h && player.y + player.h > enemy.y) {
       gameOver = true;
-      if (window.AudioManager) window.AudioManager.stopLevelMusic();
       showModal("Игра окончена.", "Ты столкнулась с врагом!", null, ()=>resetPlayer());
     }
     
@@ -392,7 +378,6 @@ window.updateEnemies = function() {
         companion.x < enemy.x + enemy.w && companion.x + companion.w > enemy.x &&
         companion.y < enemy.y + enemy.h && companion.y + companion.h > enemy.y) {
       gameOver = true;
-      if (window.AudioManager) window.AudioManager.stopLevelMusic();
       showModal("Игра окончена.", "Арчик столкнулся с врагом!", null, ()=>resetPlayer());
     }
   });
@@ -400,7 +385,6 @@ window.updateEnemies = function() {
 
 function resetPlayer() {
   // Запускаем музыку уровня заново при перезапуске
-  if (window.AudioManager) window.AudioManager.playLevelMusic();
   
   player.x=50; player.y=100; player.dy=0;
   player.idleTimer = 0;
@@ -530,7 +514,6 @@ function update() {
       if(player.x < t.x+t.w && player.x+player.w > t.x &&
          player.y < t.y+t.h && player.y+player.h > t.y){
            gameOver = true;
-           if (window.AudioManager) window.AudioManager.stopLevelMusic();
            showModal("Игра окончена.","Ты наступила на шипы!", null, ()=>resetPlayer());
       }
     });
@@ -539,7 +522,6 @@ function update() {
     if(player.x < f.x+f.w && player.x+player.w > f.x &&
        player.y < f.y+f.h && player.y+player.h > f.y){
          gameOver = true;
-         if (window.AudioManager) window.AudioManager.stopLevelMusic();
          
          const finishTime = stopLevelTimer();
          const currentStats = getLevelStats(currentLevel);
@@ -629,7 +611,6 @@ function update() {
 
     if (player.y > viewH + C.FALL_OFF.Y_MARGIN || player.x < -C.FALL_OFF.X_MARGIN || player.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
-      if (window.AudioManager) window.AudioManager.stopLevelMusic();
       showModal("Игра окончена.","Ты упала в пропасть!", null, ()=>resetPlayer());
     }
   } else {
@@ -683,7 +664,6 @@ function update() {
       if(companion.x < t.x+t.w && companion.x+companion.w > t.x &&
          companion.y < t.y+t.h && companion.y+companion.h > t.y){
            gameOver = true;
-           if (window.AudioManager) window.AudioManager.stopLevelMusic();
            showModal("Игра окончена.","Арчик наступил на шипы!", null, ()=>resetPlayer());
       }
     });
@@ -692,7 +672,6 @@ function update() {
     if(companion.x < f.x+f.w && companion.x+companion.w > f.x &&
        companion.y < f.y+f.h && companion.y+companion.h > f.y){
          gameOver = true;
-         if (window.AudioManager) window.AudioManager.stopLevelMusic();
          
          const finishTime = stopLevelTimer();
          const currentStats = getLevelStats(currentLevel);
@@ -786,7 +765,6 @@ function update() {
 
     if (companion.y > viewH + C.FALL_OFF.Y_MARGIN || companion.x < -C.FALL_OFF.X_MARGIN || companion.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
-      if (window.AudioManager) window.AudioManager.stopLevelMusic();
       showModal("Игра окончена.","Арчик упал в пропасть!", null, ()=>resetPlayer());
     }
   }
@@ -958,7 +936,6 @@ function update() {
     
     if (player.y > viewH + C.FALL_OFF.Y_MARGIN || player.x < -C.FALL_OFF.X_MARGIN || player.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
-      if (window.AudioManager) window.AudioManager.stopLevelMusic();
       showModal("Игра окончена.","Ты упала в пропасть!", null, ()=>resetPlayer());
     }
     
