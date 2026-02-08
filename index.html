@@ -479,12 +479,6 @@
       <div class="counterCenter">
         <h2 id="modalTitle"></h2>
         <p id="modalText"></p>
-        <div id="modalVolumeSliders" class="">
-          <div class="volumeRow">
-            <label for="modalMusicVol">Музыка</label>
-            <input type="range" id="modalMusicVol" min="0" max="100" value="50">
-          </div>
-        </div>
         <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
           <button id="modalBtn" style="display: none;">OK</button>
           <a href="play.html" id="modalHomeBtn" style="display: none; padding: 0; margin: 0; border: none; background: none; text-decoration: none; "><img src="./img/home.png" style="width: 50px; height: 50px;"></a>
@@ -649,7 +643,6 @@
   <script src="levels.js"></script>
   <script src="js/assets.js"></script>
   <script src="js/render.js"></script>
-  <script src="js/audio.js"></script>
   <script src="js/input.js"></script>
   <script src="game.js"></script>
   <script>
@@ -661,9 +654,6 @@
         overlay.classList.add('hidden');
         overlay.onclick = null;
         overlay.ontouchstart = null;
-        if (window.AudioManager && typeof window.AudioManager.startLevelMusicFromUserGesture === 'function') {
-          window.AudioManager.startLevelMusicFromUserGesture();
-        }
       }
       overlay.onclick = onTap;
       overlay.ontouchstart = function(e) {
@@ -697,18 +687,6 @@
           if (typeof window.showPauseModal === 'function') {
             window.showPauseModal();
           }
-        });
-      }
-    })();
-    
-    (function() {
-      var musicVol = document.getElementById('modalMusicVol');
-      if (musicVol && window.AudioManager) {
-        musicVol.addEventListener('input', function() {
-          window.AudioManager.setMusicVolume(parseInt(this.value, 10) / 100);
-        });
-        musicVol.addEventListener('change', function() {
-          window.AudioManager.setMusicVolume(parseInt(this.value, 10) / 100);
         });
       }
     })();

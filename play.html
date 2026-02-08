@@ -176,7 +176,6 @@
       cursor: pointer;
     }
   </style>
-    <script src="js/audio.js"></script>
 </head>
 <body>
   <div id="rotateNotification">
@@ -189,12 +188,6 @@
     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px;">
       <a id="playLink" href="index.html" style="padding: 0; margin: 0; border: none; background: none; text-decoration: none;"><img src="./img/play.png" style="width: 250px;"></a>
       <a id="levelsLink" href="levels.html" style="padding: 0; margin: 0; border: none; background: none; text-decoration: none;"><img src="./img/levels_btn.png" style="width: 250px;"></a>
-      <div class="menuVolumeSliders">
-        <div class="volumeRow">
-          <label for="playMusicVol">Музыка</label>
-          <input type="range" id="playMusicVol" min="0" max="100" value="50">
-        </div>
-      </div>
     </div>
     </div>
   <div id="introFade"></div>
@@ -234,22 +227,6 @@
         modal.style.display = 'flex';
       }
     }
-
-    window.addEventListener('load', function() {
-      if (!isPwaMode() && isIOSSafari()) {
-        showPwaModal();
-      }
-      var playMusicVol = document.getElementById('playMusicVol');
-      if (window.AudioManager && playMusicVol) {
-        playMusicVol.value = Math.round(window.AudioManager.getMusicVolume() * 100);
-        playMusicVol.addEventListener('input', function() {
-          window.AudioManager.setMusicVolume(parseInt(this.value, 10) / 100);
-        });
-        playMusicVol.addEventListener('change', function() {
-          window.AudioManager.setMusicVolume(parseInt(this.value, 10) / 100);
-        });
-      }
-    });
 
     function updateRotateNotification() {
       const notification = document.getElementById('rotateNotification');
