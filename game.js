@@ -1038,6 +1038,7 @@ function drawDecorations() {
         case "vaz2": img = imgVaz2; break;
         case "vaz3": img = imgVaz3; break;
         case "vaz4": img = imgVaz4; break;
+        case "table": img = imgTable; break;
       }
       
       if (!img) return;
@@ -1091,6 +1092,8 @@ function drawDecorationsUndo() {
         case "vaz2": img = imgVaz2; break;
         case "vaz3": img = imgVaz3; break;
         case "vaz4": img = imgVaz4; break;
+        case "table": img = imgTable; break;
+
       }
       
       if (!img) return;
@@ -1144,6 +1147,8 @@ function drawDecorationsUndoPlatform() {
         case "vaz2": img = imgVaz2; break;
         case "vaz3": img = imgVaz3; break;
         case "vaz4": img = imgVaz4; break;
+        case "table": img = imgTable; break;
+
       }
       
       if (!img) return;

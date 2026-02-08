@@ -90,6 +90,7 @@
     { id:'decor_vaz2', label:'Декор vaz2', type:'decor', payload:{image:'vaz2'} },
     { id:'decor_vaz3', label:'Декор vaz3', type:'decor', payload:{image:'vaz3'} },
     { id:'decor_vaz4', label:'Декор vaz4', type:'decor', payload:{image:'vaz4'} },
+    { id:'decor_table', label:'Декор table', type:'decor', payload:{image:'table'} },
   ];
 
   const toolGrid = document.getElementById('toolGrid');
@@ -256,6 +257,7 @@
         if (decorName === 'vaz2') return { w: 170, h: 46 };
         if (decorName === 'vaz3') return { w: 181, h: 72 };
         if (decorName === 'vaz4') return { w: 168, h: 49 };
+        if (decorName === 'table') return { w: 332, h: 186 };
         img = pickDecor(decorName);
         return { w: (img && img.width) || 32, h: (img && img.height) || 32 };
       default:
@@ -808,6 +810,7 @@
       case 'vaz2': return window.imgVaz2;
       case 'vaz3': return window.imgVaz3;
       case 'vaz4': return window.imgVaz4;
+      case 'table': return window.imgTable;
       default: return null;
     }
   }

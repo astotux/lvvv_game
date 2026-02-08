@@ -106,6 +106,8 @@
   imgVaz3.src = "img/vaz_3.png";
   window.imgVaz4 = new Image();
   imgVaz4.src = "img/vaz_4.png";
+  window.imgTable = new Image();
+  imgTable.src = "img/table.png";
 
   // Фоны
   window.bgLayer0 = new Image(); bgLayer0.src = "img/background_0.png";
