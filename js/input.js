@@ -336,31 +336,35 @@
     shootDirectionY = 0;
   }
 
-  // Обработка мыши
-  if (shootJoystick) {
-    shootJoystick.onmousedown = function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (!window.isBossLevel || !window.isBossLevel()) return;
-      shootJoystickActive = true;
-      shootJoystick.classList.add('active');
-      initShootJoystick();
-      updateShootJoystickPosition(e.clientX, e.clientY);
-    };
+  // Обработка мыши (только для устройств без тачскрина,
+  // чтобы на телефоне правый джойстик не дёргался из‑за синтетических mouse-событий)
+  const isTouchDevice = 'ontouchstart' in window || (navigator && navigator.maxTouchPoints > 0);
+  if (!isTouchDevice) {
+    if (shootJoystick) {
+      shootJoystick.onmousedown = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!window.isBossLevel || !window.isBossLevel()) return;
+        shootJoystickActive = true;
+        shootJoystick.classList.add('active');
+        initShootJoystick();
+        updateShootJoystickPosition(e.clientX, e.clientY);
+      };
+    }
+
+    document.addEventListener('mousemove', function(e) {
+      if (shootJoystickActive && shootJoystick) {
+        e.preventDefault();
+        updateShootJoystickPosition(e.clientX, e.clientY);
+      }
+    });
+
+    document.addEventListener('mouseup', function(e) {
+      if (shootJoystickActive) {
+        resetShootJoystick();
+      }
+    });
   }
-
-  document.addEventListener('mousemove', function(e) {
-    if (shootJoystickActive && shootJoystick) {
-      e.preventDefault();
-      updateShootJoystickPosition(e.clientX, e.clientY);
-    }
-  });
-
-  document.addEventListener('mouseup', function(e) {
-    if (shootJoystickActive) {
-      resetShootJoystick();
-    }
-  });
 
   // Обработка касаний
   if (shootJoystick) {
