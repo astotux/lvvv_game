@@ -319,12 +319,12 @@ function initBossPhase1(level) {
   bossMinions = [];
 
   // Несколько фиксированных платформ
-  const p1 = spawnBossPlatform(level, 47, 352, 164, 20);
+  const p1 = spawnBossPlatform(level, 247, 352, 164, 20);
   const p2 = spawnBossPlatform(level, 139, 200, 164, 20);
   const p3 = spawnBossPlatform(level, 195, 68, 164, 20);
   const p4 = spawnBossPlatform(level, 559, 68, 164, 20);
   const p5 = spawnBossPlatform(level, 655, 200, 164, 20);
-  const p6 = spawnBossPlatform(level, 739, 352, 164, 20);
+  const p6 = spawnBossPlatform(level, 539, 352, 164, 20);
 
   spawnBossMinionOnPlatform(p1);
   spawnBossMinionOnPlatform(p2);
@@ -362,14 +362,14 @@ function initBossPhase2(level) {
     w: 53,
     h: 65
   };
-  bossMaxHp = 50;
+  bossMaxHp = 25;
   bossHp = bossMaxHp;
   bossVisible = true;
   bossDirection = 1;
   bossState = "walk";
   bossFrame = 0;
   bossFrameTick = 0;
-  bossShootCooldown = 60;
+  bossShootCooldown = 70;
 }
 
 function initBossPhase3(level) {
@@ -394,14 +394,14 @@ function initBossPhase3(level) {
     w: 53,
     h: 65
   };
-  bossMaxHp = 100;
+  bossMaxHp = 35;
   bossHp = bossMaxHp;
   bossVisible = true;
   bossDirection = 1;
   bossState = "walk";
   bossFrame = 0;
   bossFrameTick = 0;
-  bossShootCooldown = 50;
+  bossShootCooldown = 60;
 }
 
 function updateBossLogic() {
