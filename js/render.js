@@ -16,7 +16,7 @@
     const platforms = getPlatformsArray(lvl);
     platforms.forEach(p=>{
       const platformX = p.x - cameraX;
-      const platformY = p.y;
+      const platformY = (typeof p.effectiveY !== "undefined" && p.effectiveY != null) ? p.effectiveY : p.y;
       const platformW = p.w;
       const platformH = p.h;
       
@@ -134,8 +134,10 @@
         });
       }
 
-      // Сам босс
-      if (typeof bossVisible !== "undefined" && bossVisible && typeof boss !== "undefined" && boss && bossHp > 0) {
+      // Сам босс (включая анимацию появления с масштабом)
+      const bossAppearTimer = typeof window.bossAppearTimer !== "undefined" ? window.bossAppearTimer : 0;
+      const showBoss = typeof boss !== "undefined" && boss && bossHp > 0 && (bossVisible || bossAppearTimer > 0);
+      if (showBoss) {
         const b = boss;
         const state = bossState || "walk";
         const frame = bossFrame || 0;
@@ -147,11 +149,22 @@
         const frameH = sprite.height;
         const frameX = frame * frameW;
 
+        const centerX = b.x + b.w / 2 - cameraX;
+        const centerY = b.y + b.h / 2;
         const drawX = b.x - cameraX;
         const drawY = b.y;
 
+        const appearScale = bossAppearTimer > 0 ? 1 - bossAppearTimer / 55 : 1;
+
         ctx.imageSmoothingEnabled = false;
         ctx.imageSmoothingQuality = 'high';
+
+        if (appearScale < 1) {
+          ctx.save();
+          ctx.translate(centerX, centerY);
+          ctx.scale(appearScale, appearScale);
+          ctx.translate(-centerX, -centerY);
+        }
 
         if (dir === -1) {
           ctx.save();
@@ -169,6 +182,8 @@
             drawX, drawY, b.w, b.h
           );
         }
+
+        if (appearScale < 1) ctx.restore();
       }
 
       // Полоска HP босса сверху экрана

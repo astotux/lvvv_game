@@ -166,6 +166,7 @@ let bossDeathTimer = 0;
 let bossMinionRespawnTimer = 0; // Таймер для респавна миньонов
 let bossPhaseStartTime = 0; // Время начала текущей фазы
 let bossPhaseTransitionTimer = 0; // Таймер для перехода между фазами
+let bossAppearTimer = 0; // Анимация появления босса (зелёные партиклы)
 
 function isBossLevel() {
   const lvl = levels[currentLevel];
@@ -320,6 +321,47 @@ function spawnEnemyHitParticles(x, y, w, h) {
     });
   }
 }
+
+// Зелёные партиклы появления босса
+function spawnBossAppearParticles(cx, cy) {
+  const count = 4 + Math.floor(Math.random() * 4);
+  const green = ["#2d8a2d", "#3cb371", "#228b22", "#32cd32"];
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1.5 + Math.random() * 2.5;
+    particles.push({
+      x: cx + (Math.random() - 0.5) * 20,
+      y: cy + (Math.random() - 0.5) * 20,
+      vx: Math.cos(angle) * speed,
+      vy: -Math.abs(Math.sin(angle)) * speed - 0.5,
+      life: 0,
+      maxLife: 20 + Math.floor(Math.random() * 15),
+      type: "boss_appear",
+      size: 2 + Math.random() * 2,
+      color: green[Math.floor(Math.random() * green.length)]
+    });
+  }
+}
+
+// Коричневые партиклы появления платформ босса
+function spawnPlatformAppearParticles(x, y, w, h) {
+  const count = 3 + Math.floor(Math.random() * 4);
+  const brown = ["#8B4513", "#A0522D", "#654321", "#6B4423"];
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: x + Math.random() * w,
+      y: y + (Math.random() - 0.2) * h,
+      vx: (Math.random() - 0.5) * 3,
+      vy: -1.5 - Math.random() * 2.5,
+      life: 0,
+      maxLife: 15 + Math.floor(Math.random() * 12),
+      type: "platform_appear",
+      size: 1.2 + Math.random() * 1.5,
+      color: brown[Math.floor(Math.random() * brown.length)]
+    });
+  }
+}
+
 function updateParticles() {
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
@@ -362,12 +404,20 @@ function resetBossStateForLevel(level) {
   bossMinionRespawnTimer = 0;
   bossPhaseStartTime = 0;
   bossPhaseTransitionTimer = 0;
+  bossAppearTimer = 0;
   clearBossPlatforms(level);
+}
+
+const BOSS_PLATFORM_RISE_HEIGHT = 50;
+
+function getPlatformTopY(p) {
+  return p.effectiveY != null ? p.effectiveY : p.y;
 }
 
 function spawnBossPlatform(level, x, y, w, h) {
   if (!level.dynamicPlatforms) level.dynamicPlatforms = [];
-  const p = { x, y, w, h, texture: "wood", open: true, type: "boss" };
+  const p = { x, y, w, h, texture: "wood", open: true, type: "boss", appearProgress: 0 };
+  p.effectiveY = y + BOSS_PLATFORM_RISE_HEIGHT; // старт анимации снизу
   level.dynamicPlatforms.push(p);
   bossPlatforms.push(p);
   return p;
@@ -383,6 +433,7 @@ function spawnBossMinionOnPlatform(platform, opts) {
     dx: 1,
     direction: 1,
     platformX: platform.x,
+    platformY: platform.y,
     platformW: platform.w,
     frame: 0,
     frameTick: 0,
@@ -421,13 +472,13 @@ function initBossPhase1(level) {
 
   // Задержки появления и кулдауны выстрелов миньонов
   // Эти числа можно свободно менять под баланс:
-  spawnBossMinionOnPlatform(p1, { spawnDelay: 0,   shootCooldown: 120 });
-  spawnBossMinionOnPlatform(p2, { spawnDelay: 20,  shootCooldown: 150 });
-  spawnBossMinionOnPlatform(p3, { spawnDelay: 40,  shootCooldown: 180 });
-  spawnBossMinionOnPlatform(p4, { spawnDelay: 50,  shootCooldown: 120 });
-  spawnBossMinionOnPlatform(p5, { spawnDelay: 70, shootCooldown: 150 });
-  spawnBossMinionOnPlatform(p6, { spawnDelay: 90, shootCooldown: 180 });
-  spawnBossMinionOnPlatform(p7, { spawnDelay: 100, shootCooldown: 180 });
+  spawnBossMinionOnPlatform(p1, { spawnDelay: 50,   shootCooldown: 170 });
+  spawnBossMinionOnPlatform(p2, { spawnDelay: 60,  shootCooldown: 190 });
+  spawnBossMinionOnPlatform(p3, { spawnDelay: 90,  shootCooldown: 180 });
+  spawnBossMinionOnPlatform(p4, { spawnDelay: 110,  shootCooldown: 210 });
+  spawnBossMinionOnPlatform(p5, { spawnDelay: 120, shootCooldown: 160 });
+  spawnBossMinionOnPlatform(p6, { spawnDelay: 140, shootCooldown: 200 });
+  spawnBossMinionOnPlatform(p7, { spawnDelay: 160, shootCooldown: 210 });
 
   bossVisible = false; // Босс пропадает после призыва
   bossPhaseStartTime = 0; // Сброс таймера фазы
@@ -452,7 +503,7 @@ function initBossPhase2(level) {
   level._bossPhase2Platforms = [p3, p4, p5, p7, p8, p9, p12];
   level._bossPhase2RespawnDelay = 240; // Задержка респавна миньонов в тиках (можно настроить)
 
-  // Босс стоит на средней платформе
+  // Босс стоит на средней платформе (появляется с анимацией)
   boss = {
     x: p6.x + (p6.w - 53) / 2,
     y: p6.y - 65,
@@ -461,7 +512,8 @@ function initBossPhase2(level) {
   };
   bossMaxHp = 30;
   bossHp = bossMaxHp;
-  bossVisible = true;
+  bossVisible = false;
+  bossAppearTimer = 55;
   bossDirection = 1;
   bossState = "walk";
   bossFrame = 0;
@@ -487,10 +539,10 @@ function initBossPhase3(level) {
   level._bossPhase3RespawnDelay = 240;
 
   // В третьей фазе тоже можно задать разные задержки и кулдауны
-  spawnBossMinionOnPlatform(p1, { spawnDelay: 0,   shootCooldown: 90 });
-  spawnBossMinionOnPlatform(p2, { spawnDelay: 20,  shootCooldown: 110 });
-  spawnBossMinionOnPlatform(p3, { spawnDelay: 40,  shootCooldown: 130 });
-  spawnBossMinionOnPlatform(p4, { spawnDelay: 60,  shootCooldown: 90 });
+  spawnBossMinionOnPlatform(p1, { spawnDelay: 50,   shootCooldown: 200 });
+  spawnBossMinionOnPlatform(p2, { spawnDelay: 70,  shootCooldown: 240 });
+  spawnBossMinionOnPlatform(p3, { spawnDelay: 80,  shootCooldown: 230 });
+  spawnBossMinionOnPlatform(p4, { spawnDelay: 100,  shootCooldown: 210 });
 
   boss = {
     x: p5.x + (p5.w - 53) / 2,
@@ -500,7 +552,8 @@ function initBossPhase3(level) {
   };
   bossMaxHp = 50;
   bossHp = bossMaxHp;
-  bossVisible = true;
+  bossVisible = false;
+  bossAppearTimer = 55;
   bossDirection = 1;
   bossState = "walk";
   bossFrame = 0;
@@ -531,8 +584,7 @@ function respawnBossMinions(level) {
   const freePlatforms = platforms.filter(platform => {
     // Проверяем, есть ли на этой платформе живой миньон
     return !bossMinions.some(minion => {
-      if (!minion.active || minion.hp <= 0) return false;
-      // Проверяем, находится ли миньон на этой платформе
+      if (minion._dead || minion.deathAnim || minion.hp <= 0) return false;
       return minion.platformX === platform.x && 
              minion.platformY === platform.y &&
              minion.platformW === platform.w;
@@ -544,7 +596,7 @@ function respawnBossMinions(level) {
     const randomPlatform = freePlatforms[Math.floor(Math.random() * freePlatforms.length)];
     spawnBossMinionOnPlatform(randomPlatform, { 
       spawnDelay: 0, 
-      shootCooldown: 120 + Math.floor(Math.random() * 60) // Случайный кулдаун 120-180
+      shootCooldown: 190 + Math.floor(Math.random() * 60) // Случайный кулдаун 190-250
     });
   }
 }
@@ -574,6 +626,26 @@ function updateBossLogic() {
   
   if (bossPhaseStartTime > 0) {
     bossPhaseStartTime++;
+  }
+
+  // Анимация появления платформ босса (подъём снизу + коричневые партиклы)
+  bossPlatforms.forEach(p => {
+    if (p.appearProgress !== undefined && p.appearProgress < 1) {
+      p.appearProgress = Math.min(1, p.appearProgress + 0.025);
+      if (Math.random() < 0.4) spawnPlatformAppearParticles(p.x, p.y, p.w, p.h);
+    }
+    p.effectiveY = p.appearProgress !== undefined
+      ? p.y + (1 - Math.min(1, p.appearProgress)) * BOSS_PLATFORM_RISE_HEIGHT
+      : p.y;
+  });
+
+  // Анимация появления босса (зелёные партиклы, затем показ)
+  if (boss && bossAppearTimer > 0) {
+    bossAppearTimer--;
+    const cx = boss.x + boss.w / 2;
+    const cy = boss.y + boss.h / 2;
+    spawnBossAppearParticles(cx, cy);
+    if (bossAppearTimer <= 0) bossVisible = true;
   }
 
   // Респавн миньонов для каждой фазы
@@ -615,7 +687,7 @@ function updateBossLogic() {
   // Переходы между фазами
   if (bossPhase === 1) {
     // Переход ко второй фазе, когда все миньоны уничтожены
-    const anyAlive = bossMinions.some(e => e.hp > 0);
+    const anyAlive = bossMinions.some(e => e.hp > 0 && !e.deathAnim);
     if (!anyAlive) {
       // Даем время на возможный респавн перед переходом
       bossPhaseTransitionTimer++;
@@ -672,7 +744,8 @@ function updateBossLogic() {
     // Ограничения движения по платформе под боссом (берем любую ближайшую)
     let plat = null;
     bossPlatforms.forEach(p => {
-      if (boss.y + boss.h <= p.y + 1 && boss.y + boss.h >= p.y - 70) {
+      const py = getPlatformTopY(p);
+      if (boss.y + boss.h <= py + 1 && boss.y + boss.h >= py - 70) {
         if (boss.x + boss.w > p.x && boss.x < p.x + p.w) {
           plat = p;
         }
@@ -882,6 +955,11 @@ window.createEnemy = function(platformX, platformY, platformW) {
 
 window.updateEnemies = function() {
   enemies.forEach(enemy => {
+    if (enemy.deathAnim) {
+      enemy.deathAnimTimer = (enemy.deathAnimTimer || 0) + 1;
+      if (enemy.deathAnimTimer >= 28) enemy._dead = true;
+      return;
+    }
     // Задержка появления для миньонов босса
     if (enemy.isBossMinion && enemy.spawnDelay && !enemy.active) {
       enemy.spawnTimer++;
@@ -911,13 +989,13 @@ window.updateEnemies = function() {
       if (enemy.frame > 10) enemy.frame = 0;
     }
     
-    if (player.x < enemy.x + enemy.w && player.x + player.w > enemy.x &&
+    if (!enemy.deathAnim && player.x < enemy.x + enemy.w && player.x + player.w > enemy.x &&
         player.y < enemy.y + enemy.h && player.y + player.h > enemy.y) {
       gameOver = true;
       showModal("Игра окончена.", "Ты столкнулась с врагом!", null, ()=>resetPlayer());
     }
     
-    if (activeCharacter === "companion" && 
+    if (!enemy.deathAnim && activeCharacter === "companion" && 
         companion.x < enemy.x + enemy.w && companion.x + companion.w > enemy.x &&
         companion.y < enemy.y + enemy.h && companion.y + companion.h > enemy.y) {
       gameOver = true;
@@ -1030,10 +1108,11 @@ function update() {
     const ground = getGroundArray(lvl);
 
     ground.forEach(p=>{
+      const py = getPlatformTopY(p);
       if(player.x < p.x+p.w && player.x+player.w > p.x &&
-         player.y < p.y+p.h && player.y+player.h > p.y){
-           if(player.dy > 0 && player.y + player.h - player.dy <= p.y){
-             player.y = p.y - player.h; 
+         player.y < py+p.h && player.y+player.h > py){
+           if(player.dy > 0 && player.y + player.h - player.dy <= py){
+             player.y = py - player.h; 
              player.dy = 0; 
              if (!prevPlayerOnGround) spawnLandParticles(player.x, player.y + player.h, player.w);
              player.onGround = true;
@@ -1187,10 +1266,11 @@ function update() {
     const groundC = getGroundArray(lvl);
 
     groundC.forEach(p=>{
+      const py = getPlatformTopY(p);
       if(companion.x < p.x+p.w && companion.x+companion.w > p.x &&
-         companion.y < p.y+p.h && companion.y+companion.h > p.y){
-           if(companion.dy > 0 && companion.y + companion.h - companion.dy <= p.y){ 
-             companion.y = p.y - companion.h; 
+         companion.y < py+p.h && companion.y+companion.h > py){
+           if(companion.dy > 0 && companion.y + companion.h - companion.dy <= py){ 
+             companion.y = py - companion.h; 
              companion.dy = 0; 
              if (!prevCompanionOnGround && !isBossLevel()) spawnLandParticles(companion.x, companion.y + companion.h, companion.w);
              companion.onGround = true;
@@ -1335,6 +1415,9 @@ function update() {
 
   if (isBossLevel()) {
     updateBossLogic();
+    window.bossAppearTimer = bossAppearTimer;
+  } else {
+    window.bossAppearTimer = 0;
   }
   
   if (activeCharacter === "player") {
@@ -1377,10 +1460,11 @@ function update() {
     let lvl = levels[currentLevel];
     const groundF = getGroundArray(lvl);
     groundF.forEach(p => {
+      const py = getPlatformTopY(p);
       if (companion.x < p.x + p.w && companion.x + companion.w > p.x &&
-          companion.y < p.y + p.h && companion.y + companion.h > p.y) {
-          if (companion.dy > 0 && companion.y + companion.h - companion.dy <= p.y) {
-          companion.y = p.y - companion.h;
+          companion.y < py + p.h && companion.y + companion.h > py) {
+          if (companion.dy > 0 && companion.y + companion.h - companion.dy <= py) {
+          companion.y = py - companion.h;
           companion.dy = 0;
           if (!prevCompanionOnGround && !isBossLevel()) spawnLandParticles(companion.x, companion.y + companion.h, companion.w);
           companion.onGround = true;
@@ -1484,10 +1568,11 @@ function update() {
     let lvl = levels[currentLevel];
     const platforms = getPlatformsArray(lvl);
     platforms.forEach(p => {
+      const py = getPlatformTopY(p);
       if (player.x < p.x + p.w && player.x + player.w > p.x &&
-          player.y < p.y + p.h && player.y + player.h > p.y) {
-        if (player.dy > 0 && player.y + player.h - player.dy <= p.y) {
-          player.y = p.y - player.h;
+          player.y < py + p.h && player.y + player.h > py) {
+        if (player.dy > 0 && player.y + player.h - player.dy <= py) {
+          player.y = py - player.h;
           player.dy = 0;
           if (!prevPlayerOnGround) spawnLandParticles(player.x, player.y + player.h, player.w);
           player.onGround = true;
@@ -1542,7 +1627,8 @@ function getGroundY() {
   let maxY = 0;
   const plats = getPlatformsArray(lvl);
   plats.forEach(p => {
-    if (p.y > maxY) maxY = p.y;
+    const py = getPlatformTopY(p);
+    if (py > maxY) maxY = py;
   });
   return maxY;
 }
@@ -1764,9 +1850,10 @@ function updateBossProjectiles() {
             p.y < enemy.y + enemy.h && p.y + p.h > enemy.y) {
           enemy.hp--;
           p._hit = true;
-          spawnEnemyHitParticles(enemy.x, enemy.y, enemy.w, enemy.h);
+          if (enemy.hp > 0) spawnEnemyHitParticles(enemy.x, enemy.y, enemy.w, enemy.h);
           if (enemy.hp <= 0) {
-            enemy._dead = true;
+            enemy.deathAnim = true;
+            enemy.deathAnimTimer = 0;
           }
         }
       });
@@ -1791,7 +1878,7 @@ function updateBossProjectiles() {
 
     // Выстрелы миньонов босса
     bossMinions.forEach(enemy => {
-      if (!enemy.active) return;
+      if (!enemy.active || enemy.deathAnim) return;
       if (!enemy.shootCooldownBase) return;
       enemy.shootCooldownTimer--;
       if (enemy.shootCooldownTimer <= 0) {
@@ -1871,6 +1958,8 @@ function completeBossLevel() {
   });
 }
 
+const ENEMY_DEATH_ANIM_DURATION = 28;
+
 window.drawEnemies = function() {
   enemies.forEach(enemy => {
     ctx.imageSmoothingEnabled = false;
@@ -1882,6 +1971,32 @@ window.drawEnemies = function() {
     
     let drawX = enemy.x - cameraX;
     let drawY = enemy.y;
+
+    // Анимация смерти: сжатие + затухание + лёгкое падение
+    if (enemy.deathAnim) {
+      const t = enemy.deathAnimTimer || 0;
+      const progress = Math.min(1, t / ENEMY_DEATH_ANIM_DURATION);
+      const scale = 1 - progress;
+      const alpha = 1 - progress;
+      const fallY = t * 0.8;
+      const w2 = enemy.w / 2;
+      const h2 = enemy.h / 2;
+      const cx = drawX + w2;
+      const cy = drawY + h2 + fallY;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(cx, cy);
+      ctx.scale(scale, scale);
+      ctx.translate(-cx, -cy);
+      if (enemy.direction === -1) {
+        ctx.scale(-1, 1);
+        ctx.drawImage(imgEnemy, frameX, 0, frameW, frameH, -(drawX + enemy.w), drawY + fallY, enemy.w, enemy.h);
+      } else {
+        ctx.drawImage(imgEnemy, frameX, 0, frameW, frameH, drawX, drawY + fallY, enemy.w, enemy.h);
+      }
+      ctx.restore();
+      return;
+    }
     
     if (enemy.direction === -1) {
       ctx.save();
@@ -1901,7 +2016,7 @@ window.drawEnemies = function() {
     }
 
     // Полоска хп над головой только на босс-уровне и только для миньонов
-    if (isBossLevel() && enemy.maxHp && enemy.hp !== undefined) {
+    if (isBossLevel() && enemy.maxHp && enemy.hp !== undefined && enemy.hp > 0) {
       const barW = enemy.w;
       const barH = 4;
       const hpRatio = Math.max(0, Math.min(1, enemy.hp / enemy.maxHp));
