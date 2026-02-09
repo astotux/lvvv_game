@@ -285,8 +285,20 @@
       if (!btn) return;
       btn.addEventListener('click', function(e) {
         e.preventDefault();
+        let adminStats = {
+          "0":{"bestTime":13996.80000000447,"bestCoins":15},
+          "1":{"bestTime":13996.80000000447,"bestCoins":15},
+          "2":{"bestTime":13996.80000000447,"bestCoins":15},
+          "3":{"bestTime":13996.80000000447,"bestCoins":15},
+          "4":{"bestTime":13996.80000000447,"bestCoins":15},
+          "5":{"bestTime":13996.80000000447,"bestCoins":15},
+          "6":{"bestTime":13996.80000000447,"bestCoins":15},
+          "7":{"bestTime":13996.80000000447,"bestCoins":15},
+          "8":{"bestTime":13996.80000000447,"bestCoins":15},
+          "9":{"bestTime":13996.80000000447,"bestCoins":0},
+        }
         // Открываем все уровни: ставим большое число, игра сама ограничит по количеству уровней
-        localStorage.setItem("love_game_unlocked_level", String(999));
+        localStorage.setItem("love_game_level_stats", JSON.stringify(adminStats));
         // Можно сразу перейти к выбору уровней
         var fade = document.getElementById('fade');
         if (fade) {

@@ -373,8 +373,11 @@
       e.stopPropagation();
       if (!window.isBossLevel || !window.isBossLevel()) return;
       if (currentTouchId !== null) return; // Уже обрабатываем касание
-      
-      const touch = e.touches[0];
+      // Важно: используем changedTouches[0], а не touches[0]. При двух пальцах
+      // touches[0] — это первый (левый) палец; changedTouches[0] — касание, которое
+      // только что началось именно на этом элементе (правый джойстик).
+      const touch = e.changedTouches[0];
+      if (!touch) return;
       currentTouchId = touch.identifier;
       shootJoystickActive = true;
       shootJoystick.classList.add('active');
@@ -405,18 +408,12 @@
       if (currentTouchId === null) return;
       e.preventDefault();
       e.stopPropagation();
-      
-      // Проверяем, закончилось ли наше касание
-      let touchEnded = true;
-      for (let i = 0; i < e.touches.length; i++) {
-        if (e.touches[i].identifier === currentTouchId) {
-          touchEnded = false;
-          break;
+      // Сбрасываем только когда закончилось именно наше касание (палец с правого джойстика)
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === currentTouchId) {
+          resetShootJoystick();
+          return;
         }
-      }
-      
-      if (touchEnded) {
-        resetShootJoystick();
       }
     };
 
