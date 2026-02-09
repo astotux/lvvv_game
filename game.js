@@ -197,7 +197,7 @@ Object.defineProperty(window, 'activeCharacter', {
 Object.defineProperty(window, 'companionLockToCenter', { get(){ return companionLockToCenter; }, set(v){ companionLockToCenter = v; } });
 Object.defineProperty(window, 'cameraX', { get(){ return cameraX; } });
 Object.defineProperty(window, 'currentLevel', { get(){ return currentLevel; }, set(v){ currentLevel = v; } });
-
+ 
 // Стрельба игрока по направлению джойстика
 function updatePlayerShooting() {
   if (!isBossLevel() || gameOver || gamePaused) return;
