@@ -124,6 +124,7 @@
     
     let joystickActive = false;
     let joystickBaseRect = null;
+    let joystickTouchId = null; // ID пальца, управляющего джойстиком
     const stickWidth = 64; // Фиксированная ширина ручки из CSS
 
     function updateJoystick(x, y) {
@@ -168,6 +169,7 @@
 
     function resetJoystick() {
       joystickActive = false;
+      joystickTouchId = null;
       joystick.classList.remove('active');
       joystickStick.style.transform = 'translate(-50%, -50%)';
       window.keys.left = false;
@@ -197,38 +199,56 @@
       }
     });
 
-    // Обработка касаний
+    // Обработка касаний (с учётом нескольких пальцев)
     sliderElement.ontouchstart = (e) => {
-      e.preventDefault(); 
+      e.preventDefault();
+      // Берём именно то касание, которое началось на этом элементе
+      const touch = e.changedTouches[0];
       joystickActive = true;
+      joystickTouchId = touch.identifier;
       joystick.classList.add('active');
       joystickBaseRect = null; // Сбрасываем, чтобы пересчитать
       // Убеждаемся, что ручка в центре перед началом движения
       joystickStick.style.transform = 'translate(-50%, -50%)';
-      const touch = e.touches[0];
       updateJoystick(touch.clientX, touch.clientY);
     };
 
     sliderElement.ontouchmove = (e) => {
       e.preventDefault();
-      if (joystickActive) {
-        const touch = e.touches[0];
+      if (!joystickActive || joystickTouchId === null) return;
+      // Ищем именно наш палец по identifier
+      let touch = null;
+      for (let i = 0; i < e.touches.length; i++) {
+        if (e.touches[i].identifier === joystickTouchId) {
+          touch = e.touches[i];
+          break;
+        }
+      }
+      if (touch) {
         updateJoystick(touch.clientX, touch.clientY);
       }
     };
 
     sliderElement.ontouchend = (e) => {
       e.preventDefault();
-      if (joystickActive) {
+      if (!joystickActive || joystickTouchId === null) return;
+      // Проверяем, закончился ли именно наш палец
+      let touchEnded = false;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === joystickTouchId) {
+          touchEnded = true;
+          break;
+        }
+      }
+      if (touchEnded) {
         resetJoystick();
       }
     };
 
     sliderElement.ontouchcancel = (e) => {
       e.preventDefault();
-      if (joystickActive) {
-        resetJoystick();
-      }
+      if (!joystickActive || joystickTouchId === null) return;
+      resetJoystick();
     };
   }
   if (jumpBtn) {
