@@ -163,6 +163,9 @@ let playerProjectiles = [];
 let bossProjectiles = [];
 let bossDeath = false;
 let bossDeathTimer = 0;
+let bossMinionRespawnTimer = 0; // Таймер для респавна миньонов
+let bossPhaseStartTime = 0; // Время начала текущей фазы
+let bossPhaseTransitionTimer = 0; // Таймер для перехода между фазами
 
 function isBossLevel() {
   const lvl = levels[currentLevel];
@@ -293,6 +296,9 @@ function resetBossStateForLevel(level) {
   bossProjectiles = [];
   bossDeath = false;
   bossDeathTimer = 0;
+  bossMinionRespawnTimer = 0;
+  bossPhaseStartTime = 0;
+  bossPhaseTransitionTimer = 0;
   clearBossPlatforms(level);
 }
 
@@ -337,23 +343,32 @@ function initBossPhase1(level) {
   bossMinions = [];
 
   // Несколько фиксированных платформ
-  const p1 = spawnBossPlatform(level, 247, 352, 164, 20);
-  const p2 = spawnBossPlatform(level, 139, 200, 164, 20);
-  const p3 = spawnBossPlatform(level, 195, 68, 164, 20);
-  const p4 = spawnBossPlatform(level, 559, 68, 164, 20);
-  const p5 = spawnBossPlatform(level, 655, 200, 164, 20);
-  const p6 = spawnBossPlatform(level, 539, 352, 164, 20);
+  const p1 = spawnBossPlatform(level, 247, 332, 164, 20);
+  const p2 = spawnBossPlatform(level, 139, 180, 164, 20);
+  const p3 = spawnBossPlatform(level, 195, 48, 164, 20);
+  const p4 = spawnBossPlatform(level, 559, 48, 164, 20);
+  const p5 = spawnBossPlatform(level, 655, 180, 164, 20);
+  const p6 = spawnBossPlatform(level, 539, 332, 164, 20);
+  const p7 = spawnBossPlatform(level, 375, 167, 164, 20);
+
+
+  // Сохраняем платформы для респавна миньонов
+  level._bossPhase1Platforms = [];
+  level._bossPhase1RespawnDelay = 0; // Задержка респавна миньонов в тиках (можно настроить)
 
   // Задержки появления и кулдауны выстрелов миньонов
   // Эти числа можно свободно менять под баланс:
   spawnBossMinionOnPlatform(p1, { spawnDelay: 0,   shootCooldown: 120 });
-  spawnBossMinionOnPlatform(p2, { spawnDelay: 30,  shootCooldown: 150 });
-  spawnBossMinionOnPlatform(p3, { spawnDelay: 60,  shootCooldown: 180 });
-  spawnBossMinionOnPlatform(p4, { spawnDelay: 90,  shootCooldown: 120 });
-  spawnBossMinionOnPlatform(p5, { spawnDelay: 120, shootCooldown: 150 });
-  spawnBossMinionOnPlatform(p6, { spawnDelay: 150, shootCooldown: 180 });
+  spawnBossMinionOnPlatform(p2, { spawnDelay: 20,  shootCooldown: 150 });
+  spawnBossMinionOnPlatform(p3, { spawnDelay: 40,  shootCooldown: 180 });
+  spawnBossMinionOnPlatform(p4, { spawnDelay: 50,  shootCooldown: 120 });
+  spawnBossMinionOnPlatform(p5, { spawnDelay: 70, shootCooldown: 150 });
+  spawnBossMinionOnPlatform(p6, { spawnDelay: 90, shootCooldown: 180 });
+  spawnBossMinionOnPlatform(p7, { spawnDelay: 100, shootCooldown: 180 });
 
   bossVisible = false; // Босс пропадает после призыва
+  bossPhaseStartTime = 0; // Сброс таймера фазы
+  bossMinionRespawnTimer = 0;
 }
 
 function initBossPhase2(level) {
@@ -361,8 +376,6 @@ function initBossPhase2(level) {
   enemies = [];
   bossMinions = [];
 
-  const p1 = spawnBossPlatform(level, 75, 420, 82, 20);
-  const p2 = spawnBossPlatform(level, 195, 368, 82, 20);
   const p3 = spawnBossPlatform(level, 75, 312, 82, 20);
   const p4 = spawnBossPlatform(level, 195, 244, 82, 20);
   const p5 = spawnBossPlatform(level, 75, 180, 82, 20);
@@ -370,19 +383,20 @@ function initBossPhase2(level) {
   const p7 = spawnBossPlatform(level, 800, 180, 82, 20);
   const p8 = spawnBossPlatform(level, 700, 244, 82, 20);
   const p9 = spawnBossPlatform(level, 800, 312, 82, 20);
-  const p10 = spawnBossPlatform(level, 700, 368, 82, 20);
-  const p11 = spawnBossPlatform(level, 800, 420, 82, 20);
   const p12 = spawnBossPlatform(level, 335, 320, 246, 20);
 
+  // Сохраняем платформы для респавна миньонов
+  level._bossPhase2Platforms = [p3, p4, p5, p7, p8, p9, p12];
+  level._bossPhase2RespawnDelay = 240; // Задержка респавна миньонов в тиках (можно настроить)
 
   // Босс стоит на средней платформе
   boss = {
-    x: p12.x + (p12.w - 53) / 2,
-    y: p12.y - 65,
+    x: p6.x + (p6.w - 53) / 2,
+    y: p6.y - 65,
     w: 53,
     h: 65
   };
-  bossMaxHp = 25;
+  bossMaxHp = 30;
   bossHp = bossMaxHp;
   bossVisible = true;
   bossDirection = 1;
@@ -390,6 +404,8 @@ function initBossPhase2(level) {
   bossFrame = 0;
   bossFrameTick = 0;
   bossShootCooldown = 70;
+  bossPhaseStartTime = 0;
+  bossMinionRespawnTimer = 0;
 }
 
 function initBossPhase3(level) {
@@ -403,6 +419,10 @@ function initBossPhase3(level) {
   const p4 = spawnBossPlatform(level, 739, 352, 164, 20);
   const p5 = spawnBossPlatform(level, 215, 136, 492, 20);
 
+  // Сохраняем платформы для респавна миньонов 
+  level._bossPhase3Platforms = [p1, p2, p3, p4];
+  level._bossPhase3RespawnDelay = 220;
+
   // В третьей фазе тоже можно задать разные задержки и кулдауны
   spawnBossMinionOnPlatform(p1, { spawnDelay: 0,   shootCooldown: 90 });
   spawnBossMinionOnPlatform(p2, { spawnDelay: 20,  shootCooldown: 110 });
@@ -415,7 +435,7 @@ function initBossPhase3(level) {
     w: 53,
     h: 65
   };
-  bossMaxHp = 100;
+  bossMaxHp = 45;
   bossHp = bossMaxHp;
   bossVisible = true;
   bossDirection = 1;
@@ -423,6 +443,47 @@ function initBossPhase3(level) {
   bossFrame = 0;
   bossFrameTick = 0;
   bossShootCooldown = 60;
+  bossPhaseStartTime = 0;
+  bossMinionRespawnTimer = 0;
+}
+
+function respawnBossMinions(level) {
+  let platforms = [];
+  let respawnDelay = 0;
+  
+  if (bossPhase === 1 && level._bossPhase1Platforms) {
+    platforms = level._bossPhase1Platforms;
+    respawnDelay = level._bossPhase1RespawnDelay;
+  } else if (bossPhase === 2 && level._bossPhase2Platforms) {
+    platforms = level._bossPhase2Platforms;
+    respawnDelay = level._bossPhase2RespawnDelay;
+  } else if (bossPhase === 3 && level._bossPhase3Platforms) {
+    platforms = level._bossPhase3Platforms;
+    respawnDelay = level._bossPhase3RespawnDelay;
+  }
+  
+  if (platforms.length === 0) return;
+  
+  // Находим платформы без миньонов
+  const freePlatforms = platforms.filter(platform => {
+    // Проверяем, есть ли на этой платформе живой миньон
+    return !bossMinions.some(minion => {
+      if (!minion.active || minion.hp <= 0) return false;
+      // Проверяем, находится ли миньон на этой платформе
+      return minion.platformX === platform.x && 
+             minion.platformY === platform.y &&
+             minion.platformW === platform.w;
+    });
+  });
+  
+  // Спавним миньона на случайной свободной платформе
+  if (freePlatforms.length > 0) {
+    const randomPlatform = freePlatforms[Math.floor(Math.random() * freePlatforms.length)];
+    spawnBossMinionOnPlatform(randomPlatform, { 
+      spawnDelay: 0, 
+      shootCooldown: 120 + Math.floor(Math.random() * 60) // Случайный кулдаун 120-180
+    });
+  }
 }
 
 function updateBossLogic() {
@@ -434,10 +495,58 @@ function updateBossLogic() {
   // Инициализация фаз
   if (bossPhase === 1 && bossPlatforms.length === 0 && bossMinions.length === 0) {
     initBossPhase1(lvl);
+    bossPhaseStartTime = 0;
   } else if (bossPhase === 2 && !bossVisible && !boss) {
     initBossPhase2(lvl);
+    bossPhaseStartTime = 0;
   } else if (bossPhase === 3 && !bossVisible && !boss) {
     initBossPhase3(lvl);
+    bossPhaseStartTime = 0;
+  }
+  
+  // Отслеживаем время с начала фазы
+  if (bossPhaseStartTime === 0 && (bossPlatforms.length > 0 || bossVisible)) {
+    bossPhaseStartTime = 1; // Начинаем отсчет
+  }
+  
+  if (bossPhaseStartTime > 0) {
+    bossPhaseStartTime++;
+  }
+
+  // Респавн миньонов для каждой фазы
+  let respawnDelay = 0;
+  if (bossPhase === 1) {
+    respawnDelay = lvl._bossPhase1RespawnDelay || 180;
+  } else if (bossPhase === 2) {
+    respawnDelay = lvl._bossPhase2RespawnDelay || 240;
+  } else if (bossPhase === 3) {
+    respawnDelay = lvl._bossPhase3RespawnDelay || 200;
+  }
+  
+  // Проверяем, нужно ли респавнить миньонов
+  if (respawnDelay > 0) {
+    const aliveMinions = bossMinions.filter(m => m.active && m.hp > 0);
+    
+    // Респавн после гибели всех миньонов
+    if (aliveMinions.length === 0) {
+      bossMinionRespawnTimer++;
+      if (bossMinionRespawnTimer >= respawnDelay) {
+        respawnBossMinions(lvl);
+        bossMinionRespawnTimer = 0;
+      }
+    } else {
+      // Если есть живые миньоны, сбрасываем таймер респавна
+      bossMinionRespawnTimer = 0;
+    }
+    
+    // Также периодический респавн через определенное время после начала фазы
+    // (если есть свободные платформы)
+    if (bossPhaseStartTime > 0 && bossPhaseStartTime > respawnDelay) {
+      // Проверяем каждые respawnDelay тиков
+      if ((bossPhaseStartTime - respawnDelay) % respawnDelay === 0) {
+        respawnBossMinions(lvl);
+      }
+    }
   }
 
   // Переходы между фазами
@@ -445,13 +554,22 @@ function updateBossLogic() {
     // Переход ко второй фазе, когда все миньоны уничтожены
     const anyAlive = bossMinions.some(e => e.hp > 0);
     if (!anyAlive) {
-      clearBossPlatforms(lvl);
-      bossMinions = [];
-      enemies = [];
-      bossPhase = 2;
-      bossVisible = false;
-      boss = null;
-      initBossPhase2(lvl);
+      // Даем время на возможный респавн перед переходом
+      bossPhaseTransitionTimer++;
+      // Если прошло достаточно времени и миньоны не респавнились, переходим к следующей фазе
+      if (bossPhaseTransitionTimer >= respawnDelay * 2) {
+        clearBossPlatforms(lvl);
+        bossMinions = [];
+        enemies = [];
+        bossPhase = 2;
+        bossVisible = false;
+        boss = null;
+        bossPhaseTransitionTimer = 0;
+        initBossPhase2(lvl);
+      }
+    } else {
+      // Если есть живые миньоны, сбрасываем таймер перехода
+      bossPhaseTransitionTimer = 0;
     }
   } else if (bossPhase === 2) {
     if (bossHp <= 0) {

@@ -8825,7 +8825,7 @@ const levels = [
     "platforms": [
       {
         "x": 0,
-        "y": 484,
+        "y": 448,
         "w": 960,
         "h": 20,
         "texture": "house"
