@@ -167,6 +167,10 @@ let bossMinionRespawnTimer = 0; // Таймер для респавна минь
 let bossPhaseStartTime = 0; // Время начала текущей фазы
 let bossPhaseTransitionTimer = 0; // Таймер для перехода между фазами
 let bossAppearTimer = 0; // Анимация появления босса (зелёные партиклы)
+let bossPhaseDisappearing = false;
+let bossPhaseDisappearTimer = 0;
+let bossPhaseNext = 0; // 2 или 3 — следующая фаза после анимации исчезновения
+const BOSS_PHASE_DISAPPEAR_DURATION = 50;
 
 function isBossLevel() {
   const lvl = levels[currentLevel];
@@ -405,6 +409,9 @@ function resetBossStateForLevel(level) {
   bossPhaseStartTime = 0;
   bossPhaseTransitionTimer = 0;
   bossAppearTimer = 0;
+  bossPhaseDisappearing = false;
+  bossPhaseDisappearTimer = 0;
+  bossPhaseNext = 0;
   clearBossPlatforms(level);
 }
 
@@ -628,16 +635,51 @@ function updateBossLogic() {
     bossPhaseStartTime++;
   }
 
-  // Анимация появления платформ босса (подъём снизу + коричневые партиклы)
-  bossPlatforms.forEach(p => {
-    if (p.appearProgress !== undefined && p.appearProgress < 1) {
-      p.appearProgress = Math.min(1, p.appearProgress + 0.025);
-      if (Math.random() < 0.4) spawnPlatformAppearParticles(p.x, p.y, p.w, p.h);
+  // Анимация исчезновения в конце фазы (платформы и враги уходят)
+  if (bossPhaseDisappearing) {
+    bossPhaseDisappearTimer++;
+    bossPlatforms.forEach(p => {
+      p.disappearProgress = Math.min(1, bossPhaseDisappearTimer / BOSS_PHASE_DISAPPEAR_DURATION);
+      p.effectiveY = p.y + p.disappearProgress * BOSS_PLATFORM_RISE_HEIGHT;
+    });
+    bossMinions.forEach(e => {
+      if (!e.deathAnim) {
+        e.phaseOutAnim = true;
+        e.phaseOutTimer = (e.phaseOutTimer || 0) + 1;
+      }
+    });
+    if (bossPhaseDisappearTimer >= BOSS_PHASE_DISAPPEAR_DURATION) {
+      clearBossPlatforms(lvl);
+      bossMinions = [];
+      enemies = [];
+      bossPhase = bossPhaseNext;
+      bossVisible = false;
+      boss = null;
+      bossPhaseDisappearing = false;
+      bossPhaseDisappearTimer = 0;
+      bossPhaseTransitionTimer = 0;
+      if (bossPhaseNext === 2) initBossPhase2(lvl);
+      else if (bossPhaseNext === 3) initBossPhase3(lvl);
+      bossPhaseNext = 0;
     }
-    p.effectiveY = p.appearProgress !== undefined
-      ? p.y + (1 - Math.min(1, p.appearProgress)) * BOSS_PLATFORM_RISE_HEIGHT
-      : p.y;
-  });
+  }
+
+  // Анимация появления платформ босса (подъём снизу + коричневые партиклы)
+  if (!bossPhaseDisappearing) {
+    bossPlatforms.forEach(p => {
+      if (p.appearProgress !== undefined && p.appearProgress < 1) {
+        p.appearProgress = Math.min(1, p.appearProgress + 0.025);
+        if (Math.random() < 0.4) spawnPlatformAppearParticles(p.x, p.y, p.w, p.h);
+      }
+      if (p.disappearProgress !== undefined && p.disappearProgress > 0) {
+        p.effectiveY = p.y + Math.min(1, p.disappearProgress) * BOSS_PLATFORM_RISE_HEIGHT;
+      } else {
+        p.effectiveY = p.appearProgress !== undefined
+          ? p.y + (1 - Math.min(1, p.appearProgress)) * BOSS_PLATFORM_RISE_HEIGHT
+          : p.y;
+      }
+    });
+  }
 
   // Анимация появления босса (зелёные партиклы, затем показ)
   if (boss && bossAppearTimer > 0) {
@@ -684,38 +726,36 @@ function updateBossLogic() {
     }
   }
 
-  // Переходы между фазами
-  if (bossPhase === 1) {
-    // Переход ко второй фазе, когда все миньоны уничтожены
-    const anyAlive = bossMinions.some(e => e.hp > 0 && !e.deathAnim);
-    if (!anyAlive) {
-      // Даем время на возможный респавн перед переходом
-      bossPhaseTransitionTimer++;
-      // Если прошло достаточно времени и миньоны не респавнились, переходим к следующей фазе
-      if (bossPhaseTransitionTimer >= respawnDelay * 2) {
-        clearBossPlatforms(lvl);
-        bossMinions = [];
-        enemies = [];
-        bossPhase = 2;
-        bossVisible = false;
-        boss = null;
+  // Переходы между фазами (не запускаем, если идёт анимация исчезновения)
+  if (!bossPhaseDisappearing) {
+    if (bossPhase === 1) {
+      const anyAlive = bossMinions.some(e => e.hp > 0 && !e.deathAnim);
+      if (!anyAlive) {
+        bossPhaseTransitionTimer++;
+        if (bossPhaseTransitionTimer >= respawnDelay * 2) {
+          bossPhaseDisappearing = true;
+          bossPhaseDisappearTimer = 0;
+          bossPhaseNext = 2;
+          bossPlatforms.forEach(p => { p.disappearProgress = 0; });
+          bossMinions.forEach(e => {
+            if (!e.deathAnim) { e.phaseOutAnim = true; e.phaseOutTimer = 0; }
+          });
+        }
+      } else {
         bossPhaseTransitionTimer = 0;
-        initBossPhase2(lvl);
       }
-    } else {
-      // Если есть живые миньоны, сбрасываем таймер перехода
-      bossPhaseTransitionTimer = 0;
+    } else if (bossPhase === 2) {
+      if (bossHp <= 0) {
+        bossPhaseDisappearing = true;
+        bossPhaseDisappearTimer = 0;
+        bossPhaseNext = 3;
+        bossPlatforms.forEach(p => { p.disappearProgress = 0; });
+        bossMinions.forEach(e => { e.phaseOutAnim = true; e.phaseOutTimer = 0; });
+      }
     }
-  } else if (bossPhase === 2) {
-    if (bossHp <= 0) {
-      // Переход к третьей фазе
-      clearBossPlatforms(lvl);
-      bossPhase = 3;
-      bossVisible = false;
-      boss = null;
-      initBossPhase3(lvl);
-    }
-  } else if (bossPhase === 3) {
+  }
+
+  if (bossPhase === 3) {
     if (bossHp <= 0 && !bossDeath) {
       bossDeath = true;
       bossDeathTimer = 0;
@@ -960,17 +1000,18 @@ window.updateEnemies = function() {
       if (enemy.deathAnimTimer >= 28) enemy._dead = true;
       return;
     }
-    // Задержка появления для миньонов босса
-    if (enemy.isBossMinion && enemy.spawnDelay && !enemy.active) {
-      enemy.spawnTimer++;
-      if (enemy.spawnTimer >= enemy.spawnDelay) {
+    if (enemy.phaseOutAnim) return;
+    // Миньоны босса появляются только после полного появления платформы
+    if (enemy.isBossMinion && !enemy.active) {
+      const plat = bossPlatforms.find(p =>
+        p.x === enemy.platformX && p.y === enemy.platformY && p.w === enemy.platformW
+      );
+      if (plat && plat.appearProgress !== undefined && plat.appearProgress >= 1) {
         enemy.active = true;
       } else {
-        // Пока не активен – не двигаем и не проверяем столкновения
         return;
       }
     }
-
     enemy.x += enemy.dx * enemy.direction;
     
     if (enemy.x <= enemy.platformX) {
@@ -989,13 +1030,13 @@ window.updateEnemies = function() {
       if (enemy.frame > 10) enemy.frame = 0;
     }
     
-    if (!enemy.deathAnim && player.x < enemy.x + enemy.w && player.x + player.w > enemy.x &&
+    if (!enemy.deathAnim && !enemy.phaseOutAnim && player.x < enemy.x + enemy.w && player.x + player.w > enemy.x &&
         player.y < enemy.y + enemy.h && player.y + player.h > enemy.y) {
       gameOver = true;
       showModal("Игра окончена.", "Ты столкнулась с врагом!", null, ()=>resetPlayer());
     }
     
-    if (!enemy.deathAnim && activeCharacter === "companion" && 
+    if (!enemy.deathAnim && !enemy.phaseOutAnim && activeCharacter === "companion" && 
         companion.x < enemy.x + enemy.w && companion.x + companion.w > enemy.x &&
         companion.y < enemy.y + enemy.h && companion.y + companion.h > enemy.y) {
       gameOver = true;
@@ -1975,6 +2016,31 @@ window.drawEnemies = function() {
     // Анимация смерти: сжатие + затухание + лёгкое падение
     if (enemy.deathAnim) {
       const t = enemy.deathAnimTimer || 0;
+      const progress = Math.min(1, t / ENEMY_DEATH_ANIM_DURATION);
+      const scale = 1 - progress;
+      const alpha = 1 - progress;
+      const fallY = t * 0.8;
+      const w2 = enemy.w / 2;
+      const h2 = enemy.h / 2;
+      const cx = drawX + w2;
+      const cy = drawY + h2 + fallY;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(cx, cy);
+      ctx.scale(scale, scale);
+      ctx.translate(-cx, -cy);
+      if (enemy.direction === -1) {
+        ctx.scale(-1, 1);
+        ctx.drawImage(imgEnemy, frameX, 0, frameW, frameH, -(drawX + enemy.w), drawY + fallY, enemy.w, enemy.h);
+      } else {
+        ctx.drawImage(imgEnemy, frameX, 0, frameW, frameH, drawX, drawY + fallY, enemy.w, enemy.h);
+      }
+      ctx.restore();
+      return;
+    }
+    // Исчезновение в конце фазы (как смерть: сжатие + затухание)
+    if (enemy.phaseOutAnim) {
+      const t = enemy.phaseOutTimer || 0;
       const progress = Math.min(1, t / ENEMY_DEATH_ANIM_DURATION);
       const scale = 1 - progress;
       const alpha = 1 - progress;

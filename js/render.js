@@ -19,6 +19,7 @@
       const platformY = (typeof p.effectiveY !== "undefined" && p.effectiveY != null) ? p.effectiveY : p.y;
       const platformW = p.w;
       const platformH = p.h;
+      const disappearProgress = (typeof p.disappearProgress !== "undefined" && p.disappearProgress != null) ? Math.min(1, p.disappearProgress) : 0;
       
       let textureImg = imgPlatformGrass;
       if (p.type === "bouncy") textureImg = imgPlatformSlime;
@@ -35,6 +36,9 @@
       ctx.imageSmoothingEnabled = false;
       ctx.imageSmoothingQuality = 'high';
       
+      if (disappearProgress > 0) ctx.save();
+      if (disappearProgress > 0) ctx.globalAlpha = 1 - disappearProgress;
+      
       for (let x = 0; x < platformW; x += textureW) {
         for (let y = 0; y < platformH; y += textureH) {
           const drawW = Math.min(textureW, platformW - x);
@@ -47,6 +51,8 @@
           );
         }
       }
+      
+      if (disappearProgress > 0) ctx.restore();
     });
     if (lvl.walls) {
       lvl.walls.forEach(w=>{
