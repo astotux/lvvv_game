@@ -106,13 +106,13 @@
 
     // Рисуем босса, его снаряды и полоску HP только на босс-уровне
     if (window.isBossLevel && window.isBossLevel()) {
-      // Снаряды игрока и босса
+      // Снаряды игрока (монетки) и босса (шары)
       if (typeof playerProjectiles !== "undefined" && playerProjectiles.length) {
         playerProjectiles.forEach(p => {
           ctx.imageSmoothingEnabled = false;
           ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(
-            imgBossOrb,
+            imgCoin,
             p.x - cameraX,
             p.y,
             p.w,

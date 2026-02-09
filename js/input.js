@@ -46,10 +46,37 @@
   const joystick = document.getElementById("joystick");
   const joystickStick = document.getElementById("joystickStick");
   const sliderCounter = document.getElementById("sliderCounter");
+  const shootJoystick = document.getElementById("shootJoystick");
+  const shootJoystickStick = document.getElementById("shootJoystickStick");
+  const shootSliderCounter = document.getElementById("shootSliderCounter");
   const jumpBtn = document.getElementById("jump");
   const switchBtn = document.getElementById("switch");
   const followBtn = document.getElementById("follow");
   const gameCanvas = document.getElementById("game");
+
+  // Показываем/скрываем джойстик стрельбы в зависимости от уровня
+  function updateShootJoystickVisibility() {
+    if (shootJoystick) {
+      if (window.isBossLevel && window.isBossLevel()) {
+        shootJoystick.style.display = 'flex';
+      } else {
+        shootJoystick.style.display = 'none';
+        // Сбрасываем состояние при скрытии
+        if (typeof window.getShootDirection === "function") {
+          const dir = window.getShootDirection();
+          if (dir.x !== 0 || dir.y !== 0) {
+            // Принудительно сбрасываем через resetShootJoystick если она доступна
+          }
+        }
+      }
+    }
+  }
+  // Проверяем видимость при загрузке и периодически
+  window.addEventListener('load', updateShootJoystickVisibility);
+  setInterval(updateShootJoystickVisibility, 500);
+  
+  // Экспортируем функцию обновления видимости для вызова из game.js при смене уровня
+  window.updateShootJoystickVisibility = updateShootJoystickVisibility;
 
   // Горизонтальный слайдер
   if (joystick && joystickStick) {
@@ -187,46 +214,174 @@
     followBtn.ontouchstart = toggleFollow;
   }
 
-  // Стрельба по тапу/клику на экране на босс-уровне
-  function handleShootPointer(clientX, clientY) {
-    if (!window.isBossLevel || !window.isBossLevel()) return;
-    if (window.gameOver) return;
+  // Джойстик стрельбы (справа, под кнопкой прыжка) - создан с нуля
+  let shootJoystickActive = false;
+  let shootJoystickCenterX = 0;
+  let shootJoystickCenterY = 0;
+  let shootJoystickRadius = 0;
+  let shootDirectionX = 0;
+  let shootDirectionY = 0;
+  let currentTouchId = null;
 
-    const screenW = window.innerWidth;
-    const screenH = window.innerHeight;
-    const logicW = window.C.LOGIC_WIDTH;
-    const logicH = window.C.LOGIC_HEIGHT;
+  function initShootJoystick() {
+    if (!shootJoystick || !shootJoystickStick) return;
+    
+    const rect = shootJoystick.getBoundingClientRect();
+    shootJoystickCenterX = rect.left + rect.width / 2;
+    shootJoystickCenterY = rect.top + rect.height / 2;
+    shootJoystickRadius = Math.min(rect.width, rect.height) / 2 - 32; // минус половина ширины ручки
+  }
 
-    const scale = Math.min(screenW / logicW, screenH / logicH);
-    const destW = logicW * scale;
-    const destH = logicH * scale;
-    const dx = (screenW - destW) / 2;
-    const dy = (screenH - destH) / 2;
-
-    const xInView = (clientX - dx);
-    const yInView = (clientY - dy);
-    if (xInView < 0 || yInView < 0 || xInView > destW || yInView > destH) return;
-
-    const worldX = (xInView / scale) + (window.cameraX || 0);
-    const worldY = (yInView / scale);
-
-    if (typeof window.shootPlayerProjectile === "function") {
-      window.shootPlayerProjectile(worldX, worldY);
+  function updateShootJoystickPosition(clientX, clientY) {
+    if (!shootJoystick || !shootJoystickStick) return;
+    
+    // Пересчитываем центр при каждом обновлении (на случай изменения размера)
+    const rect = shootJoystick.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const radius = Math.min(rect.width, rect.height) / 2 - 32;
+    
+    const deltaX = clientX - centerX;
+    const deltaY = clientY - centerY;
+    const distance = Math.hypot(deltaX, deltaY);
+    
+    let stickX = deltaX;
+    let stickY = deltaY;
+    
+    // Ограничиваем кругом
+    if (distance > radius) {
+      stickX = (deltaX / distance) * radius;
+      stickY = (deltaY / distance) * radius;
+    }
+    
+    // Обновляем визуальное положение
+    shootJoystickStick.style.transform = `translate(calc(-50% + ${stickX}px), calc(-50% + ${stickY}px))`;
+    
+    // Нормализуем направление для стрельбы
+    const finalDistance = Math.hypot(stickX, stickY);
+    if (finalDistance > 3) {
+      shootDirectionX = stickX / finalDistance;
+      shootDirectionY = stickY / finalDistance;
+    } else {
+      shootDirectionX = 0;
+      shootDirectionY = 0;
     }
   }
 
-  if (gameCanvas) {
-    gameCanvas.addEventListener("mousedown", (e)=>{
-      if (e.button === 0) {
-        handleShootPointer(e.clientX, e.clientY);
-      }
-    });
-    gameCanvas.addEventListener("touchstart", (e)=>{
-      const t = e.touches[0];
-      if (t) {
-        handleShootPointer(t.clientX, t.clientY);
-      }
-    }, {passive: true});
+  function resetShootJoystick() {
+    shootJoystickActive = false;
+    currentTouchId = null;
+    if (shootJoystick) shootJoystick.classList.remove('active');
+    if (shootJoystickStick) {
+      shootJoystickStick.style.transform = 'translate(-50%, -50%)';
+    }
+    shootDirectionX = 0;
+    shootDirectionY = 0;
   }
+
+  // Обработка мыши
+  if (shootJoystick) {
+    shootJoystick.onmousedown = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!window.isBossLevel || !window.isBossLevel()) return;
+      shootJoystickActive = true;
+      shootJoystick.classList.add('active');
+      initShootJoystick();
+      updateShootJoystickPosition(e.clientX, e.clientY);
+    };
+  }
+
+  document.addEventListener('mousemove', function(e) {
+    if (shootJoystickActive && shootJoystick) {
+      e.preventDefault();
+      updateShootJoystickPosition(e.clientX, e.clientY);
+    }
+  });
+
+  document.addEventListener('mouseup', function(e) {
+    if (shootJoystickActive) {
+      resetShootJoystick();
+    }
+  });
+
+  // Обработка касаний
+  if (shootJoystick) {
+    shootJoystick.ontouchstart = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!window.isBossLevel || !window.isBossLevel()) return;
+      if (currentTouchId !== null) return; // Уже обрабатываем касание
+      
+      const touch = e.touches[0];
+      currentTouchId = touch.identifier;
+      shootJoystickActive = true;
+      shootJoystick.classList.add('active');
+      initShootJoystick();
+      updateShootJoystickPosition(touch.clientX, touch.clientY);
+    };
+
+    shootJoystick.ontouchmove = function(e) {
+      if (!shootJoystickActive || currentTouchId === null) return;
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Находим нужное касание
+      let touch = null;
+      for (let i = 0; i < e.touches.length; i++) {
+        if (e.touches[i].identifier === currentTouchId) {
+          touch = e.touches[i];
+          break;
+        }
+      }
+      
+      if (touch) {
+        updateShootJoystickPosition(touch.clientX, touch.clientY);
+      }
+    };
+
+    shootJoystick.ontouchend = function(e) {
+      if (currentTouchId === null) return;
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Проверяем, закончилось ли наше касание
+      let touchEnded = true;
+      for (let i = 0; i < e.touches.length; i++) {
+        if (e.touches[i].identifier === currentTouchId) {
+          touchEnded = false;
+          break;
+        }
+      }
+      
+      if (touchEnded) {
+        resetShootJoystick();
+      }
+    };
+
+    shootJoystick.ontouchcancel = function(e) {
+      if (currentTouchId === null) return;
+      e.preventDefault();
+      e.stopPropagation();
+      resetShootJoystick();
+    };
+  }
+
+  // Экспортируем направление стрельбы для game.js
+  window.getShootDirection = function() {
+    if (!shootJoystickActive || !window.isBossLevel || !window.isBossLevel()) {
+      return { x: 0, y: 0 };
+    }
+    return { x: shootDirectionX, y: shootDirectionY };
+  };
+
+  // Инициализация при загрузке
+  window.addEventListener('load', function() {
+    if (shootJoystickStick) {
+      shootJoystickStick.style.transform = 'translate(-50%, -50%)';
+    }
+    initShootJoystick();
+  });
+
 })();
 

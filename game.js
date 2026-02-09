@@ -192,29 +192,41 @@ Object.defineProperty(window, 'activeCharacter', {
 Object.defineProperty(window, 'companionLockToCenter', { get(){ return companionLockToCenter; }, set(v){ companionLockToCenter = v; } });
 Object.defineProperty(window, 'cameraX', { get(){ return cameraX; } });
 
-// Публичная стрельба игрока (используется в input.js)
-window.shootPlayerProjectile = function(targetX, targetY) {
+// Стрельба игрока по направлению джойстика
+function updatePlayerShooting() {
   if (!isBossLevel() || gameOver || gamePaused) return;
-  if (playerShootCooldown > 0) return;
+  
+  // Уменьшаем кулдаун
+  if (playerShootCooldown > 0) {
+    playerShootCooldown--;
+  }
 
-  const startX = player.x + player.w / 2;
-  const startY = player.y + player.h / 2;
-  const dx = targetX - startX;
-  const dy = targetY - startY;
-  const len = Math.hypot(dx, dy) || 1;
-  const speed = 10;
+  // Получаем направление от джойстика стрельбы
+  if (typeof window.getShootDirection === "function") {
+    const dir = window.getShootDirection();
+    // Проверяем, что джойстик активен и направление не нулевое
+    if (Math.abs(dir.x) > 0.01 || Math.abs(dir.y) > 0.01) {
+      // Стреляем только если кулдаун прошел
+      if (playerShootCooldown <= 0) {
+        const startX = player.x + player.w / 2;
+        const startY = player.y + player.h / 2;
+        const speed = 10;
+        
+        // Направление уже нормализовано в джойстике, используем напрямую
+        playerProjectiles.push({
+          x: startX - 7,
+          y: startY - 7,
+          w: 14,
+          h: 14,
+          vx: dir.x * speed,
+          vy: dir.y * speed
+        });
 
-  playerProjectiles.push({
-    x: startX - 7,
-    y: startY - 7,
-    w: 14,
-    h: 14,
-    vx: (dx / len) * speed,
-    vy: (dy / len) * speed
-  });
-
-  playerShootCooldown = 10; // небольшой кулдаун
-};
+        playerShootCooldown = 25; // небольшой кулдаун
+      }
+    }
+  }
+}
 
 function shootBossProjectile() {
   if (!boss || !bossVisible || bossHp <= 0) return;
@@ -292,7 +304,8 @@ function spawnBossPlatform(level, x, y, w, h) {
   return p;
 }
 
-function spawnBossMinionOnPlatform(platform) {
+function spawnBossMinionOnPlatform(platform, opts) {
+  const options = opts || {};
   const enemy = {
     x: platform.x + 10,
     y: platform.y - 38,
@@ -307,7 +320,12 @@ function spawnBossMinionOnPlatform(platform) {
     state: "walk",
     hp: 3,
     maxHp: 3,
-    isBossMinion: true
+    isBossMinion: true,
+    spawnDelay: options.spawnDelay || 0,   // задержка появления в тиках
+    spawnTimer: 0,
+    active: options.spawnDelay ? false : true,
+    shootCooldownBase: options.shootCooldown || 0, // базовый кулдаун выстрела
+    shootCooldownTimer: options.shootCooldown || 0
   };
   enemies.push(enemy);
   bossMinions.push(enemy);
@@ -326,12 +344,14 @@ function initBossPhase1(level) {
   const p5 = spawnBossPlatform(level, 655, 200, 164, 20);
   const p6 = spawnBossPlatform(level, 539, 352, 164, 20);
 
-  spawnBossMinionOnPlatform(p1);
-  spawnBossMinionOnPlatform(p2);
-  spawnBossMinionOnPlatform(p3);
-  spawnBossMinionOnPlatform(p4);
-  spawnBossMinionOnPlatform(p5);
-  spawnBossMinionOnPlatform(p6);
+  // Задержки появления и кулдауны выстрелов миньонов
+  // Эти числа можно свободно менять под баланс:
+  spawnBossMinionOnPlatform(p1, { spawnDelay: 0,   shootCooldown: 120 });
+  spawnBossMinionOnPlatform(p2, { spawnDelay: 30,  shootCooldown: 150 });
+  spawnBossMinionOnPlatform(p3, { spawnDelay: 60,  shootCooldown: 180 });
+  spawnBossMinionOnPlatform(p4, { spawnDelay: 90,  shootCooldown: 120 });
+  spawnBossMinionOnPlatform(p5, { spawnDelay: 120, shootCooldown: 150 });
+  spawnBossMinionOnPlatform(p6, { spawnDelay: 150, shootCooldown: 180 });
 
   bossVisible = false; // Босс пропадает после призыва
 }
@@ -383,10 +403,11 @@ function initBossPhase3(level) {
   const p4 = spawnBossPlatform(level, 739, 352, 164, 20);
   const p5 = spawnBossPlatform(level, 215, 136, 492, 20);
 
-  spawnBossMinionOnPlatform(p1);
-  spawnBossMinionOnPlatform(p2);
-  spawnBossMinionOnPlatform(p3);
-  spawnBossMinionOnPlatform(p4);
+  // В третьей фазе тоже можно задать разные задержки и кулдауны
+  spawnBossMinionOnPlatform(p1, { spawnDelay: 0,   shootCooldown: 90 });
+  spawnBossMinionOnPlatform(p2, { spawnDelay: 20,  shootCooldown: 110 });
+  spawnBossMinionOnPlatform(p3, { spawnDelay: 40,  shootCooldown: 130 });
+  spawnBossMinionOnPlatform(p4, { spawnDelay: 60,  shootCooldown: 90 });
 
   boss = {
     x: p5.x + (p5.w - 53) / 2,
@@ -394,7 +415,7 @@ function initBossPhase3(level) {
     w: 53,
     h: 65
   };
-  bossMaxHp = 35;
+  bossMaxHp = 100;
   bossHp = bossMaxHp;
   bossVisible = true;
   bossDirection = 1;
@@ -680,6 +701,17 @@ window.createEnemy = function(platformX, platformY, platformW) {
 
 window.updateEnemies = function() {
   enemies.forEach(enemy => {
+    // Задержка появления для миньонов босса
+    if (enemy.isBossMinion && enemy.spawnDelay && !enemy.active) {
+      enemy.spawnTimer++;
+      if (enemy.spawnTimer >= enemy.spawnDelay) {
+        enemy.active = true;
+      } else {
+        // Пока не активен – не двигаем и не проверяем столкновения
+        return;
+      }
+    }
+
     enemy.x += enemy.dx * enemy.direction;
     
     if (enemy.x <= enemy.platformX) {
@@ -795,6 +827,7 @@ function update() {
 
   // Обновляем снаряды босса и игрока (для босс-уровня)
   if (isBossLevel()) {
+    updatePlayerShooting(); // Стрельба игрока по джойстику
     updateBossProjectiles();
   }
 
@@ -1554,6 +1587,34 @@ function updateBossProjectiles() {
     playerProjectiles = playerProjectiles.filter(p => !p._hit);
     bossMinions = bossMinions.filter(e => !e._dead);
     enemies = enemies.filter(e => !e._dead);
+
+    // Выстрелы миньонов босса
+    bossMinions.forEach(enemy => {
+      if (!enemy.active) return;
+      if (!enemy.shootCooldownBase) return;
+      enemy.shootCooldownTimer--;
+      if (enemy.shootCooldownTimer <= 0) {
+        enemy.shootCooldownTimer = enemy.shootCooldownBase;
+        // Стреляем в игрока тем же шаром, что и босс
+        const startX = enemy.x + enemy.w / 2;
+        const startY = enemy.y + enemy.h / 2;
+        const targetX = player.x + player.w / 2;
+        const targetY = player.y + player.h / 2;
+        const dx = targetX - startX;
+        const dy = targetY - startY;
+        const len = Math.hypot(dx, dy) || 1;
+        const speed = 6;
+
+        bossProjectiles.push({
+          x: startX - 7,
+          y: startY - 7,
+          w: 14,
+          h: 14,
+          vx: (dx / len) * speed,
+          vy: (dy / len) * speed
+        });
+      }
+    });
   }
 
   // Попадания по игроку от босса
