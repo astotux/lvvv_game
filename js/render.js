@@ -91,15 +91,104 @@
 
     drawCoins();
 
-    let f=lvl.finish;
-    ctx.imageSmoothingEnabled = false;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(imgFinish, f.x - cameraX, f.y, f.w, f.h);
+    // На босс-уровне не рисуем финишный флаг
+    if (!(window.isBossLevel && window.isBossLevel())) {
+      let f = lvl.finish;
+      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(imgFinish, f.x - cameraX, f.y, f.w, f.h);
+    }
     
     drawPlayer();
     
     drawCompanion();
     drawEnemies();
+
+    // Рисуем босса, его снаряды и полоску HP только на босс-уровне
+    if (window.isBossLevel && window.isBossLevel()) {
+      // Снаряды игрока и босса
+      if (typeof playerProjectiles !== "undefined" && playerProjectiles.length) {
+        playerProjectiles.forEach(p => {
+          ctx.imageSmoothingEnabled = false;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(
+            imgBossOrb,
+            p.x - cameraX,
+            p.y,
+            p.w,
+            p.h
+          );
+        });
+      }
+      if (typeof bossProjectiles !== "undefined" && bossProjectiles.length) {
+        bossProjectiles.forEach(p => {
+          ctx.imageSmoothingEnabled = false;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(
+            imgBossOrb,
+            p.x - cameraX,
+            p.y,
+            p.w,
+            p.h
+          );
+        });
+      }
+
+      // Сам босс
+      if (typeof bossVisible !== "undefined" && bossVisible && typeof boss !== "undefined" && boss && bossHp > 0) {
+        const b = boss;
+        const state = bossState || "walk";
+        const frame = bossFrame || 0;
+        const dir = bossDirection || 1;
+
+        const sprite = state === "attack" ? imgBossAttack : imgBossWalk;
+        const frames = state === "attack" ? 5 : 7;
+        const frameW = sprite.width / frames;
+        const frameH = sprite.height;
+        const frameX = frame * frameW;
+
+        const drawX = b.x - cameraX;
+        const drawY = b.y;
+
+        ctx.imageSmoothingEnabled = false;
+        ctx.imageSmoothingQuality = 'high';
+
+        if (dir === -1) {
+          ctx.save();
+          ctx.scale(-1, 1);
+          ctx.drawImage(
+            sprite,
+            frameX, 0, frameW, frameH,
+            -(drawX + b.w), drawY, b.w, b.h
+          );
+          ctx.restore();
+        } else {
+          ctx.drawImage(
+            sprite,
+            frameX, 0, frameW, frameH,
+            drawX, drawY, b.w, b.h
+          );
+        }
+      }
+
+      // Полоска HP босса сверху экрана
+      if (typeof bossMaxHp !== "undefined" && typeof bossHp !== "undefined" && bossMaxHp > 0) {
+        const ratio = Math.max(0, Math.min(1, bossHp / bossMaxHp));
+        const barW = 300;
+        const barH = 12;
+        const x = (LOGIC_WIDTH - barW) / 2;
+        const y = 16;
+
+        ctx.fillStyle = "rgba(0,0,0,0.6)";
+        ctx.fillRect(x - 2, y - 2, barW + 4, barH + 4);
+
+        ctx.fillStyle = "#444";
+        ctx.fillRect(x, y, barW, barH);
+
+        ctx.fillStyle = "#ff3344";
+        ctx.fillRect(x, y, barW * ratio, barH);
+      }
+    }
     drawDecorations();
 
     const scale = Math.min(screenW / LOGIC_WIDTH, screenH / LOGIC_HEIGHT);

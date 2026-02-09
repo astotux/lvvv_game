@@ -9,6 +9,14 @@
   window.imgCompanionWalk = new Image();
   imgCompanionWalk.src = "img/cato_walk.png";
 
+  // Босс
+  window.imgBossWalk = new Image();
+  imgBossWalk.src = "img/ioma_walk.png";
+  window.imgBossAttack = new Image();
+  imgBossAttack.src = "img/ioma_attack.png";
+  window.imgBossOrb = new Image();
+  imgBossOrb.src = "img/ioma_orb.png";
+
   // Платформы
   window.imgPlatformGrass = new Image();
   imgPlatformGrass.src = "img/platform_grass.png";

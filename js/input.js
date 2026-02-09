@@ -49,6 +49,7 @@
   const jumpBtn = document.getElementById("jump");
   const switchBtn = document.getElementById("switch");
   const followBtn = document.getElementById("follow");
+  const gameCanvas = document.getElementById("game");
 
   // Горизонтальный слайдер
   if (joystick && joystickStick) {
@@ -172,7 +173,9 @@
   }
   if (switchBtn) {
     switchBtn.ontouchstart = ()=>{
-      window.activeCharacter = window.activeCharacter === "player" ? "companion" : "player";
+      if (!window.isBossLevel || !window.isBossLevel()) {
+        window.activeCharacter = window.activeCharacter === "player" ? "companion" : "player";
+      }
     };
   }
   if (followBtn) {
@@ -182,6 +185,48 @@
       else followBtn.classList.remove('active');
     };
     followBtn.ontouchstart = toggleFollow;
+  }
+
+  // Стрельба по тапу/клику на экране на босс-уровне
+  function handleShootPointer(clientX, clientY) {
+    if (!window.isBossLevel || !window.isBossLevel()) return;
+    if (window.gameOver) return;
+
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight;
+    const logicW = window.C.LOGIC_WIDTH;
+    const logicH = window.C.LOGIC_HEIGHT;
+
+    const scale = Math.min(screenW / logicW, screenH / logicH);
+    const destW = logicW * scale;
+    const destH = logicH * scale;
+    const dx = (screenW - destW) / 2;
+    const dy = (screenH - destH) / 2;
+
+    const xInView = (clientX - dx);
+    const yInView = (clientY - dy);
+    if (xInView < 0 || yInView < 0 || xInView > destW || yInView > destH) return;
+
+    const worldX = (xInView / scale) + (window.cameraX || 0);
+    const worldY = (yInView / scale);
+
+    if (typeof window.shootPlayerProjectile === "function") {
+      window.shootPlayerProjectile(worldX, worldY);
+    }
+  }
+
+  if (gameCanvas) {
+    gameCanvas.addEventListener("mousedown", (e)=>{
+      if (e.button === 0) {
+        handleShootPointer(e.clientX, e.clientY);
+      }
+    });
+    gameCanvas.addEventListener("touchstart", (e)=>{
+      const t = e.touches[0];
+      if (t) {
+        handleShootPointer(t.clientX, t.clientY);
+      }
+    }, {passive: true});
   }
 })();
 

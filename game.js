@@ -145,6 +145,31 @@ let gameOver = false;
 let gamePaused = false;
 let activeCharacter = "player";
 
+// --- Состояние босса и снарядов (только для босс-уровня) ---
+let boss = null;
+let bossPhase = 0;              // 0 – не активен, 1..3 – фазы
+let bossVisible = false;
+let bossMaxHp = 0;
+let bossHp = 0;
+let bossDirection = 1;
+let bossFrame = 0;
+let bossFrameTick = 0;
+let bossState = "idle";         // "idle" | "walk" | "attack"
+let bossShootCooldown = 0;
+let playerShootCooldown = 0;
+let bossPlatforms = [];
+let bossMinions = [];
+let playerProjectiles = [];
+let bossProjectiles = [];
+let bossDeath = false;
+let bossDeathTimer = 0;
+
+function isBossLevel() {
+  const lvl = levels[currentLevel];
+  return !!lvl.isBossLevel;
+}
+window.isBossLevel = isBossLevel;
+
 
 window.player = player;
 window.companion = companion;
@@ -165,6 +190,52 @@ Object.defineProperty(window, 'activeCharacter', {
   } 
 });
 Object.defineProperty(window, 'companionLockToCenter', { get(){ return companionLockToCenter; }, set(v){ companionLockToCenter = v; } });
+Object.defineProperty(window, 'cameraX', { get(){ return cameraX; } });
+
+// Публичная стрельба игрока (используется в input.js)
+window.shootPlayerProjectile = function(targetX, targetY) {
+  if (!isBossLevel() || gameOver || gamePaused) return;
+  if (playerShootCooldown > 0) return;
+
+  const startX = player.x + player.w / 2;
+  const startY = player.y + player.h / 2;
+  const dx = targetX - startX;
+  const dy = targetY - startY;
+  const len = Math.hypot(dx, dy) || 1;
+  const speed = 10;
+
+  playerProjectiles.push({
+    x: startX - 7,
+    y: startY - 7,
+    w: 14,
+    h: 14,
+    vx: (dx / len) * speed,
+    vy: (dy / len) * speed
+  });
+
+  playerShootCooldown = 10; // небольшой кулдаун
+};
+
+function shootBossProjectile() {
+  if (!boss || !bossVisible || bossHp <= 0) return;
+  const startX = boss.x + boss.w / 2;
+  const startY = boss.y + boss.h / 2;
+  const targetX = player.x + player.w / 2;
+  const targetY = player.y + player.h / 2;
+  const dx = targetX - startX;
+  const dy = targetY - startY;
+  const len = Math.hypot(dx, dy) || 1;
+  const speed = 7;
+
+  bossProjectiles.push({
+    x: startX - 7,
+    y: startY - 7,
+    w: 14,
+    h: 14,
+    vx: (dx / len) * speed,
+    vy: (dy / len) * speed
+  });
+}
 
 let totalCoins = 0;
 
@@ -181,6 +252,265 @@ let levelStats = {
 let companionLockToCenter = false;
 
 let enemies = [];
+
+function clearBossPlatforms(level) {
+  if (!level.dynamicPlatforms) return;
+  bossPlatforms.forEach(p => {
+    const idx = level.dynamicPlatforms.indexOf(p);
+    if (idx !== -1) {
+      level.dynamicPlatforms.splice(idx, 1);
+    }
+  });
+  bossPlatforms = [];
+}
+
+function resetBossStateForLevel(level) {
+  boss = null;
+  bossPhase = level.isBossLevel ? 1 : 0;
+  bossVisible = false;
+  bossMaxHp = 0;
+  bossHp = 0;
+  bossDirection = 1;
+  bossFrame = 0;
+  bossFrameTick = 0;
+  bossState = "idle";
+  bossShootCooldown = 0;
+  playerShootCooldown = 0;
+  bossMinions = [];
+  playerProjectiles = [];
+  bossProjectiles = [];
+  bossDeath = false;
+  bossDeathTimer = 0;
+  clearBossPlatforms(level);
+}
+
+function spawnBossPlatform(level, x, y, w, h) {
+  if (!level.dynamicPlatforms) level.dynamicPlatforms = [];
+  const p = { x, y, w, h, texture: "wood", open: true, type: "boss" };
+  level.dynamicPlatforms.push(p);
+  bossPlatforms.push(p);
+  return p;
+}
+
+function spawnBossMinionOnPlatform(platform) {
+  const enemy = {
+    x: platform.x + 10,
+    y: platform.y - 38,
+    w: 46,
+    h: 38,
+    dx: 1,
+    direction: 1,
+    platformX: platform.x,
+    platformW: platform.w,
+    frame: 0,
+    frameTick: 0,
+    state: "walk",
+    hp: 3,
+    maxHp: 3,
+    isBossMinion: true
+  };
+  enemies.push(enemy);
+  bossMinions.push(enemy);
+}
+
+function initBossPhase1(level) {
+  clearBossPlatforms(level);
+  enemies = [];
+  bossMinions = [];
+
+  // Несколько фиксированных платформ
+  const p1 = spawnBossPlatform(level, 47, 352, 164, 20);
+  const p2 = spawnBossPlatform(level, 139, 200, 164, 20);
+  const p3 = spawnBossPlatform(level, 195, 68, 164, 20);
+  const p4 = spawnBossPlatform(level, 559, 68, 164, 20);
+  const p5 = spawnBossPlatform(level, 655, 200, 164, 20);
+  const p6 = spawnBossPlatform(level, 739, 352, 164, 20);
+
+  spawnBossMinionOnPlatform(p1);
+  spawnBossMinionOnPlatform(p2);
+  spawnBossMinionOnPlatform(p3);
+  spawnBossMinionOnPlatform(p4);
+  spawnBossMinionOnPlatform(p5);
+  spawnBossMinionOnPlatform(p6);
+
+  bossVisible = false; // Босс пропадает после призыва
+}
+
+function initBossPhase2(level) {
+  clearBossPlatforms(level);
+  enemies = [];
+  bossMinions = [];
+
+  const p1 = spawnBossPlatform(level, 75, 420, 82, 20);
+  const p2 = spawnBossPlatform(level, 195, 368, 82, 20);
+  const p3 = spawnBossPlatform(level, 75, 312, 82, 20);
+  const p4 = spawnBossPlatform(level, 195, 244, 82, 20);
+  const p5 = spawnBossPlatform(level, 75, 180, 82, 20);
+  const p6 = spawnBossPlatform(level, 215, 136, 492, 20);
+  const p7 = spawnBossPlatform(level, 800, 180, 82, 20);
+  const p8 = spawnBossPlatform(level, 700, 244, 82, 20);
+  const p9 = spawnBossPlatform(level, 800, 312, 82, 20);
+  const p10 = spawnBossPlatform(level, 700, 368, 82, 20);
+  const p11 = spawnBossPlatform(level, 800, 420, 82, 20);
+  const p12 = spawnBossPlatform(level, 335, 320, 246, 20);
+
+
+  // Босс стоит на средней платформе
+  boss = {
+    x: p12.x + (p12.w - 53) / 2,
+    y: p12.y - 65,
+    w: 53,
+    h: 65
+  };
+  bossMaxHp = 50;
+  bossHp = bossMaxHp;
+  bossVisible = true;
+  bossDirection = 1;
+  bossState = "walk";
+  bossFrame = 0;
+  bossFrameTick = 0;
+  bossShootCooldown = 60;
+}
+
+function initBossPhase3(level) {
+  clearBossPlatforms(level);
+  enemies = [];
+  bossMinions = [];
+  
+  const p1 = spawnBossPlatform(level, 47, 352, 164, 20);
+  const p2 = spawnBossPlatform(level, 139, 200, 164, 20);
+  const p3 = spawnBossPlatform(level, 655, 200, 164, 20);
+  const p4 = spawnBossPlatform(level, 739, 352, 164, 20);
+  const p5 = spawnBossPlatform(level, 215, 136, 492, 20);
+
+  spawnBossMinionOnPlatform(p1);
+  spawnBossMinionOnPlatform(p2);
+  spawnBossMinionOnPlatform(p3);
+  spawnBossMinionOnPlatform(p4);
+
+  boss = {
+    x: p5.x + (p5.w - 53) / 2,
+    y: p5.y - 65,
+    w: 53,
+    h: 65
+  };
+  bossMaxHp = 100;
+  bossHp = bossMaxHp;
+  bossVisible = true;
+  bossDirection = 1;
+  bossState = "walk";
+  bossFrame = 0;
+  bossFrameTick = 0;
+  bossShootCooldown = 50;
+}
+
+function updateBossLogic() {
+  if (!isBossLevel()) return;
+  const lvl = levels[currentLevel];
+
+  if (bossPhase === 0) return;
+
+  // Инициализация фаз
+  if (bossPhase === 1 && bossPlatforms.length === 0 && bossMinions.length === 0) {
+    initBossPhase1(lvl);
+  } else if (bossPhase === 2 && !bossVisible && !boss) {
+    initBossPhase2(lvl);
+  } else if (bossPhase === 3 && !bossVisible && !boss) {
+    initBossPhase3(lvl);
+  }
+
+  // Переходы между фазами
+  if (bossPhase === 1) {
+    // Переход ко второй фазе, когда все миньоны уничтожены
+    const anyAlive = bossMinions.some(e => e.hp > 0);
+    if (!anyAlive) {
+      clearBossPlatforms(lvl);
+      bossMinions = [];
+      enemies = [];
+      bossPhase = 2;
+      bossVisible = false;
+      boss = null;
+      initBossPhase2(lvl);
+    }
+  } else if (bossPhase === 2) {
+    if (bossHp <= 0) {
+      // Переход к третьей фазе
+      clearBossPlatforms(lvl);
+      bossPhase = 3;
+      bossVisible = false;
+      boss = null;
+      initBossPhase3(lvl);
+    }
+  } else if (bossPhase === 3) {
+    if (bossHp <= 0 && !bossDeath) {
+      bossDeath = true;
+      bossDeathTimer = 0;
+      bossVisible = false;
+      clearBossPlatforms(lvl);
+      enemies = [];
+      bossMinions = [];
+      playerProjectiles = [];
+      bossProjectiles = [];
+    }
+    if (bossDeath) {
+      bossDeathTimer++;
+      if (bossDeathTimer > 120) {
+        completeBossLevel();
+      }
+      return;
+    }
+  }
+
+  // Движение и атаки босса во 2 и 3 фазах
+  if ((bossPhase === 2 || bossPhase === 3) && boss && bossVisible && bossHp > 0) {
+    // Движение влево-вправо
+    const speed = 1.5;
+    boss.x += bossDirection * speed;
+
+    // Ограничения движения по платформе под боссом (берем любую ближайшую)
+    let plat = null;
+    bossPlatforms.forEach(p => {
+      if (boss.y + boss.h <= p.y + 1 && boss.y + boss.h >= p.y - 70) {
+        if (boss.x + boss.w > p.x && boss.x < p.x + p.w) {
+          plat = p;
+        }
+      }
+    });
+    if (plat) {
+      if (boss.x < plat.x) {
+        boss.x = plat.x;
+        bossDirection = 1;
+      } else if (boss.x + boss.w > plat.x + plat.w) {
+        boss.x = plat.x + plat.w - boss.w;
+        bossDirection = -1;
+      }
+    } else {
+      // Если по какой-то причине платформы не найдено, ограничиваем по краям уровня
+      if (boss.x < 0) { boss.x = 0; bossDirection = 1; }
+      if (boss.x + boss.w > lvl.width) { boss.x = lvl.width - boss.w; bossDirection = -1; }
+    }
+
+    // Атаки шарами
+    if (bossShootCooldown <= 0) {
+      bossState = "attack";
+      bossFrame = 0;
+      shootBossProjectile();
+      bossShootCooldown = bossPhase === 2 ? 60 : 45;
+    } else {
+      bossState = "walk";
+    }
+
+    // Анимация босса
+    bossFrameTick++;
+    const frameTickLimit = bossState === "attack" ? 5 : 7;
+    const maxFrames = bossState === "attack" ? 5 : 7;
+    if (bossFrameTick > frameTickLimit) {
+      bossFrameTick = 0;
+      bossFrame++;
+      if (bossFrame >= maxFrames) bossFrame = 0;
+    }
+  }
+}
 
 const modal = document.getElementById("modal");
 const modalTitle = document.getElementById("modalTitle");
@@ -400,6 +730,9 @@ function resetPlayer() {
   
   enemies = [];
   let lvl = levels[currentLevel];
+
+  // Сбрасываем состояние босса для уровня
+  resetBossStateForLevel(lvl);
   
   // Сброс состояния динамических платформ
   if (lvl.dynamicPlatforms) {
@@ -460,6 +793,11 @@ function update() {
   updateDynamicPlatforms();
   updateEnemies();
 
+  // Обновляем снаряды босса и игрока (для босс-уровня)
+  if (isBossLevel()) {
+    updateBossProjectiles();
+  }
+
   if (activeCharacter === "player") {
     player.dx = 0;
     if (keys.left) player.dx = -C.PLAYER.SPEED;
@@ -519,7 +857,7 @@ function update() {
     });
 
     let f = lvl.finish;
-    if(player.x < f.x+f.w && player.x+player.w > f.x &&
+    if(!isBossLevel() && player.x < f.x+f.w && player.x+player.w > f.x &&
        player.y < f.y+f.h && player.y+player.h > f.y){
          gameOver = true;
          
@@ -669,7 +1007,7 @@ function update() {
     });
 
     let f = lvl.finish;
-    if(companion.x < f.x+f.w && companion.x+companion.w > f.x &&
+    if(!isBossLevel() && companion.x < f.x+f.w && companion.x+companion.w > f.x &&
        companion.y < f.y+f.h && companion.y+companion.h > f.y){
          gameOver = true;
          
@@ -767,6 +1105,10 @@ function update() {
       gameOver = true;
       showModal("Игра окончена.","Арчик упал в пропасть!", null, ()=>resetPlayer());
     }
+  }
+
+  if (isBossLevel()) {
+    updateBossLogic();
   }
   
   if (activeCharacter === "player") {
@@ -1153,6 +1495,120 @@ function drawCoins() {
   }
 }
 
+function updateBossProjectiles() {
+  if (playerShootCooldown > 0) playerShootCooldown--;
+  if (bossShootCooldown > 0) bossShootCooldown--;
+
+  // Движение снарядов игрока
+  playerProjectiles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+  });
+  playerProjectiles = playerProjectiles.filter(p =>
+    p.x + p.w > 0 &&
+    p.x < levels[currentLevel].width &&
+    p.y + p.h > -100 &&
+    p.y < LOGIC_HEIGHT + 100
+  );
+
+  // Движение снарядов босса
+  bossProjectiles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+  });
+  bossProjectiles = bossProjectiles.filter(p =>
+    p.x + p.w > 0 &&
+    p.x < levels[currentLevel].width &&
+    p.y + p.h > -100 &&
+    p.y < LOGIC_HEIGHT + 100
+  );
+
+  if (isBossLevel()) {
+    // Попадания по миньонам
+    playerProjectiles.forEach(p => {
+      bossMinions.forEach(enemy => {
+        if (!enemy.hp) return;
+        if (p.x < enemy.x + enemy.w && p.x + p.w > enemy.x &&
+            p.y < enemy.y + enemy.h && p.y + p.h > enemy.y) {
+          enemy.hp--;
+          p._hit = true;
+          if (enemy.hp <= 0) {
+            enemy._dead = true;
+          }
+        }
+      });
+
+      // Попадание по боссу
+      if (boss && bossVisible && bossHp > 0) {
+        if (p.x < boss.x + boss.w && p.x + p.w > boss.x &&
+            p.y < boss.y + boss.h && p.y + p.h > boss.y) {
+          bossHp--;
+          p._hit = true;
+          if (bossHp <= 0) {
+            bossHp = 0;
+          }
+        }
+      }
+    });
+
+    playerProjectiles = playerProjectiles.filter(p => !p._hit);
+    bossMinions = bossMinions.filter(e => !e._dead);
+    enemies = enemies.filter(e => !e._dead);
+  }
+
+  // Попадания по игроку от босса
+  bossProjectiles.forEach(p => {
+    if (p.x < player.x + player.w && p.x + p.w > player.x &&
+        p.y < player.y + player.h && p.y + p.h > player.y) {
+      p._hit = true;
+      gameOver = true;
+      showModal("Игра окончена.","Ты попала под атаку босса!", null, ()=>resetPlayer());
+    }
+  });
+  bossProjectiles = bossProjectiles.filter(p => !p._hit);
+}
+
+function completeBossLevel() {
+  const lvl = levels[currentLevel];
+  if (!isBossLevel() || gameOver) return;
+  gameOver = true;
+
+  const finishTime = stopLevelTimer();
+  const currentStats = getLevelStats(currentLevel);
+
+  let isNewBestTime = !currentStats.bestTime || finishTime < currentStats.bestTime;
+  let isNewBestCoins = totalCoins > currentStats.bestCoins;
+
+  if (isNewBestTime || isNewBestCoins) {
+    const newStats = {
+      bestTime: isNewBestTime ? finishTime : currentStats.bestTime,
+      bestCoins: isNewBestCoins ? totalCoins : currentStats.bestCoins
+    };
+    saveLevelStats(currentLevel, newStats);
+  }
+
+  try { localStorage.setItem('love_game_dialog_level', String(currentLevel)); } catch (e) {}
+
+  let resultText = `${lvl.gift.desc}\n\n`;
+  resultText += `Время прохождения: ${formatTime(finishTime)}\n`;
+  resultText += `Собрано морошки: ${totalCoins}/${lvl.coins.length}\n\n`;
+
+  if (isNewBestTime) {
+    resultText += `Новый рекорд времени!\n`;
+  }
+
+  if (currentStats.bestTime) {
+    resultText += `Лучшее время: ${formatTime(currentStats.bestTime)}\n`;
+  }
+
+  const editorMode = localStorage.getItem('love_game_editor_mode');
+  const showNext = editorMode !== '1';
+
+  showModal(lvl.gift.title, resultText, showNext ? ()=>{} : null, ()=>{
+    resetPlayer();
+  });
+}
+
 window.drawEnemies = function() {
   enemies.forEach(enemy => {
     ctx.imageSmoothingEnabled = false;
@@ -1180,6 +1636,17 @@ window.drawEnemies = function() {
         frameX, 0, frameW, frameH,
         drawX, drawY, enemy.w, enemy.h
       );
+    }
+
+    // Полоска хп над головой только на босс-уровне и только для миньонов
+    if (isBossLevel() && enemy.maxHp && enemy.hp !== undefined) {
+      const barW = enemy.w;
+      const barH = 4;
+      const hpRatio = Math.max(0, Math.min(1, enemy.hp / enemy.maxHp));
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(drawX, drawY - 8, barW, barH);
+      ctx.fillStyle = "#ff3344";
+      ctx.fillRect(drawX, drawY - 8, barW * hpRatio, barH);
     }
   });
 }
@@ -1495,6 +1962,7 @@ function drawBackground() {
   }
   
   function drawCompanion() {
+    if (isBossLevel()) return; // На босс-уровне компаньон не рисуется
     ctx.imageSmoothingEnabled = false;
     ctx.imageSmoothingQuality = 'high';
     
@@ -1629,7 +2097,23 @@ const bgImages = [bgLayer0, bgLayer1, bgLayer2, bgLayer3, bgLayer4, bgLayer5, bg
 const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2, imgMountain, imgThree, imgAlert, imgBush, imgHouse1, imgHouse2, imgHouseBg];
 const platformImages = [imgPlatformGrass, imgPlatformStone, imgPlatformWood, imgPlatformStone2, imgPlatformDanger, imgPlatformSlime, imgDoorDanger, imgPlatformHouse];
 const groundImages = [imgDirt, imgFloor];
-const allImages = [...bgImages, ...decorationImages, ...platformImages, ...groundImages, imgPlayerIdle, imgPlayerWalk, imgCompanionIdle, imgCompanionWalk, imgTrap, imgFinish, imgBackgroundAll, imgEnemy];
+const allImages = [
+  ...bgImages,
+  ...decorationImages,
+  ...platformImages,
+  ...groundImages,
+  imgPlayerIdle,
+  imgPlayerWalk,
+  imgCompanionIdle,
+  imgCompanionWalk,
+  imgTrap,
+  imgFinish,
+  imgBackgroundAll,
+  imgEnemy,
+  imgBossWalk,
+  imgBossAttack,
+  imgBossOrb
+];
 allImages.forEach(img => {
   img.onload = () => {
     loaded++;
@@ -1674,6 +2158,9 @@ allImages.forEach(img => {
           }
         });
       }
+
+      // Инициализируем состояние босса, если текущий уровень – босс-уровень
+      resetBossStateForLevel(lvl);
       
       loop(0);
     }
