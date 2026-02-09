@@ -180,6 +180,7 @@ window.keys = keys;
 let followEnabled = true;
 Object.defineProperty(window, 'followEnabled', { get(){ return followEnabled; }, set(v){ followEnabled = !!v; } });
 Object.defineProperty(window, 'gameOver', { get(){ return gameOver; }, set(v){ gameOver = v; } });
+let highlightUntil = 0; // подсветка активного персонажа при переключении (мс)
 Object.defineProperty(window, 'activeCharacter', { 
   get(){ return activeCharacter; }, 
   set(v){ 
@@ -188,12 +189,14 @@ Object.defineProperty(window, 'activeCharacter', {
       cameraTransitionStart = performance.now();
       isCameraTransitioning = true;
       previousActiveCharacter = activeCharacter;
+      highlightUntil = performance.now() + 500; // подсветка 0.5 сек
     }
     activeCharacter = v; 
   } 
 });
 Object.defineProperty(window, 'companionLockToCenter', { get(){ return companionLockToCenter; }, set(v){ companionLockToCenter = v; } });
 Object.defineProperty(window, 'cameraX', { get(){ return cameraX; } });
+Object.defineProperty(window, 'currentLevel', { get(){ return currentLevel; }, set(v){ currentLevel = v; } });
 
 // Стрельба игрока по направлению джойстика
 function updatePlayerShooting() {
@@ -225,7 +228,7 @@ function updatePlayerShooting() {
           vy: dir.y * speed
         });
 
-        playerShootCooldown = 25; // небольшой кулдаун
+        playerShootCooldown = 30; // небольшой кулдаун
       }
     }
   }
@@ -267,6 +270,66 @@ let levelStats = {
 let companionLockToCenter = false;
 
 let enemies = [];
+
+// --- Партиклы (ходьба, приземление) ---
+let particles = [];
+let prevPlayerOnGround = false;
+let prevCompanionOnGround = false;
+function spawnWalkParticle(x, y, dir) {
+  for (let i = 0; i < 2; i++) {
+    particles.push({
+      x: x + (Math.random() - 0.5) * 10,
+      y: y,
+      vx: (dir === 1 ? 1 : -1) * (0.4 + Math.random() * 1),
+      vy: -0.3 - Math.random() * 0.8,
+      life: 0,
+      maxLife: 12 + Math.floor(Math.random() * 8),
+      type: "walk",
+      size: 0.8 + Math.random() * 0.8
+    });
+  }
+}
+function spawnLandParticles(x, y, w) {
+  const count = 6 + Math.floor(Math.random() * 4);
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: x + Math.random() * w,
+      y: y,
+      vx: (Math.random() - 0.5) * 2.5,
+      vy: -0.3 - Math.random() * 1.2,
+      life: 0,
+      maxLife: 12 + Math.floor(Math.random() * 12),
+      type: "land",
+      size: 1 + Math.random() * 1.5
+    });
+  }
+}
+function spawnEnemyHitParticles(x, y, w, h) {
+  const count = 8 + Math.floor(Math.random() * 6);
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: x + Math.random() * w,
+      y: y + Math.random() * h,
+      vx: (Math.random() - 0.5) * 5,
+      vy: -2 - Math.random() * 4,
+      life: 0,
+      maxLife: 14 + Math.floor(Math.random() * 10),
+      type: "hit",
+      size: 1.5 + Math.random() * 2,
+      color: "#FFA424"
+    });
+  }
+}
+function updateParticles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.15;
+    p.life++;
+    if (p.life >= p.maxLife) particles.splice(i, 1);
+  }
+}
 
 function clearBossPlatforms(level) {
   if (!level.dynamicPlatforms) return;
@@ -421,7 +484,7 @@ function initBossPhase3(level) {
 
   // Сохраняем платформы для респавна миньонов 
   level._bossPhase3Platforms = [p1, p2, p3, p4];
-  level._bossPhase3RespawnDelay = 220;
+  level._bossPhase3RespawnDelay = 240;
 
   // В третьей фазе тоже можно задать разные задержки и кулдауны
   spawnBossMinionOnPlatform(p1, { spawnDelay: 0,   shootCooldown: 90 });
@@ -435,7 +498,7 @@ function initBossPhase3(level) {
     w: 53,
     h: 65
   };
-  bossMaxHp = 45;
+  bossMaxHp = 50;
   bossHp = bossMaxHp;
   bossVisible = true;
   bossDirection = 1;
@@ -879,6 +942,7 @@ function resetPlayer() {
   companion.targetX = 50; companion.targetY = 250;
   
   enemies = [];
+  particles = [];
   let lvl = levels[currentLevel];
 
   // Сбрасываем состояние босса для уровня
@@ -939,6 +1003,9 @@ function updateStatsDisplay() {
 function update() {
   if(gameOver || gamePaused) return;
   
+  prevPlayerOnGround = player.onGround;
+  prevCompanionOnGround = companion.onGround;
+  
   processSwitchesAndDynamics();
   updateDynamicPlatforms();
   updateEnemies();
@@ -968,6 +1035,7 @@ function update() {
            if(player.dy > 0 && player.y + player.h - player.dy <= p.y){
              player.y = p.y - player.h; 
              player.dy = 0; 
+             if (!prevPlayerOnGround) spawnLandParticles(player.x, player.y + player.h, player.w);
              player.onGround = true;
              
              // Обработка подпрыгивающих платформ
@@ -1097,6 +1165,9 @@ function update() {
             if (player.frame > C.PLAYER.WALK_FRAMES - 1) player.frame = 0;
         }
     }
+    if ((player.state === "walk-right" || player.state === "walk-left") && player.onGround && player.frameTick % 2 === 0) {
+      spawnWalkParticle(player.x + player.w / 2, player.y + player.h, player.state === "walk-right" ? 1 : -1);
+    }
 
     if (player.y > viewH + C.FALL_OFF.Y_MARGIN || player.x < -C.FALL_OFF.X_MARGIN || player.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
@@ -1121,6 +1192,7 @@ function update() {
            if(companion.dy > 0 && companion.y + companion.h - companion.dy <= p.y){ 
              companion.y = p.y - companion.h; 
              companion.dy = 0; 
+             if (!prevCompanionOnGround && !isBossLevel()) spawnLandParticles(companion.x, companion.y + companion.h, companion.w);
              companion.onGround = true;
              
              // Обработка подпрыгивающих платформ
@@ -1251,6 +1323,9 @@ function update() {
             if (companion.frame > C.COMPANION.WALK_FRAMES - 1) companion.frame = 0;
         }
     }
+    if (!isBossLevel() && (companion.state === "walk-right" || companion.state === "walk-left") && companion.onGround && companion.frameTick % 2 === 0) {
+      spawnWalkParticle(companion.x + companion.w / 2, companion.y + companion.h, companion.state === "walk-right" ? 1 : -1);
+    }
 
     if (companion.y > viewH + C.FALL_OFF.Y_MARGIN || companion.x < -C.FALL_OFF.X_MARGIN || companion.x > lvl.width + C.FALL_OFF.X_MARGIN) {
       gameOver = true;
@@ -1267,6 +1342,7 @@ function update() {
   } else {
     updatePlayer();
   }
+  updateParticles();
 }
   
   function updateCompanion() {
@@ -1303,9 +1379,10 @@ function update() {
     groundF.forEach(p => {
       if (companion.x < p.x + p.w && companion.x + companion.w > p.x &&
           companion.y < p.y + p.h && companion.y + companion.h > p.y) {
-        if (companion.dy > 0 && companion.y + companion.h - companion.dy <= p.y) {
+          if (companion.dy > 0 && companion.y + companion.h - companion.dy <= p.y) {
           companion.y = p.y - companion.h;
           companion.dy = 0;
+          if (!prevCompanionOnGround && !isBossLevel()) spawnLandParticles(companion.x, companion.y + companion.h, companion.w);
           companion.onGround = true;
           
           // Обработка подпрыгивающих платформ
@@ -1394,6 +1471,9 @@ function update() {
             if (companion.frame > C.COMPANION.WALK_FRAMES - 1) companion.frame = 0;
         }
     }
+    if (!isBossLevel() && (companion.state === "walk-right" || companion.state === "walk-left") && companion.onGround && companion.frameTick % 2 === 0) {
+      spawnWalkParticle(companion.x + companion.w / 2, companion.y + companion.h, companion.state === "walk-right" ? 1 : -1);
+    }
   }
   
   function updatePlayer() {
@@ -1409,6 +1489,7 @@ function update() {
         if (player.dy > 0 && player.y + player.h - player.dy <= p.y) {
           player.y = p.y - player.h;
           player.dy = 0;
+          if (!prevPlayerOnGround) spawnLandParticles(player.x, player.y + player.h, player.w);
           player.onGround = true;
           
           // Обработка подпрыгивающих платформ
@@ -1683,6 +1764,7 @@ function updateBossProjectiles() {
             p.y < enemy.y + enemy.h && p.y + p.h > enemy.y) {
           enemy.hp--;
           p._hit = true;
+          spawnEnemyHitParticles(enemy.x, enemy.y, enemy.w, enemy.h);
           if (enemy.hp <= 0) {
             enemy._dead = true;
           }
@@ -1695,6 +1777,7 @@ function updateBossProjectiles() {
             p.y < boss.y + boss.h && p.y + p.h > boss.y) {
           bossHp--;
           p._hit = true;
+          spawnEnemyHitParticles(boss.x, boss.y, boss.w, boss.h);
           if (bossHp <= 0) {
             bossHp = 0;
           }
@@ -2100,9 +2183,35 @@ function drawBackground() {
       
     });
   }
+  function drawParticles() {
+    particles.forEach(p => {
+      const t = p.life / p.maxLife;
+      const alpha = 1 - t;
+      const sz = (p.size || 2) * (1 - t * 0.5);
+      if (p.color) {
+        const hex = p.color.replace("#", "");
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        ctx.fillStyle = `rgba(${r},${g},${b},${alpha * 0.95})`;
+      } else {
+        ctx.fillStyle = p.type === "land" ? `rgba(180,160,140,${alpha * 0.9})` : `rgba(200,180,160,${alpha * 0.8})`;
+      }
+      const px = p.x - cameraX;
+      ctx.fillRect(px - sz, p.y - sz, sz * 2, sz * 2);
+    });
+  }
+
   function drawPlayer() {
     ctx.imageSmoothingEnabled = false;
     ctx.imageSmoothingQuality = 'high';
+    
+    const isHighlight = activeCharacter === "player" && (typeof highlightUntil !== "undefined" && performance.now() < highlightUntil);
+    if (isHighlight) {
+      ctx.save();
+      ctx.shadowColor = "rgba(255, 220, 180, 0.9)";
+      ctx.shadowBlur = 18;
+    }
     
     let sprite, frames, frameW, frameH;
   
@@ -2138,12 +2247,20 @@ function drawBackground() {
         drawX, drawY, player.w, player.h
       );
     }
+    if (isHighlight) ctx.restore();
   }
   
   function drawCompanion() {
     if (isBossLevel()) return; // На босс-уровне компаньон не рисуется
     ctx.imageSmoothingEnabled = false;
     ctx.imageSmoothingQuality = 'high';
+    
+    const isHighlight = activeCharacter === "companion" && (typeof highlightUntil !== "undefined" && performance.now() < highlightUntil);
+    if (isHighlight) {
+      ctx.save();
+      ctx.shadowColor = "rgba(255, 220, 180, 0.9)";
+      ctx.shadowBlur = 18;
+    }
     
     let sprite, frames, frameW, frameH;
   
@@ -2178,7 +2295,7 @@ function drawBackground() {
         drawX, drawY, companion.w, companion.h
       );
     }
-    
+    if (isHighlight) ctx.restore();
     ctx.globalAlpha = 1.0;
   }
   

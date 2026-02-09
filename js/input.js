@@ -24,6 +24,7 @@
       window.jump();
     }
     if (event.code === 'KeyQ') {
+        if ((window.isBossLevel && window.isBossLevel()) || window.currentLevel === 0) return;
         const toggleFollow = ()=>{
             window.followEnabled = !window.followEnabled;
             if (window.followEnabled) followBtn.classList.add('active');
@@ -32,6 +33,8 @@
           toggleFollow()
     }
     if (event.code === 'KeyE') {
+      if (window.isBossLevel && window.isBossLevel()) return;
+      if (typeof window.currentLevel !== "undefined" && window.currentLevel <= 2) return;
       window.activeCharacter = window.activeCharacter === "player" ? "companion" : "player";
     }
   });
@@ -71,9 +74,43 @@
       }
     }
   }
+
+  // Кнопки компаньона: на босс-файте и на 1 уровне — скрыть обе; на 2–3 — только «оставить»; с 4 — обе
+  function updateCompanionButtonsVisibility() {
+    const lvl = typeof window.currentLevel !== "undefined" ? window.currentLevel : 0;
+    const isBoss = window.isBossLevel && window.isBossLevel();
+    if (followBtn) {
+      if (isBoss || lvl === 0) {
+        followBtn.style.display = "none";
+      } else {
+        followBtn.style.display = "";
+      }
+    }
+    if (switchBtn) {
+      if (isBoss || lvl <= 2) {
+        switchBtn.style.display = "none";
+      } else {
+        switchBtn.style.display = "";
+      }
+    }
+    if (isBoss) {
+      const coinsMenu = document.getElementById("coinsMenu");
+      coinsMenu.style.display = "none";
+    } else {
+      coinsMenu.style.display = "";
+    }
+  }
+  window.updateCompanionButtonsVisibility = updateCompanionButtonsVisibility;
+
   // Проверяем видимость при загрузке и периодически
-  window.addEventListener('load', updateShootJoystickVisibility);
-  setInterval(updateShootJoystickVisibility, 500);
+  window.addEventListener('load', function() {
+    updateShootJoystickVisibility();
+    updateCompanionButtonsVisibility();
+  });
+  setInterval(function() {
+    updateShootJoystickVisibility();
+    updateCompanionButtonsVisibility();
+  }, 500);
   
   // Экспортируем функцию обновления видимости для вызова из game.js при смене уровня
   window.updateShootJoystickVisibility = updateShootJoystickVisibility;

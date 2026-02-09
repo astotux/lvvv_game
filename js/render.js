@@ -99,8 +99,8 @@
       ctx.drawImage(imgFinish, f.x - cameraX, f.y, f.w, f.h);
     }
     
+    if (typeof drawParticles === "function") drawParticles();
     drawPlayer();
-    
     drawCompanion();
     drawEnemies();
 
