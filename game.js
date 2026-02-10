@@ -200,7 +200,7 @@ let bossPhaseDisappearing = false;
 let bossPhaseDisappearTimer = 0;
 let bossPhaseNext = 0; // 2 или 3 — следующая фаза после анимации исчезновения
 const BOSS_PHASE_DISAPPEAR_DURATION = 50;
-const BOSS_PHASE1_EMPTY_DELAY = 360; // ~6 секунд пустой карты после убийства всех врагов в фазе 1
+const BOSS_PHASE1_EMPTY_DELAY = 60; // ~6 секунд пустой карты после убийства всех врагов в фазе 1
 const BOSS_PHASE2_EMPTY_DELAY = 60; // ~1 секунда пустой карты после окончания второй фазы
 
 // --- Сложность боссфайта и жизни игрока на боссе ---
