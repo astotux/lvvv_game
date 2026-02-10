@@ -279,7 +279,7 @@ Object.defineProperty(window, 'activeCharacter', {
       cameraTransitionStart = performance.now();
       isCameraTransitioning = true;
       previousActiveCharacter = activeCharacter;
-      highlightUntil = performance.now() + 500; // подсветка 0.5 сек
+      highlightUntil = performance.now() + 800; // подсветка 0.5 сек
     }
     activeCharacter = v; 
   } 
@@ -375,12 +375,12 @@ function spawnWalkParticle(x, y, dir) {
       life: 0,
       maxLife: 12 + Math.floor(Math.random() * 8),
       type: "walk",
-      size: 0.8 + Math.random() * 0.8
+      size: 1.5 + Math.random() * 0.8
     });
   }
 }
 function spawnLandParticles(x, y, w) {
-  const count = 6 + Math.floor(Math.random() * 4);
+  const count = 10 + Math.floor(Math.random() * 4);
   for (let i = 0; i < count; i++) {
     particles.push({
       x: x + Math.random() * w,
@@ -390,7 +390,7 @@ function spawnLandParticles(x, y, w) {
       life: 0,
       maxLife: 12 + Math.floor(Math.random() * 12),
       type: "land",
-      size: 1 + Math.random() * 1.5
+      size: 2 + Math.random() * 1.5
     });
   }
 }
@@ -2548,8 +2548,8 @@ function drawBackground() {
     const isHighlight = activeCharacter === "player" && (typeof highlightUntil !== "undefined" && performance.now() < highlightUntil);
     if (isHighlight) {
       ctx.save();
-      ctx.shadowColor = "rgba(255, 220, 180, 0.9)";
-      ctx.shadowBlur = 18;
+      ctx.shadowColor = "rgba(255, 210, 158, 0.9)";
+      ctx.shadowBlur = 5;
     }
     
     let sprite, frames, frameW, frameH;
@@ -2597,8 +2597,8 @@ function drawBackground() {
     const isHighlight = activeCharacter === "companion" && (typeof highlightUntil !== "undefined" && performance.now() < highlightUntil);
     if (isHighlight) {
       ctx.save();
-      ctx.shadowColor = "rgba(255, 220, 180, 0.9)";
-      ctx.shadowBlur = 18;
+      ctx.shadowColor = "rgba(255, 210, 158, 0.9)";
+      ctx.shadowBlur = 5;
     }
     
     let sprite, frames, frameW, frameH;
