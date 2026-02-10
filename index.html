@@ -755,11 +755,14 @@
     (function() {
       var overlay = document.getElementById('tapToStartOverlay');
       if (!overlay) return;
-      function onTap(e) {
-        if (e) { e.preventDefault(); e.stopPropagation(); }
+      window.hideTapToStartOverlay = function() {
         overlay.classList.add('hidden');
         overlay.onclick = null;
         overlay.ontouchstart = null;
+      };
+      function onTap(e) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        window.hideTapToStartOverlay();
       }
       overlay.onclick = onTap;
       overlay.ontouchstart = function(e) {

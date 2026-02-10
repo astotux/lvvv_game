@@ -1221,21 +1221,38 @@ window.updateEnemies = function() {
 function resetPlayer() {
   // Запускаем музыку уровня заново при перезапуске
   
-  player.x=50; player.y=100; player.dy=0;
+  let lvl = levels[currentLevel];
+  const isBoss = !!lvl && !!lvl.isBossLevel;
+  if (isBoss && lvl.width) {
+    const centerX = Math.round(lvl.width / 2 - player.w / 2);
+    player.x = centerX;
+    player.y = 350;
+    companion.x = centerX;
+    companion.y = 100;
+    companion.targetX = centerX;
+    companion.targetY = 250;
+  } else {
+    player.x = 50;
+    player.y = 100;
+    companion.x = 50;
+    companion.y = 100;
+    companion.targetX = 50;
+    companion.targetY = 250;
+  }
+  player.dy = 0;
   player.idleTimer = 0;
   player.onDynamicPlatform = null;
-  gameOver=false;
+  gameOver = false;
   gamePaused = false;
   totalCoins = 0;
-  
-  companion.x = 50; companion.y = 100; companion.dy = 0;
+
+  companion.dy = 0;
   companion.idleTimer = 0;
   companion.onDynamicPlatform = null;
-  companion.targetX = 50; companion.targetY = 250;
   
   enemies = [];
   particles = [];
-  let lvl = levels[currentLevel];
+  lvl = levels[currentLevel];
 
   // Сбрасываем состояние босса для уровня
   resetBossStateForLevel(lvl);
@@ -2822,6 +2839,19 @@ allImages.forEach(img => {
       }
       
       let lvl = levels[currentLevel];
+      // На босс-уровне спавним игрока по центру карты и скрываем оверлей «Нажми чтобы начать»
+      if (lvl && lvl.isBossLevel && lvl.width) {
+        const centerX = Math.round(lvl.width / 2 - player.w / 2);
+        player.x = centerX;
+        player.y = 350;
+        companion.x = centerX;
+        companion.y = 100;
+        companion.targetX = centerX;
+        companion.targetY = 250;
+        if (typeof window.hideTapToStartOverlay === 'function') {
+          window.hideTapToStartOverlay();
+        }
+      }
       // Инициализируем камеру с учетом dead zone
       const activeChar = activeCharacter === "player" ? player : companion;
       const charCenterX = activeChar.x + activeChar.w / 2;
