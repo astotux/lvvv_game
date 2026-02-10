@@ -38,6 +38,7 @@ const fixedTimeStep = C.FIXED_TIMESTEP_MS;
 let currentLevel = 0;
 const STORAGE_KEY_LEVEL = 'love_game_unlocked_level';
 const STORAGE_KEY_STATS = 'love_game_level_stats';
+const STORAGE_KEY_BOSS_DIFFICULTY_STATS = 'love_game_boss_difficulty_stats';
 
 function loadLevelProgress(){
   try {
@@ -70,6 +71,25 @@ function saveLevelStats(levelIndex, stats) {
     const allStats = loadLevelStats();
     allStats[levelIndex] = stats;
     localStorage.setItem(STORAGE_KEY_STATS, JSON.stringify(allStats));
+  } catch (e) {}
+}
+
+function loadBossDifficultyStats() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_BOSS_DIFFICULTY_STATS);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {}
+  return {};
+}
+
+function saveBossDifficultyStats(levelIndex, difficultyKey, stats) {
+  try {
+    const allStats = loadBossDifficultyStats();
+    if (!allStats[levelIndex]) allStats[levelIndex] = {};
+    allStats[levelIndex][difficultyKey] = stats;
+    localStorage.setItem(STORAGE_KEY_BOSS_DIFFICULTY_STATS, JSON.stringify(allStats));
   } catch (e) {}
 }
 
@@ -171,6 +191,62 @@ let bossPhaseDisappearing = false;
 let bossPhaseDisappearTimer = 0;
 let bossPhaseNext = 0; // 2 или 3 — следующая фаза после анимации исчезновения
 const BOSS_PHASE_DISAPPEAR_DURATION = 50;
+
+// --- Сложность боссфайта и жизни игрока на боссе ---
+const BOSS_DIFFICULTY_CONFIG = {
+  easy: {
+    key: 'easy',
+    label: 'Лёгкое',
+    playerHp: 4,
+    bossHpPhase2: 20,
+    bossHpPhase3: 30,
+    bossShootCooldownPhase2: 85,
+    bossShootCooldownPhase3: 70,
+    minionShootCooldownMultiplier: 1.3,
+    minionRespawnDelayMultiplier: 1.5
+  },
+  normal: {
+    key: 'normal',
+    label: 'Средне',
+    playerHp: 3,
+    bossHpPhase2: 25,
+    bossHpPhase3: 40,
+    bossShootCooldownPhase2: 75,
+    bossShootCooldownPhase3: 65,
+    minionShootCooldownMultiplier: 1.1,
+    minionRespawnDelayMultiplier: 1.1
+  },
+  hard: {
+    key: 'hard',
+    label: 'Сложно',
+    playerHp: 2,
+    bossHpPhase2: 30,
+    bossHpPhase3: 45,
+    bossShootCooldownPhase2: 70,
+    bossShootCooldownPhase3: 60,
+    minionShootCooldownMultiplier: 0.9,
+    minionRespawnDelayMultiplier: 0.9
+  }
+};
+
+let currentBossDifficulty = 'normal';
+let playerBossMaxHp = 0;
+let playerBossHp = 0;
+
+function getCurrentBossConfig() {
+  return BOSS_DIFFICULTY_CONFIG[currentBossDifficulty] || BOSS_DIFFICULTY_CONFIG.normal;
+}
+
+function initBossPlayerHpForLevel(level) {
+  if (level && level.isBossLevel) {
+    const cfg = getCurrentBossConfig();
+    playerBossMaxHp = cfg.playerHp;
+    playerBossHp = cfg.playerHp;
+  } else {
+    playerBossMaxHp = 0;
+    playerBossHp = 0;
+  }
+}
 
 function isBossLevel() {
   const lvl = levels[currentLevel];
@@ -413,6 +489,7 @@ function resetBossStateForLevel(level) {
   bossPhaseDisappearTimer = 0;
   bossPhaseNext = 0;
   clearBossPlatforms(level);
+  initBossPlayerHpForLevel(level);
 }
 
 const BOSS_PLATFORM_RISE_HEIGHT = 50;
@@ -432,6 +509,9 @@ function spawnBossPlatform(level, x, y, w, h) {
 
 function spawnBossMinionOnPlatform(platform, opts) {
   const options = opts || {};
+  const cfg = getCurrentBossConfig();
+  const shootCdBase = options.shootCooldown || 0;
+  const adjustedShootCd = Math.round(shootCdBase * cfg.minionShootCooldownMultiplier);
   const enemy = {
     x: platform.x + 10,
     y: platform.y - 38,
@@ -451,8 +531,8 @@ function spawnBossMinionOnPlatform(platform, opts) {
     spawnDelay: options.spawnDelay || 0,   // задержка появления в тиках
     spawnTimer: 0,
     active: options.spawnDelay ? false : true,
-    shootCooldownBase: options.shootCooldown || 0, // базовый кулдаун выстрела
-    shootCooldownTimer: options.shootCooldown || 0
+    shootCooldownBase: adjustedShootCd, // базовый кулдаун выстрела
+    shootCooldownTimer: adjustedShootCd
   };
   enemies.push(enemy);
   bossMinions.push(enemy);
@@ -475,7 +555,9 @@ function initBossPhase1(level) {
 
   // Сохраняем платформы для респавна миньонов
   level._bossPhase1Platforms = [];
-  level._bossPhase1RespawnDelay = 0; // Задержка респавна миньонов в тиках (можно настроить)
+  const cfg = getCurrentBossConfig();
+  // Базовый кулдаун респавна миньонов первой фазы (в тиках) с учётом сложности
+  level._bossPhase1RespawnDelay = Math.round(180 * cfg.minionRespawnDelayMultiplier);
 
   // Задержки появления и кулдауны выстрелов миньонов
   // Эти числа можно свободно менять под баланс:
@@ -497,6 +579,8 @@ function initBossPhase2(level) {
   enemies = [];
   bossMinions = [];
 
+  const cfg = getCurrentBossConfig();
+
   const p3 = spawnBossPlatform(level, 75, 312, 82, 20);
   const p4 = spawnBossPlatform(level, 195, 244, 82, 20);
   const p5 = spawnBossPlatform(level, 75, 180, 82, 20);
@@ -508,7 +592,8 @@ function initBossPhase2(level) {
 
   // Сохраняем платформы для респавна миньонов
   level._bossPhase2Platforms = [p3, p4, p5, p7, p8, p9, p12];
-  level._bossPhase2RespawnDelay = 240; // Задержка респавна миньонов в тиках (можно настроить)
+  // Базовый кулдаун респавна миньонов второй фазы (в тиках) с учётом сложности
+  level._bossPhase2RespawnDelay = Math.round(240 * cfg.minionRespawnDelayMultiplier);
 
   // Босс стоит на средней платформе (появляется с анимацией)
   boss = {
@@ -517,7 +602,7 @@ function initBossPhase2(level) {
     w: 53,
     h: 65
   };
-  bossMaxHp = 30;
+  bossMaxHp = cfg.bossHpPhase2;
   bossHp = bossMaxHp;
   bossVisible = false;
   bossAppearTimer = 55;
@@ -525,7 +610,7 @@ function initBossPhase2(level) {
   bossState = "walk";
   bossFrame = 0;
   bossFrameTick = 0;
-  bossShootCooldown = 70;
+  bossShootCooldown = cfg.bossShootCooldownPhase2;
   bossPhaseStartTime = 0;
   bossMinionRespawnTimer = 0;
 }
@@ -534,7 +619,8 @@ function initBossPhase3(level) {
   clearBossPlatforms(level);
   enemies = [];
   bossMinions = [];
-  
+
+  const cfg = getCurrentBossConfig();
   const p1 = spawnBossPlatform(level, 47, 352, 164, 20);
   const p2 = spawnBossPlatform(level, 139, 200, 164, 20);
   const p3 = spawnBossPlatform(level, 655, 200, 164, 20);
@@ -543,7 +629,8 @@ function initBossPhase3(level) {
 
   // Сохраняем платформы для респавна миньонов 
   level._bossPhase3Platforms = [p1, p2, p3, p4];
-  level._bossPhase3RespawnDelay = 240;
+  // Базовый кулдаун респавна миньонов третьей фазы (в тиках) с учётом сложности
+  level._bossPhase3RespawnDelay = Math.round(240 * cfg.minionRespawnDelayMultiplier);
 
   // В третьей фазе тоже можно задать разные задержки и кулдауны
   spawnBossMinionOnPlatform(p1, { spawnDelay: 50,   shootCooldown: 200 });
@@ -557,7 +644,7 @@ function initBossPhase3(level) {
     w: 53,
     h: 65
   };
-  bossMaxHp = 50;
+  bossMaxHp = cfg.bossHpPhase3;
   bossHp = bossMaxHp;
   bossVisible = false;
   bossAppearTimer = 55;
@@ -565,7 +652,7 @@ function initBossPhase3(level) {
   bossState = "walk";
   bossFrame = 0;
   bossFrameTick = 0;
-  bossShootCooldown = 60;
+  bossShootCooldown = cfg.bossShootCooldownPhase3;
   bossPhaseStartTime = 0;
   bossMinionRespawnTimer = 0;
 }
@@ -880,6 +967,37 @@ function showModal(title, text, nextCallback = null, restartCallback = null, sho
     setTimeout(()=>window.updateCounterEdges(), 0);
   }
 }
+
+// --- Модалка выбора сложности боссфайта ---
+function showBossDifficultyModalIfNeeded(level) {
+  if (!level || !level.isBossLevel) return;
+  const diffModal = document.getElementById('difficultyModal');
+  if (!diffModal) {
+    // Если по какой-то причине модалки нет, просто инициализируем жизни по умолчанию
+    initBossPlayerHpForLevel(level);
+    return;
+  }
+  gamePaused = true;
+  diffModal.style.display = 'flex';
+  if (typeof window.updateCounterEdges === 'function') {
+    setTimeout(()=>window.updateCounterEdges(), 0);
+  }
+}
+
+window.selectBossDifficulty = function(diffKey) {
+  if (diffKey === 'easy' || diffKey === 'normal' || diffKey === 'hard') {
+    currentBossDifficulty = diffKey;
+  } else {
+    currentBossDifficulty = 'normal';
+  }
+  const lvl = levels[currentLevel];
+  initBossPlayerHpForLevel(lvl);
+  const diffModal = document.getElementById('difficultyModal');
+  if (diffModal) {
+    diffModal.style.display = 'none';
+  }
+  gamePaused = false;
+};
 
 function showPauseModal() {
   if (gamePaused) {
@@ -1457,8 +1575,12 @@ function update() {
   if (isBossLevel()) {
     updateBossLogic();
     window.bossAppearTimer = bossAppearTimer;
+    window.playerBossMaxHp = playerBossMaxHp;
+    window.playerBossHp = playerBossHp;
   } else {
     window.bossAppearTimer = 0;
+    window.playerBossMaxHp = 0;
+    window.playerBossHp = 0;
   }
   
   if (activeCharacter === "player") {
@@ -1858,6 +1980,10 @@ function updateBossProjectiles() {
   if (playerShootCooldown > 0) playerShootCooldown--;
   if (bossShootCooldown > 0) bossShootCooldown--;
 
+  const lvl = levels[currentLevel];
+  const lvlWidth = lvl.width;
+  const bossLevelNow = isBossLevel();
+
   // Движение снарядов игрока
   playerProjectiles.forEach(p => {
     p.x += p.vx;
@@ -1865,7 +1991,7 @@ function updateBossProjectiles() {
   });
   playerProjectiles = playerProjectiles.filter(p =>
     p.x + p.w > 0 &&
-    p.x < levels[currentLevel].width &&
+    p.x < lvlWidth &&
     p.y + p.h > -100 &&
     p.y < LOGIC_HEIGHT + 100
   );
@@ -1877,12 +2003,12 @@ function updateBossProjectiles() {
   });
   bossProjectiles = bossProjectiles.filter(p =>
     p.x + p.w > 0 &&
-    p.x < levels[currentLevel].width &&
+    p.x < lvlWidth &&
     p.y + p.h > -100 &&
     p.y < LOGIC_HEIGHT + 100
   );
 
-  if (isBossLevel()) {
+  if (bossLevelNow) {
     // Попадания по миньонам
     playerProjectiles.forEach(p => {
       bossMinions.forEach(enemy => {
@@ -1951,8 +2077,21 @@ function updateBossProjectiles() {
     if (p.x < player.x + player.w && p.x + p.w > player.x &&
         p.y < player.y + player.h && p.y + p.h > player.y) {
       p._hit = true;
-      gameOver = true;
-      showModal("Игра окончена.","Ты попала под атаку босса!", null, ()=>resetPlayer());
+      if (!bossLevelNow) {
+        gameOver = true;
+        showModal("Игра окончена.","Ты попала под атаку босса!", null, ()=>resetPlayer());
+      } else {
+        if (playerBossMaxHp <= 0) {
+          gameOver = true;
+          showModal("Игра окончена.","Ты попала под атаку босса!", null, ()=>resetPlayer());
+        } else {
+          playerBossHp = Math.max(0, playerBossHp - 1);
+          if (playerBossHp <= 0) {
+            gameOver = true;
+            showModal("Игра окончена.","Ты попала под атаку босса!", null, ()=>resetPlayer());
+          }
+        }
+      }
     }
   });
   bossProjectiles = bossProjectiles.filter(p => !p._hit);
@@ -1975,6 +2114,16 @@ function completeBossLevel() {
       bestCoins: isNewBestCoins ? totalCoins : currentStats.bestCoins
     };
     saveLevelStats(currentLevel, newStats);
+  }
+
+  // Сохраняем рекорды по сложностям только для босс-уровня
+  const bossCfg = getCurrentBossConfig();
+  const allBossStats = loadBossDifficultyStats();
+  const levelBossStats = allBossStats[currentLevel] || {};
+  const prevDiffStats = levelBossStats[bossCfg.key] || { bestTime: null };
+  const isNewBestForDifficulty = !prevDiffStats.bestTime || finishTime < prevDiffStats.bestTime;
+  if (isNewBestForDifficulty) {
+    saveBossDifficultyStats(currentLevel, bossCfg.key, { bestTime: finishTime });
   }
 
   try { localStorage.setItem('love_game_dialog_level', String(currentLevel)); } catch (e) {}
@@ -2638,7 +2787,10 @@ allImages.forEach(img => {
 
       // Инициализируем состояние босса, если текущий уровень – босс-уровень
       resetBossStateForLevel(lvl);
-      
+      // Если это босс-уровень – показываем выбор сложности до начала боя
+      if (isBossLevel()) {
+        showBossDifficultyModalIfNeeded(lvl);
+      }
       loop(0);
     }
   };

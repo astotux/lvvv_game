@@ -309,7 +309,7 @@
       justify-content: center;
       margin: auto;
     }
-    #coinCounter {
+    .counterFrame {
       white-space: nowrap;
       width: min-content;
       font-weight: bold;
@@ -318,8 +318,8 @@
       border-radius: 10px;
       overflow: hidden;
     }
-    #coinCounter .counterLeft,
-    #coinCounter .counterRight {
+    .counterFrame .counterLeft,
+    .counterFrame .counterRight {
       height: 100%;
       aspect-ratio: var(--edge-ar, 1);
       background-repeat: no-repeat;
@@ -328,9 +328,9 @@
       width: auto;
       flex: 0 0 auto;
     }
-    #coinCounter .counterLeft { background-image: url("img/tabl1.png"); }
-    #coinCounter .counterRight { background-image: url("img/tabl3.png"); }
-    #coinCounter .counterCenter {
+    .counterFrame .counterLeft { background-image: url("img/tabl1.png"); }
+    .counterFrame .counterRight { background-image: url("img/tabl3.png"); }
+    .counterFrame .counterCenter {
       flex: 1 1 auto;
       background-image: url("img/tabl2.png");
       background-repeat: repeat-x;
@@ -463,6 +463,39 @@
       text-align: center;
       padding: 20px;
     }
+    /* Модалка выбора сложности боссфайта (в стиле основной модалки) */
+    #difficultyModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+      font-family: "Pixelify Sans", sans-serif;
+    }
+    #difficultyText { white-space: pre-line; }
+    .difficultyButtons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 7px;
+      margin-bottom: 7px;
+      flex-wrap: wrap;
+    }
+    .difficultyBtn {
+      padding: 0;
+      margin: 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+    .difficultyBtn img {
+      width: auto;
+      height: 50px;
+      display: block;
+    }
   </style>
   
 </head>
@@ -524,7 +557,7 @@
   </div>
 
   <div id="modal">
-    <div id="coinCounter">
+    <div id="coinCounter" class="counterFrame">
       <div class="counterLeft"></div>
       <div class="counterCenter">
         <h2 id="modalTitle"></h2>
@@ -535,6 +568,28 @@
           <button id="modalRestartBtn" style="display: none; padding: 0; margin: 0; border: none; background: none; cursor: pointer;"><img src="./img/restart.png" style="width: 50px; height: 50px;"></button>
           <button id="modalResumeBtn" style="display: none; padding: 0; margin: 0; border: none; background: none; cursor: pointer;"><img src="./img/resume.png" style="width: 50px; height: 50px;"></button>
           <a href="#" id="modalNextBtn" style="display: none; padding: 0; margin: 0; border: none; background: none; text-decoration: none; "><img src="./img/next.png" style="width: 50px; height: 50px;"></a>
+        </div>
+      </div>
+      <div class="counterRight"></div>
+    </div>
+  </div>
+
+  <!-- Модалка выбора сложности боссфайта -->
+  <div id="difficultyModal">
+    <div id="difficultyCounter" class="counterFrame">
+      <div class="counterLeft"></div>
+      <div class="counterCenter">
+        <h2 id="difficultyTitle">Выбери сложность</h2>
+        <div class="difficultyButtons">
+          <button class="difficultyBtn" onclick="window.selectBossDifficulty && window.selectBossDifficulty('easy')" aria-label="Лёгкое">
+            <img src="./img/easy.png" style="height: 40px;" onerror="this.style.display='none'">
+          </button>
+          <button class="difficultyBtn" onclick="window.selectBossDifficulty && window.selectBossDifficulty('normal')" aria-label="Средне">
+            <img src="./img/normal.png" style="height: 40px;" onerror="this.style.display='none'">
+          </button>
+          <button class="difficultyBtn" onclick="window.selectBossDifficulty && window.selectBossDifficulty('hard')" aria-label="Сложно">
+            <img src="./img/hard.png" style="height: 40px;" onerror="this.style.display='none'">
+          </button>
         </div>
       </div>
       <div class="counterRight"></div>
@@ -616,19 +671,23 @@
         updateCounterEdges();
       }
       window.updateCounterEdges = function updateCounterEdges(){
-        const leftEl = document.querySelector('#coinCounter .counterLeft');
-        const rightEl = document.querySelector('#coinCounter .counterRight');
-        const centerEl = document.querySelector('#coinCounter .counterCenter');
-        if (!leftEl || !rightEl || !centerEl) return;
-        const h = centerEl.clientHeight;
-        if (h === 0) {
-          setTimeout(updateCounterEdges, 50);
-          return;
-        }
-        leftEl.style.width = (h * arLeft) + 'px';
-        rightEl.style.width = (h * arRight) + 'px';
-        leftEl.style.height = h + 'px';
-        rightEl.style.height = h + 'px';
+        const frames = Array.from(document.querySelectorAll('.counterFrame'));
+        if (!frames.length) return;
+        frames.forEach(frame => {
+          const leftEl = frame.querySelector('.counterLeft');
+          const rightEl = frame.querySelector('.counterRight');
+          const centerEl = frame.querySelector('.counterCenter');
+          if (!leftEl || !rightEl || !centerEl) return;
+          const h = centerEl.clientHeight;
+          if (h === 0) {
+            setTimeout(updateCounterEdges, 50);
+            return;
+          }
+          leftEl.style.width = (h * arLeft) + 'px';
+          rightEl.style.width = (h * arRight) + 'px';
+          leftEl.style.height = h + 'px';
+          rightEl.style.height = h + 'px';
+        });
       };
       imgL.onload = ()=>{ ready++; applyAR(); };
       imgR.onload = ()=>{ ready++; applyAR(); };

@@ -262,6 +262,7 @@
   <script>
     const STORAGE_KEY_LEVEL = 'love_game_unlocked_level';
     const STORAGE_KEY_STATS = 'love_game_level_stats';
+    const STORAGE_KEY_BOSS_DIFFICULTY_STATS = 'love_game_boss_difficulty_stats';
 
     function loadLevelProgress() {
       try {
@@ -283,9 +284,24 @@
       return {};
     }
 
+    function loadBossDifficultyStats() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY_BOSS_DIFFICULTY_STATS);
+        if (stored) {
+          return JSON.parse(stored);
+        }
+      } catch (e) {}
+      return {};
+    }
+
     function getLevelStats(levelIndex) {
       const allStats = loadLevelStats();
       return allStats[levelIndex] || { bestTime: null, bestCoins: 0 };
+    }
+
+    function getBossDifficultyStatsForLevel(levelIndex) {
+      const all = loadBossDifficultyStats();
+      return all[levelIndex] || {};
     }
 
     function formatTime(milliseconds) {
@@ -408,14 +424,27 @@
       document.getElementById('modalTitle').textContent = levelTitle;
       
       let modalText = '';
-      if (stats.bestTime) {
-        modalText += `Лучшее время: ${formatTime(stats.bestTime)}\n`;
+      console.log(levelIndex)
+      // Для босс-уровня показываем лучшие времена по сложностям
+      if (levelIndex==9) {
+        const bossStats = getBossDifficultyStatsForLevel(levelIndex);
+        const easyTime = bossStats.easy && bossStats.easy.bestTime ? formatTime(bossStats.easy.bestTime) : 'не пройдено';
+        const normalTime = bossStats.normal && bossStats.normal.bestTime ? formatTime(bossStats.normal.bestTime) : 'не пройдено';
+        const hardTime = bossStats.hard && bossStats.hard.bestTime ? formatTime(bossStats.hard.bestTime) : 'не пройдено';
+
+        modalText += `Сложность: лёгкое\nЛучшее время прохождения: ${easyTime}\n\n`;
+        modalText += `Сложность: средне\nЛучшее время прохождения: ${normalTime}\n\n`;
+        modalText += `Сложность: сложно\nЛучшее время прохождения: ${hardTime}`;
       } else {
-        modalText += 'Лучшее время: не пройдено\n';
+        if (stats.bestTime) {
+          modalText += `Лучшее время: ${formatTime(stats.bestTime)}\n`;
+        } else {
+          modalText += 'Лучшее время: не пройдено\n';
+        }
+        
+        const totalCoins = level && level.coins ? level.coins.length : 0;
+        modalText += `Лучший результат монет: ${stats.bestCoins}`;
       }
-      
-      const totalCoins = level && level.coins ? level.coins.length : 0;
-      modalText += `Лучший результат монет: ${stats.bestCoins}`;
       
       document.getElementById('modalText').textContent = modalText;
       

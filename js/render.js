@@ -209,6 +209,30 @@
         ctx.fillStyle = "#ff3344";
         ctx.fillRect(x, y, barW * ratio, barH);
       }
+
+      // Полоска HP игрока по центру снизу (только на босс-уровне)
+      if (typeof window.playerBossMaxHp !== "undefined" && window.playerBossMaxHp > 0) {
+        const segments = window.playerBossMaxHp;
+        const current = Math.max(0, Math.min(window.playerBossHp || 0, segments));
+        const barW = 140;
+        const barH = 10;
+        const x = (LOGIC_WIDTH - barW) / 2;
+        const y = LOGIC_HEIGHT - barH - 20;
+
+        ctx.fillStyle = "rgba(0,0,0,0.6)";
+        ctx.fillRect(x - 2, y - 2, barW + 4, barH + 4);
+
+        const segmentW = barW / segments;
+        for (let i = 0; i < segments; i++) {
+          const sx = x + i * segmentW;
+          ctx.fillStyle = "#444";
+          ctx.fillRect(sx + 1, y, segmentW - 2, barH);
+          if (i < current) {
+            ctx.fillStyle = "#2fd06a";
+            ctx.fillRect(sx + 1, y, segmentW - 2, barH);
+          }
+        }
+      }
     }
     drawDecorations();
 
