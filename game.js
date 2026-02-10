@@ -200,6 +200,8 @@ let bossPhaseDisappearing = false;
 let bossPhaseDisappearTimer = 0;
 let bossPhaseNext = 0; // 2 или 3 — следующая фаза после анимации исчезновения
 const BOSS_PHASE_DISAPPEAR_DURATION = 50;
+const BOSS_PHASE1_EMPTY_DELAY = 360; // ~6 секунд пустой карты после убийства всех врагов в фазе 1
+const BOSS_PHASE2_EMPTY_DELAY = 60; // ~1 секунда пустой карты после окончания второй фазы
 
 // --- Сложность боссфайта и жизни игрока на боссе ---
 const BOSS_DIFFICULTY_CONFIG = {
@@ -810,11 +812,17 @@ function updateBossLogic() {
   // Респавн миньонов для каждой фазы
   let respawnDelay = 0;
   if (bossPhase === 1) {
-    respawnDelay = lvl._bossPhase1RespawnDelay || 180;
+    // В первой фазе после стартовой волны миньоны не респавнятся
+    respawnDelay = 0;
   } else if (bossPhase === 2) {
     respawnDelay = lvl._bossPhase2RespawnDelay || 240;
   } else if (bossPhase === 3) {
-    respawnDelay = lvl._bossPhase3RespawnDelay || 200;
+    // В третьей фазе миньоны не респавнятся во время анимации смерти босса
+    if (bossDeath) {
+      respawnDelay = 0;
+    } else {
+      respawnDelay = lvl._bossPhase3RespawnDelay || 200;
+    }
   }
   
   // Проверяем, нужно ли респавнить миньонов
@@ -849,7 +857,8 @@ function updateBossLogic() {
       const anyAlive = bossMinions.some(e => e.hp > 0 && !e.deathAnim);
       if (!anyAlive) {
         bossPhaseTransitionTimer++;
-        if (bossPhaseTransitionTimer >= respawnDelay * 2) {
+        // После убийства всех врагов в первой фазе ждём ~6 секунд пустой карты
+        if (bossPhaseTransitionTimer >= BOSS_PHASE1_EMPTY_DELAY) {
           bossPhaseDisappearing = true;
           bossPhaseDisappearTimer = 0;
           bossPhaseNext = 2;
@@ -863,11 +872,17 @@ function updateBossLogic() {
       }
     } else if (bossPhase === 2) {
       if (bossHp <= 0) {
-        bossPhaseDisappearing = true;
-        bossPhaseDisappearTimer = 0;
-        bossPhaseNext = 3;
-        bossPlatforms.forEach(p => { p.disappearProgress = 0; });
-        bossMinions.forEach(e => { e.phaseOutAnim = true; e.phaseOutTimer = 0; });
+        bossPhaseTransitionTimer++;
+        // После окончания второй фазы ждём ~1 секунду пустой карты
+        if (bossPhaseTransitionTimer >= BOSS_PHASE2_EMPTY_DELAY) {
+          bossPhaseDisappearing = true;
+          bossPhaseDisappearTimer = 0;
+          bossPhaseNext = 3;
+          bossPlatforms.forEach(p => { p.disappearProgress = 0; });
+          bossMinions.forEach(e => { e.phaseOutAnim = true; e.phaseOutTimer = 0; });
+        }
+      } else {
+        bossPhaseTransitionTimer = 0;
       }
     }
   }
@@ -886,12 +901,13 @@ function updateBossLogic() {
     if (bossDeath) {
       bossDeathTimer++;
       // Эпичная анимация смерти: мощный взрыв партиклов вокруг последней позиции босса
-      if (boss && bossDeathTimer <= 90 && (bossDeathTimer % 2 === 0)) {
+      if (boss && bossDeathTimer <= 180 && (bossDeathTimer % 2 === 0)) {
         const cx = boss.x + boss.w / 2;
         const cy = boss.y + boss.h / 2;
         spawnBossDeathParticles(cx, cy);
       }
-      if (bossDeathTimer > 120) {
+      // Увеличиваем длительность анимации смерти босса примерно в 2 раза
+      if (bossDeathTimer > 240) {
         completeBossLevel();
       }
       return;
@@ -1184,7 +1200,10 @@ window.updateEnemies = function() {
       if (enemy.frame > 10) enemy.frame = 0;
     }
     
-    if (!enemy.deathAnim && !enemy.phaseOutAnim && player.x < enemy.x + enemy.w && player.x + player.w > enemy.x &&
+    // Во время боссфайта столкновения с обычными врагами не наносят урон игроку
+    if (!isBossLevel() &&
+        !enemy.deathAnim && !enemy.phaseOutAnim &&
+        player.x < enemy.x + enemy.w && player.x + player.w > enemy.x &&
         player.y < enemy.y + enemy.h && player.y + player.h > enemy.y) {
       gameOver = true;
       showModal("Игра окончена.", "Ты столкнулась с врагом!", null, ()=>resetPlayer());
