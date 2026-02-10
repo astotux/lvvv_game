@@ -233,6 +233,19 @@
           }
         }
       }
+
+      // Эффект вспышки экрана при смерти босса в третьей фазе
+      if (typeof window.bossDeath !== "undefined" && window.bossDeath && typeof window.bossDeathTimer === "number") {
+        const t = Math.min(window.bossDeathTimer / 120, 1);
+        // Пульсирующая белая вспышка, затухающая к концу
+        const alpha = 0.6 * (1 - t) * (1 + 0.3 * Math.sin(t * Math.PI * 4));
+        if (alpha > 0.02) {
+          ctx.save();
+          ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+          ctx.fillRect(0, 0, LOGIC_WIDTH, LOGIC_HEIGHT);
+          ctx.restore();
+        }
+      }
     }
     drawDecorations();
 

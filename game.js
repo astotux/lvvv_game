@@ -432,6 +432,27 @@ function spawnBossAppearParticles(cx, cy) {
   }
 }
 
+// Эпичные партиклы смерти босса (третья фаза)
+function spawnBossDeathParticles(cx, cy) {
+  const count = 18 + Math.floor(Math.random() * 10);
+  const colors = ["#ff4444", "#ff9a3c", "#ffd32a", "#ffffff"];
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2.5 + Math.random() * 4.5;
+    particles.push({
+      x: cx + (Math.random() - 0.5) * 12,
+      y: cy + (Math.random() - 0.5) * 12,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed * 0.8 - 0.5,
+      life: 0,
+      maxLife: 26 + Math.floor(Math.random() * 18),
+      type: "boss_death",
+      size: 2.5 + Math.random() * 3.5,
+      color: colors[Math.floor(Math.random() * colors.length)]
+    });
+  }
+}
+
 // Коричневые партиклы появления платформ босса
 function spawnPlatformAppearParticles(x, y, w, h) {
   const count = 3 + Math.floor(Math.random() * 4);
@@ -864,6 +885,12 @@ function updateBossLogic() {
     }
     if (bossDeath) {
       bossDeathTimer++;
+      // Эпичная анимация смерти: мощный взрыв партиклов вокруг последней позиции босса
+      if (boss && bossDeathTimer <= 90 && (bossDeathTimer % 2 === 0)) {
+        const cx = boss.x + boss.w / 2;
+        const cy = boss.y + boss.h / 2;
+        spawnBossDeathParticles(cx, cy);
+      }
       if (bossDeathTimer > 120) {
         completeBossLevel();
       }
@@ -1586,10 +1613,14 @@ function update() {
     window.bossAppearTimer = bossAppearTimer;
     window.playerBossMaxHp = playerBossMaxHp;
     window.playerBossHp = playerBossHp;
+    window.bossDeath = bossDeath;
+    window.bossDeathTimer = bossDeathTimer;
   } else {
     window.bossAppearTimer = 0;
     window.playerBossMaxHp = 0;
     window.playerBossHp = 0;
+    window.bossDeath = false;
+    window.bossDeathTimer = 0;
   }
   
   if (activeCharacter === "player") {
