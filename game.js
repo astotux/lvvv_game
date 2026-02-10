@@ -228,7 +228,7 @@ const BOSS_DIFFICULTY_CONFIG = {
   hard: {
     key: 'hard',
     label: 'Сложно',
-    playerHp: 2,
+    playerHp: 3,
     bossHpPhase2: 30,
     bossHpPhase3: 45,
     bossShootCooldownPhase2: 70,
