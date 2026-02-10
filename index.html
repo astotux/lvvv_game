@@ -679,10 +679,7 @@
           const centerEl = frame.querySelector('.counterCenter');
           if (!leftEl || !rightEl || !centerEl) return;
           const h = centerEl.clientHeight;
-          if (h === 0) {
-            setTimeout(updateCounterEdges, 50);
-            return;
-          }
+          if (h === 0) return;
           leftEl.style.width = (h * arLeft) + 'px';
           rightEl.style.width = (h * arRight) + 'px';
           leftEl.style.height = h + 'px';

@@ -40,6 +40,10 @@ const STORAGE_KEY_LEVEL = 'love_game_unlocked_level';
 const STORAGE_KEY_STATS = 'love_game_level_stats';
 const STORAGE_KEY_BOSS_DIFFICULTY_STATS = 'love_game_boss_difficulty_stats';
 
+// Кэш для статистики уровней и босс-сложностей, чтобы не дергать localStorage и JSON.parse слишком часто
+let cachedLevelStats = null;
+let cachedBossDifficultyStats = null;
+
 function loadLevelProgress(){
   try {
     const stored = parseInt(localStorage.getItem(STORAGE_KEY_LEVEL) || '0', 10);
@@ -57,13 +61,16 @@ function saveLevelProgress(nextLevelIndex){
 }
 
 function loadLevelStats() {
+  if (cachedLevelStats) return cachedLevelStats;
   try {
     const stored = localStorage.getItem(STORAGE_KEY_STATS);
     if (stored) {
-      return JSON.parse(stored);
+      cachedLevelStats = JSON.parse(stored);
+      return cachedLevelStats;
     }
   } catch (e) {}
-  return {};
+  cachedLevelStats = {};
+  return cachedLevelStats;
 }
 
 function saveLevelStats(levelIndex, stats) {
@@ -75,13 +82,16 @@ function saveLevelStats(levelIndex, stats) {
 }
 
 function loadBossDifficultyStats() {
+  if (cachedBossDifficultyStats) return cachedBossDifficultyStats;
   try {
     const stored = localStorage.getItem(STORAGE_KEY_BOSS_DIFFICULTY_STATS);
     if (stored) {
-      return JSON.parse(stored);
+      cachedBossDifficultyStats = JSON.parse(stored);
+      return cachedBossDifficultyStats;
     }
   } catch (e) {}
-  return {};
+  cachedBossDifficultyStats = {};
+  return cachedBossDifficultyStats;
 }
 
 function saveBossDifficultyStats(levelIndex, difficultyKey, stats) {
@@ -111,9 +121,8 @@ function stopLevelTimer() {
 }
 
 function updateLevelTimer() {
-  if (levelTimerActive && !gamePaused) {
-    levelElapsedTime = performance.now() - levelStartTime;
-  }
+  if (!levelTimerActive || gamePaused) return;
+  levelElapsedTime = performance.now() - levelStartTime;
 }
 
 function formatTime(milliseconds) {
