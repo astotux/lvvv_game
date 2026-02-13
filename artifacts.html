@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#282825">
+  <meta name="apple-mobile-web-app-title" content="АРТЕФАКТЫ">
+  <meta name="application-name" content="АРТЕФАКТЫ">
+  <meta name="format-detection" content="telephone=no">
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+  <link rel="apple-touch-icon" href="img/iconified/apple-touch-icon.png" />
+  <link rel="SHORTCUT ICON" href="img/favicon.ico" type="image/x-icon">
+  <link rel="manifest" href="manifest.json">
+
+  <title>Артефакты</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      background: url('./img/levels_bg.png') no-repeat center center;
+      background-size: cover;
+      font-family: "Pixelify Sans", sans-serif;
+      overflow-x: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .container {
+      width: 100%;
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+    .artifact-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 24px;
+      width: 100%;
+      max-width: 600px;
+      margin-top: 10px;
+    }
+    .artifact-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+      text-align: center;
+      font-size: 14px;
+    }
+    .artifact-button {
+      position: relative;
+      width: 64px;
+      aspect-ratio: 1;
+      background: none;
+      background-image: url('./img/level.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s;
+    }
+    .artifact-button.unlocked:active {
+      transform: scale(0.95);
+    }
+    .artifact-button.locked {
+      filter: grayscale(1) brightness(0.5);
+      cursor: default;
+    }
+    .artifact-icon {
+      position: absolute;
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      pointer-events: none;
+    }
+    .artifact-question {
+      position: absolute;
+      font-size: 42px;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 0 4px rgba(0,0,0,0.8);
+      pointer-events: none;
+    }
+    .back-button {
+      background: none;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 100;
+      border: none;
+      cursor: pointer;
+    }
+    .back-button img {
+      width: 50px;
+      height: 50px;
+    }
+    .fade {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease;
+      z-index: 2000;
+    }
+    .fade.show {
+      opacity: 1;
+    }
+    #introFade {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #000;
+      z-index: 2000;
+      opacity: 1;
+      pointer-events: none;
+      transition: opacity 2s ease;
+    }
+    #introFade.hide {
+      opacity: 0;
+    }
+    #rotateNotification {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(#282825 33%, #222220 33% 66%, #1d1d1b 66% 100%);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      color: white;
+      font-family: "Pixelify Sans", sans-serif;
+      text-align: center;
+    }
+    #rotateNotification .rotateIcon {
+      width: 120px;
+      margin-bottom: 20px;
+      animation: rotate 2s linear infinite;
+    }
+    #rotateNotification h2 {
+      font-size: 24px;
+      margin: 0 0 10px 0;
+    }
+    #rotateNotification p {
+      font-size: 16px;
+      margin: 0;
+      opacity: 0.8;
+    }
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      90% { transform: rotate(95deg); }
+      100% { transform: rotate(0deg); }
+    }
+    @media screen and (orientation: portrait) {
+      #rotateNotification { display: flex; }
+    }
+    @media screen and (orientation: landscape) {
+      #rotateNotification { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <button class="back-button" onclick="goBack()"><img src="./img/home.png" alt="Домой"></button>
+
+  <div class="container">
+    <h1 style="color: #fff; margin-top: 60px; font-size: 32px;">Артефакты</h1>
+    <p style="color: #fff; opacity: 0.85; font-size: 14px; text-align: center; max-width: 480px;">
+      Собирай артефакты в уровнях, чтобы открыть их описания здесь.<br>(нажми на любой артефакт чтобы узнать подробнее о нем)
+    </p>
+    
+    <div class="artifact-grid" id="artifactGrid"></div>
+
+    <div id="giftContainer" style="margin-top: 28px; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+      <a id="giftLink" href="https://t.me/+jOCvvGP7ms1jNDNi" target="_blank" rel="noopener noreferrer"
+         style="padding: 0; margin: 0; border: none; background: none; text-decoration: none; opacity: 0.4; pointer-events: none;">
+        <img src="./img/gift.png" alt="Подарок" style="width: 250px; height: auto;">
+      </a>
+      <p id="giftHint" style="color: #fff; font-size: 14px; text-align: center; max-width: 480px;">
+        Подарок станет доступен только когда ты соберёшь все артефакты.
+      </p>
+    </div>
+  </div>
+
+  <div id="introFade"></div>
+  <div id="fade" class="fade"></div>
+  <div id="rotateNotification">
+    <img src="img/phone.png" class="rotateIcon" alt="">
+    <h2>Поверни телефон</h2>
+    <p>Для лучшего игрового опыта поверни устройство горизонтально и обнови страницу</p>
+  </div>
+
+  <script>
+    const STORAGE_KEY_ARTIFACTS = 'love_game_artifacts';
+    const STORAGE_KEY_CURRENT_ARTIFACT = 'love_game_current_artifact';
+
+    const ARTIFACTS = [
+      { id: 1, title: 'Ковш', smallImage: 'img/art_1.png' },
+      { id: 2, title: 'Пояс', smallImage: 'img/art_2.png' },
+      { id: 3, title: 'Лыжи', smallImage: 'img/art_3.png' },
+      { id: 4, title: 'Кольчуга', smallImage: 'img/art_4.png' },
+      { id: 5, title: 'Золотая баба', smallImage: 'img/art_5.png' }
+    ];
+
+    function loadArtifactsState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_ARTIFACTS);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function isArtifactUnlocked(id) {
+      const state = loadArtifactsState();
+      return !!state[id] || !!state[String(id)];
+    }
+
+    function areAllArtifactsUnlocked() {
+      const state = loadArtifactsState();
+      return ARTIFACTS.every(a => state[a.id] || state[String(a.id)]);
+    }
+
+    function updateGiftAvailability() {
+      const link = document.getElementById('giftLink');
+      if (!link) return;
+      const allUnlocked = areAllArtifactsUnlocked();
+      if (allUnlocked) {
+        link.style.opacity = '1';
+        link.style.pointerEvents = 'auto';
+      } else {
+        link.style.opacity = '0.4';
+        link.style.pointerEvents = 'none';
+      }
+    }
+
+    function renderArtifacts() {
+      const grid = document.getElementById('artifactGrid');
+      grid.innerHTML = '';
+
+      ARTIFACTS.forEach(art => {
+        const unlocked = isArtifactUnlocked(art.id);
+
+        const item = document.createElement('div');
+        item.className = 'artifact-item';
+
+        const btn = document.createElement('button');
+        btn.className = 'artifact-button ' + (unlocked ? 'unlocked' : 'locked');
+        btn.setAttribute('data-id', String(art.id));
+        btn.type = 'button';
+
+        if (unlocked) {
+          const img = document.createElement('img');
+          img.src = art.smallImage;
+          img.alt = art.title;
+          img.className = 'artifact-icon';
+          btn.appendChild(img);
+        } else {
+          const span = document.createElement('span');
+          span.textContent = '?';
+          span.className = 'artifact-question';
+          btn.appendChild(span);
+        }
+
+        btn.addEventListener('click', function() {
+          if (!unlocked) return;
+          const fade = document.getElementById('fade');
+          const id = this.getAttribute('data-id');
+          try {
+            localStorage.setItem(STORAGE_KEY_CURRENT_ARTIFACT, String(id));
+          } catch (e) {}
+          const href = 'artifact.html';
+          if (fade) {
+            fade.classList.add('show');
+            setTimeout(function() { window.location.href = href; }, 800);
+          } else {
+            window.location.href = href;
+          }
+        });
+
+        const caption = document.createElement('div');
+        caption.textContent = unlocked ? art.title : 'Не найден';
+
+        item.appendChild(btn);
+        item.appendChild(caption);
+        grid.appendChild(item);
+      });
+    }
+
+    function goBack() {
+      const fade = document.getElementById('fade');
+      if (fade) {
+        fade.classList.add('show');
+        setTimeout(() => {
+          window.location.href = 'play.html';
+        }, 1000);
+      } else {
+        window.location.href = 'play.html';
+      }
+    }
+
+    function updateRotateNotification() {
+      const notification = document.getElementById('rotateNotification');
+      const isPortrait = window.innerHeight > window.innerWidth;
+      notification.style.display = isPortrait ? 'flex' : 'none';
+    }
+
+    window.addEventListener('load', updateRotateNotification);
+    window.addEventListener('resize', updateRotateNotification);
+    window.addEventListener('orientationchange', function() {
+      setTimeout(updateRotateNotification, 100);
+    });
+
+    window.addEventListener('load', function () {
+      renderArtifacts();
+      updateGiftAvailability();
+
+      var fade = document.getElementById('introFade');
+      if (!fade) return;
+      requestAnimationFrame(function () {
+        fade.classList.add('hide');
+        setTimeout(function () {
+          if (fade && fade.parentNode) fade.parentNode.removeChild(fade);
+        }, 2100);
+      });
+    });
+  </script>
+</body>
+</html>
+

@@ -96,6 +96,7 @@
     drawDecorationsUndo();
 
     drawCoins();
+    drawArtifacts();
 
     // На босс-уровне не рисуем финишный флаг
     if (!(window.isBossLevel && window.isBossLevel())) {

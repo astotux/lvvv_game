@@ -39,10 +39,13 @@ let currentLevel = 0;
 const STORAGE_KEY_LEVEL = 'love_game_unlocked_level';
 const STORAGE_KEY_STATS = 'love_game_level_stats';
 const STORAGE_KEY_BOSS_DIFFICULTY_STATS = 'love_game_boss_difficulty_stats';
+const STORAGE_KEY_ARTIFACTS = 'love_game_artifacts';
 
-// Кэш для статистики уровней и босс-сложностей, чтобы не дергать localStorage и JSON.parse слишком часто
+// Кэш для статистики уровней, босс-сложностей и артефактов,
+// чтобы не дергать localStorage и JSON.parse слишком часто
 let cachedLevelStats = null;
 let cachedBossDifficultyStats = null;
+let cachedArtifactsState = null;
 
 function loadLevelProgress(){
   try {
@@ -92,6 +95,53 @@ function loadBossDifficultyStats() {
   } catch (e) {}
   cachedBossDifficultyStats = {};
   return cachedBossDifficultyStats;
+}
+
+function isBossBeatenGlobally() {
+  try {
+    const all = loadBossDifficultyStats();
+    const bossStats = all[9] || all["9"];
+    if (!bossStats) return false;
+    return Object.values(bossStats).some(s => s && s.bestTime);
+  } catch (e) {
+    return false;
+  }
+}
+
+function loadArtifactsState() {
+  if (cachedArtifactsState) return cachedArtifactsState;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_ARTIFACTS);
+    if (stored) {
+      cachedArtifactsState = JSON.parse(stored);
+      if (cachedArtifactsState && typeof cachedArtifactsState === 'object') {
+        return cachedArtifactsState;
+      }
+    }
+  } catch (e) {}
+  cachedArtifactsState = {};
+  return cachedArtifactsState;
+}
+
+function saveArtifactsState(state) {
+  try {
+    cachedArtifactsState = state || {};
+    localStorage.setItem(STORAGE_KEY_ARTIFACTS, JSON.stringify(cachedArtifactsState));
+  } catch (e) {}
+}
+
+function isArtifactUnlockedGlobal(id) {
+  const st = loadArtifactsState();
+  return !!st[id] || !!st[String(id)];
+}
+
+function unlockArtifactGlobal(id) {
+  if (!id && id !== 0) return;
+  const st = loadArtifactsState();
+  const key = String(id);
+  if (st[key]) return;
+  st[key] = true;
+  saveArtifactsState(st);
 }
 
 function saveBossDifficultyStats(levelIndex, difficultyKey, stats) {
@@ -362,6 +412,19 @@ let levelStats = {
 let companionLockToCenter = false;
 
 let enemies = [];
+
+// --- Артефакты ---
+const ARTIFACT_DEFS = {
+  1: { id: 1, title: 'Новый артефакт!', name: 'Магический лог (ковш) Стефана Пермского', image: 'img/art_1.png' },
+  2: { id: 2, title: 'Новый артефакт!', name: 'Заговоренный пояс колдуна (Вöрса сий)', image: 'img/art_2.png' },
+  3: { id: 3, title: 'Новый артефакт!', name: 'Лыжи Йиркапа (Аслыс кöтi)', image: 'img/art_3.png' },
+  4: { id: 4, title: 'Новый артефакт!', name: 'Неуязвимая кольчуга (Пас)', image: 'img/art_4.png' },
+  5: { id: 5, title: 'Новый артефакт!', name: 'Золотая баба (Зарни ань)', image: 'img/art_5.png' }
+};
+
+function getArtifactDefById(id) {
+  return ARTIFACT_DEFS[id] || null;
+}
 
 // --- Партиклы (ходьба, приземление) ---
 let particles = [];
@@ -969,6 +1032,8 @@ function updateBossLogic() {
 const modal = document.getElementById("modal");
 const modalTitle = document.getElementById("modalTitle");
 const modalText = document.getElementById("modalText");
+const modalImageContainer = document.getElementById("modalImageContainer");
+const modalImage = document.getElementById("modalImage");
 const modalBtn = document.getElementById("modalBtn");
 const modalNextBtn = document.getElementById("modalNextBtn");
 const modalRestartBtn = document.getElementById("modalRestartBtn");
@@ -978,11 +1043,23 @@ const modalHomeBtn = document.getElementById("modalHomeBtn");
 let modalNextCallback = ()=>{};
 let modalRestartCallback = ()=>{};
 
-function showModal(title, text, nextCallback = null, restartCallback = null, showHome = false, showResume = false) {
+function showModal(title, text, nextCallback = null, restartCallback = null, showHome = false, showResume = false, imageUrl = null) {
   modalTitle.textContent = title;
   modalText.textContent = text;
   modal.style.display = "flex";
   modalRestartCallback = restartCallback || (()=>{});
+
+  // Картинка в модалке (для артефактов и др.)
+  if (modalImageContainer && modalImage) {
+    if (imageUrl) {
+      modalImage.src = imageUrl;
+      modalImage.alt = title || '';
+      modalImageContainer.style.display = "block";
+    } else {
+      modalImageContainer.style.display = "none";
+      modalImage.src = "";
+    }
+  }
   
   if (nextCallback) {
     modalNextBtn.style.display = "inline-block";
@@ -1286,6 +1363,24 @@ function resetPlayer() {
     });
   }
 
+  // Сбрасываем состояние артефактов на уровне:
+  // до победы над боссом они не должны появляться вовсе,
+  // после победы уже найденные глобально помечаем собранными,
+  // остальные показываем снова.
+  if (lvl.artifacts) {
+    const bossBeaten = isBossBeatenGlobally();
+    lvl.artifacts.forEach(art => {
+      if (!art) return;
+      if (!bossBeaten) {
+        art.collected = true;
+      } else if (isArtifactUnlockedGlobal(art.id)) {
+        art.collected = true;
+      } else {
+        art.collected = false;
+      }
+    });
+  }
+
   const stats = getLevelStats(currentLevel);
   levelStats.bestTime = stats.bestTime;
   levelStats.bestCoins = stats.bestCoins;
@@ -1303,6 +1398,25 @@ function updateCoins () {
   totalCoins++;
   document.getElementById('totalCoins').innerText = `${totalCoins} | ${levels[currentLevel].coins.length}`;
   // Воспроизводим звук сбора монетки
+}
+
+function collectArtifact(artifact) {
+  if (!artifact || artifact.collected) return;
+
+  const def = getArtifactDefById(artifact.id);
+
+  // Помечаем как собранный на уровне и глобально
+  artifact.collected = true;
+  unlockArtifactGlobal(artifact.id);
+
+  // Показываем модалку с картинкой и кнопкой продолжить
+  const title = def ? def.title : "Новый артефакт";
+  const name = def ? def.name : ("Артефакт " + String(artifact.id || ""));
+  const imgUrl = def ? def.image : null;
+  const text = `Ты нашла ${name}!\nТеперь он доступен в меню артефактов.`;
+
+  gamePaused = true;
+  showModal(title, text, null, null, false, true, imgUrl);
 }
 
 function updateStatsDisplay() {
@@ -1434,6 +1548,17 @@ function update() {
             player.y < coin.y + coin.h && player.y + player.h > coin.y) {
           coin.collected = true;
           updateCoins()
+        }
+      });
+    }
+
+    if (lvl.artifacts && isBossBeatenGlobally()) {
+      lvl.artifacts.forEach(art => {
+        if (!art.collected &&
+            !isArtifactUnlockedGlobal(art.id) &&
+            player.x < art.x + art.w && player.x + player.w > art.x &&
+            player.y < art.y + art.h && player.y + player.h > art.y) {
+          collectArtifact(art);
         }
       });
     }
@@ -1597,6 +1722,17 @@ function update() {
       });
     }
 
+    if (lvl.artifacts && isBossBeatenGlobally()) {
+      lvl.artifacts.forEach(art => {
+        if (!art.collected &&
+            !isArtifactUnlockedGlobal(art.id) &&
+            companion.x < art.x + art.w && companion.x + companion.w > art.x &&
+            companion.y < art.y + art.h && companion.y + companion.h > art.y) {
+          collectArtifact(art);
+        }
+      });
+    }
+
     if (companion.dx > 0) {
         companion.state = "walk-right";
         companion.idleTimer = 0;
@@ -1664,6 +1800,7 @@ function update() {
   } else {
     updatePlayer();
   }
+  updateArtifactEffects();
   updateParticles();
 }
   
@@ -2050,6 +2187,70 @@ function drawCoins() {
       }
     });
   }
+}
+
+function getArtifactImageById(id) {
+  switch (id) {
+    case 1: return typeof imgArtifact1 !== 'undefined' ? imgArtifact1 : null;
+    case 2: return typeof imgArtifact2 !== 'undefined' ? imgArtifact2 : null;
+    case 3: return typeof imgArtifact3 !== 'undefined' ? imgArtifact3 : null;
+    case 4: return typeof imgArtifact4 !== 'undefined' ? imgArtifact4 : null;
+    case 5: return typeof imgArtifact5 !== 'undefined' ? imgArtifact5 : null;
+    default: return null;
+  }
+}
+
+function spawnArtifactParticles(art) {
+  const cx = art.x + art.w / 2;
+  const cy = art.y + art.h / 2;
+  const colors = ["#7FFEF5", "#1BFDFA", "#00BBB7"];
+  const color = colors[Math.floor(Math.random() * colors.length)];
+
+  particles.push({
+    x: cx + (Math.random() - 0.5) * art.w * 0.4,
+    y: cy + (Math.random() - 0.3) * art.h * 0.4,
+    vx: (Math.random() - 0.5) * 0.4,
+    vy: -0.4 - Math.random() * 0.6,
+    life: 0,
+    maxLife: 18 + Math.floor(Math.random() * 10),
+    type: "artifact",
+    size: 1.5 + Math.random() * 1.3,
+    color
+  });
+}
+
+function updateArtifactEffects() {
+  const lvl = levels[currentLevel];
+  if (!lvl.artifacts || !isBossBeatenGlobally()) return;
+  lvl.artifacts.forEach(art => {
+    if (!art || art.collected) return;
+    if (isArtifactUnlockedGlobal(art.id)) return;
+    // Небольшое рандомное облако частиц за артефактом
+    if (Math.random() < 0.18) {
+      spawnArtifactParticles(art);
+    }
+  });
+}
+
+function drawArtifacts() {
+  let lvl = levels[currentLevel];
+  if (!lvl.artifacts || !isBossBeatenGlobally()) return;
+  lvl.artifacts.forEach(art => {
+    if (!art || art.collected) return;
+    const img = getArtifactImageById(art.id);
+    if (!img) return;
+    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingQuality = 'high';
+
+    // Небольшая анимация левитации
+    const t = performance.now() / 600;
+    if (typeof art._phase === "undefined") {
+      art._phase = (art.x + art.y) * 0.01;
+    }
+    const bob = Math.sin(t + art._phase) * 3; // амплитуда ~3px
+
+    ctx.drawImage(img, art.x - cameraX, art.y + bob, art.w, art.h);
+  });
 }
 
 function updateBossProjectiles() {
@@ -2799,11 +3000,13 @@ const bgImages = [bgLayer0, bgLayer1, bgLayer2, bgLayer3, bgLayer4, bgLayer5, bg
 const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2, imgMountain, imgThree, imgAlert, imgBush, imgHouse1, imgHouse2, imgHouseBg];
 const platformImages = [imgPlatformGrass, imgPlatformStone, imgPlatformWood, imgPlatformStone2, imgPlatformDanger, imgPlatformSlime, imgDoorDanger, imgPlatformHouse];
 const groundImages = [imgDirt, imgFloor];
+const artifactImages = [imgArtifact1, imgArtifact2, imgArtifact3, imgArtifact4, imgArtifact5];
 const allImages = [
   ...bgImages,
   ...decorationImages,
   ...platformImages,
   ...groundImages,
+  ...artifactImages,
   imgPlayerIdle,
   imgPlayerWalk,
   imgCompanionIdle,

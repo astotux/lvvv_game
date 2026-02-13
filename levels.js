@@ -55,6 +55,11 @@ const levels = [
       {x: 3125, y: 150, w: 20, h: 20, collected: false}
     ],
 
+    // Артефакт 1
+    artifacts: [
+      { id: 1, x: 2964, y: 168, w: 42, h: 32, collected: false }
+    ],
+
     finish: {x: 3660, y: 200, w: 24, h: 63},
     gift: {title: "Уровень 1", desc: "Супер, первый пройден!"},
     decorations: [
@@ -1915,7 +1920,13 @@ const levels = [
         "image": "three"
       }
     ],
-    "enemies": []
+    "enemies": [],
+    
+    // Артефакт 2
+    "artifacts": [
+      { "id": 2, "x": 2380, "y": 390, "w": 53, "h": 48, "collected": false }
+    ],
+
   },
   {
     "width": 5000,
@@ -2789,6 +2800,12 @@ const levels = [
   },
   {
     "width": 3800,
+    
+    // Артефакт 3
+    "artifacts": [
+      { "id": 3, "x": 1835, "y": 196, "w": 63, "h": 59, "collected": false }
+    ],
+
     "platforms": [
       {
         "x": 0,
@@ -3489,6 +3506,12 @@ const levels = [
   },
   {
     "width": 5000,
+
+    // Артефакт 4
+    "artifacts": [
+      { "id": 4, "x": 4508, "y": 140, "w": 46, "h": 70, "collected": false }
+    ],
+
     "background": "forest",
     "platforms": [
       {
@@ -4376,6 +4399,7 @@ const levels = [
   },
   {
     "width": 4500,
+
     "platforms": [
       {
         "x": 1,
@@ -6175,6 +6199,12 @@ const levels = [
   },
   {
     "width": 7500,
+
+    // Артефакт 5
+    "artifacts": [
+      { "id": 5, "x": 6005, "y": 28, "w": 39, "h": 75, "collected": false }
+    ],
+
     "background": "house",
     "platforms": [
       {

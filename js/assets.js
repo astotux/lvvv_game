@@ -141,6 +141,18 @@
   // Общий фон
   window.imgBackgroundAll = new Image();
   imgBackgroundAll.src = "img/background_all.png";
+
+  // Артефакты (малые иконки для уровней и меню)
+  window.imgArtifact1 = new Image();
+  imgArtifact1.src = "img/art_1.png";
+  window.imgArtifact2 = new Image();
+  imgArtifact2.src = "img/art_2.png";
+  window.imgArtifact3 = new Image();
+  imgArtifact3.src = "img/art_3.png";
+  window.imgArtifact4 = new Image();
+  imgArtifact4.src = "img/art_4.png";
+  window.imgArtifact5 = new Image();
+  imgArtifact5.src = "img/art_5.png";
 })();
 
 

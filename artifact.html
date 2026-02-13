@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Артефакт</title>
+  <style>
+    html, body {
+      margin: 0;
+      background: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .wrap {
+      width: 100vw;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .fade {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease;
+      z-index: 1000;
+    }
+    .fade.show {
+      opacity: 1;
+    }
+    #introFade {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #000;
+      z-index: 2000;
+      opacity: 1;
+      pointer-events: none;
+      transition: opacity 1s ease;
+    }
+    #introFade.hide {
+      opacity: 0;
+    }
+    .back-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1500;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+    .back-button img {
+      height: 50px;
+      width: auto;
+      display: block;
+    }
+  </style>
+  <script>
+    const STORAGE_KEY_CURRENT_ARTIFACT = 'love_game_current_artifact';
+
+    const ARTIFACT_IMAGES = {
+      1: 'img/art_ph_1.png',
+      2: 'img/art_ph_2.png',
+      3: 'img/art_ph_3.png',
+      4: 'img/art_ph_4.png',
+      5: 'img/art_ph_5.png'
+    };
+
+    function getCurrentArtifactId() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_CURRENT_ARTIFACT);
+        if (!raw) return null;
+        const id = parseInt(raw, 10);
+        return Number.isNaN(id) ? null : id;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function pickImageForArtifact() {
+      const id = getCurrentArtifactId();
+      if (id != null && ARTIFACT_IMAGES[id]) {
+        return ARTIFACT_IMAGES[id];
+      }
+      return ARTIFACT_IMAGES[1];
+    }
+
+    window.addEventListener('DOMContentLoaded', function () {
+      const img = document.getElementById('artifactImage');
+      img.src = pickImageForArtifact();
+    });
+  </script>
+</head>
+<body>
+  <button class="back-button" id="backButton">
+    <img src="./img/home.png" alt="Назад">
+  </button>
+  <div class="wrap">
+    <img id="artifactImage" alt="artifact" style="width: 100%; height: auto;">
+  </div>
+  <div id="fade" class="fade"></div>
+  <div id="introFade"></div>
+  <script>
+    (function () {
+      var backButton = document.getElementById('backButton');
+      var fade = document.getElementById('fade');
+      if (!backButton || !fade) return;
+      backButton.addEventListener('click', function (e) {
+        e.preventDefault();
+        fade.classList.add('show');
+        setTimeout(function () {
+          window.location.href = 'artifacts.html';
+        }, 1000);
+      });
+    })();
+  </script>
+  <script>
+    window.addEventListener('load', function () {
+      var fade = document.getElementById('introFade');
+      if (!fade) return;
+      requestAnimationFrame(function () {
+        fade.classList.add('hide');
+        setTimeout(function () {
+          if (fade && fade.parentNode) fade.parentNode.removeChild(fade);
+        }, 2100);
+      });
+    });
+  </script>
+</body>
+</html>
+
