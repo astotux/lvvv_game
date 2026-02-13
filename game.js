@@ -1327,6 +1327,25 @@ function resetPlayer() {
   companion.idleTimer = 0;
   companion.onDynamicPlatform = null;
   
+  // При рестарте всегда устанавливаем управление игроком и режим следования компаньона
+  activeCharacter = "player";
+  followEnabled = true;
+  companionLockToCenter = true;
+  
+  // Устанавливаем начальные targetX и targetY для компаньона, чтобы он начал следовать сразу
+  companion.targetX = player.x;
+  companion.targetY = player.y + player.h - companion.h;
+  
+  // Обновляем визуальное состояние кнопки "следовать"
+  if (typeof window.updateCompanionButtonsVisibility === 'function') {
+    window.updateCompanionButtonsVisibility();
+  }
+  // Устанавливаем активное состояние кнопки "следовать"
+  const followBtn = document.getElementById('follow');
+  if (followBtn) {
+    followBtn.classList.add('active');
+  }
+  
   enemies = [];
   particles = [];
   lvl = levels[currentLevel];
