@@ -17,10 +17,10 @@ ctx.imageSmoothingQuality = C.IMAGE_SMOOTHING_QUALITY;
 
 function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
-  screenW = window.innerWidth;
-  screenH = window.innerHeight;
-  canvas.width = Math.floor(screenW * dpr);
-  canvas.height = Math.floor(screenH * dpr);
+  screenW = Math.max(1, window.innerWidth);
+  screenH = Math.max(1, window.innerHeight);
+  canvas.width = Math.max(1, Math.floor(screenW * dpr));
+  canvas.height = Math.max(1, Math.floor(screenH * dpr));
   canvas.style.width = screenW + "px";
   canvas.style.height = screenH + "px";
 
@@ -30,6 +30,11 @@ function resizeCanvas() {
 }
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "visible") {
+    resizeCanvas();
+  }
+});
 
 let lastTime = 0;
 let accumulator = 0;
@@ -2531,9 +2536,9 @@ window.drawEnemies = function() {
       const barW = enemy.w;
       const barH = 4;
       const hpRatio = Math.max(0, Math.min(1, enemy.hp / enemy.maxHp));
-      ctx.fillStyle = "#000000";
+      ctx.fillStyle = "#2a1010";
       ctx.fillRect(drawX, drawY - 8, barW, barH);
-      ctx.fillStyle = "#ff3344";
+      ctx.fillStyle = "#cc2244";
       ctx.fillRect(drawX, drawY - 8, barW * hpRatio, barH);
     }
   });
@@ -2989,25 +2994,35 @@ function drawBackground() {
     cameraX = Math.round(cameraX);
   }
 
-  function draw() { window.drawFrame(); }
+  function draw() {
+    try {
+      if (typeof window.drawFrame === "function") window.drawFrame();
+    } catch (e) {
+      console.warn("drawFrame error:", e);
+    }
+  }
 
    function loop(currentTime) {
   if (lastTime === 0) {
     lastTime = currentTime;
   }
-  
+
   const deltaTime = currentTime - lastTime;
   lastTime = currentTime;
-  
+
   if (!gamePaused) {
     accumulator += deltaTime;
-    
+
     while (accumulator >= fixedTimeStep) {
-      update();
+      try {
+        update();
+      } catch (e) {
+        console.warn("update error:", e);
+      }
       accumulator -= fixedTimeStep;
     }
   }
-  
+
   updateLevelTimer();
   updateCamera(currentTime);
   draw();
@@ -3015,6 +3030,7 @@ function drawBackground() {
 }
 
 let loaded = 0;
+let gameLoopStarted = false;
 const bgImages = [bgLayer0, bgLayer1, bgLayer2, bgLayer3, bgLayer4, bgLayer5, bgLayer6, imgBackgroundAnother];
 const decorationImages = [imgRock1, imgRock2, imgGrass1, imgFlower1, imgFlower2, imgMountain, imgThree, imgAlert, imgBush, imgHouse1, imgHouse2, imgHouseBg];
 const platformImages = [imgPlatformGrass, imgPlatformStone, imgPlatformWood, imgPlatformStone2, imgPlatformDanger, imgPlatformSlime, imgDoorDanger, imgPlatformHouse];
@@ -3038,71 +3054,90 @@ const allImages = [
   imgBossAttack,
   imgBossOrb
 ];
-allImages.forEach(img => {
-  img.onload = () => {
-    loaded++;
-    if (loaded === allImages.length) {
-      
-      // Обновляем уровень из редактора, если режим активен
-      const editorMode = localStorage.getItem('love_game_editor_mode');
-      if (editorMode === '1') {
-        const editorLevelJson = localStorage.getItem('love_game_editor_level');
-        if (editorLevelJson) {
-          try {
-            const editorLevel = JSON.parse(editorLevelJson);
-            if (levels.length > 0) {
-              levels[0] = editorLevel;
-            } else {
-              levels.push(editorLevel);
-            }
-            currentLevel = 0;
-          } catch(e) {}
-        }
-      }
-      
-      let lvl = levels[currentLevel];
-      // На босс-уровне спавним игрока по центру карты и скрываем оверлей «Нажми чтобы начать»
-      if (lvl && lvl.isBossLevel && lvl.width) {
-        const centerX = Math.round(lvl.width / 2 - player.w / 2);
-        player.x = centerX;
-        player.y = 350;
-        companion.x = centerX;
-        companion.y = 100;
-        companion.targetX = centerX;
-        companion.targetY = 250;
-        if (typeof window.hideTapToStartOverlay === 'function') {
-          window.hideTapToStartOverlay();
-        }
-      }
-      // Инициализируем камеру с учетом dead zone
-      const activeChar = activeCharacter === "player" ? player : companion;
-      const charCenterX = activeChar.x + activeChar.w / 2;
-      cameraX = charCenterX - viewW / 2;
-      if(cameraX < 0) cameraX = 0;
-      if(cameraX > lvl.width - viewW) cameraX = lvl.width - viewW;
-      cameraX = Math.round(cameraX);
-      isCameraTransitioning = false;
-      previousActiveCharacter = activeCharacter;
-      
-      enemies = [];
-      if (lvl.enemies) {
-        lvl.enemies.forEach(enemyData => {
-          const platform = lvl.platforms.find(p => 
-            p.x === enemyData.platformX && p.y === enemyData.platformY
-          );
-          if (platform) {
-            enemies.push(createEnemy(platform.x, platform.y, platform.w));
-          }
-        });
-      }
 
-      // Инициализируем состояние босса, если текущий уровень – босс-уровень
-      resetBossStateForLevel(lvl);
-      // Если это босс-уровень – показываем выбор сложности до начала боя
-      if (isBossLevel()) {
-        showBossDifficultyModalIfNeeded(lvl);
-      }
-      loop(0);
+function startGameAfterLoad() {
+  if (gameLoopStarted) return;
+  gameLoopStarted = true;
+
+  // Обновляем уровень из редактора, если режим активен
+  const editorMode = localStorage.getItem('love_game_editor_mode');
+  if (editorMode === '1') {
+    const editorLevelJson = localStorage.getItem('love_game_editor_level');
+    if (editorLevelJson) {
+      try {
+        const editorLevel = JSON.parse(editorLevelJson);
+        if (levels.length > 0) {
+          levels[0] = editorLevel;
+        } else {
+          levels.push(editorLevel);
+        }
+        currentLevel = 0;
+      } catch(e) {}
     }
-  };
+  }
+
+  let lvl = levels[currentLevel];
+  if (!lvl) return;
+
+  // На босс-уровне спавним игрока по центру карты и скрываем оверлей «Нажми чтобы начать»
+  if (lvl.isBossLevel && lvl.width) {
+    const centerX = Math.round(lvl.width / 2 - player.w / 2);
+    player.x = centerX;
+    player.y = 350;
+    companion.x = centerX;
+    companion.y = 100;
+    companion.targetX = centerX;
+    companion.targetY = 250;
+    if (typeof window.hideTapToStartOverlay === 'function') {
+      window.hideTapToStartOverlay();
+    }
+  }
+  // Инициализируем камеру с учетом dead zone
+  const activeChar = activeCharacter === "player" ? player : companion;
+  const charCenterX = activeChar.x + activeChar.w / 2;
+  cameraX = charCenterX - viewW / 2;
+  if (cameraX < 0) cameraX = 0;
+  if (cameraX > lvl.width - viewW) cameraX = lvl.width - viewW;
+  cameraX = Math.round(cameraX);
+  isCameraTransitioning = false;
+  previousActiveCharacter = activeCharacter;
+
+  enemies = [];
+  if (lvl.enemies) {
+    lvl.enemies.forEach(enemyData => {
+      const platform = lvl.platforms.find(p =>
+        p.x === enemyData.platformX && p.y === enemyData.platformY
+      );
+      if (platform) {
+        enemies.push(createEnemy(platform.x, platform.y, platform.w));
+      }
+    });
+  }
+
+  resetBossStateForLevel(lvl);
+  if (isBossLevel()) {
+    showBossDifficultyModalIfNeeded(lvl);
+  }
+  loop(0);
+}
+
+allImages.forEach(img => {
+  if (img.complete && img.naturalWidth > 0) {
+    loaded++;
+  } else {
+    img.onload = function () {
+      loaded++;
+      if (loaded >= allImages.length) startGameAfterLoad();
+    };
+    img.onerror = function () {
+      loaded++;
+      if (loaded >= allImages.length) startGameAfterLoad();
+    };
+  }
 });
+if (loaded >= allImages.length) startGameAfterLoad();
+
+// Если загрузка зависла или что-то не вызвало onload/onerror — через 10 сек запускаем игру в любом случае
+setTimeout(function () {
+  startGameAfterLoad();
+}, 10000);

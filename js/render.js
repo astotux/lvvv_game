@@ -193,44 +193,107 @@
         if (appearScale < 1) ctx.restore();
       }
 
-      // Полоска HP босса сверху экрана
+      // Полоска HP босса сверху экрана — оформление
       if (typeof bossMaxHp !== "undefined" && typeof bossHp !== "undefined" && bossMaxHp > 0) {
         const ratio = Math.max(0, Math.min(1, bossHp / bossMaxHp));
-        const barW = 300;
-        const barH = 12;
+        const barW = 320;
+        const barH = 20;
+        const padding = 6;
         const x = (LOGIC_WIDTH - barW) / 2;
-        const y = 16;
+        const y = 12;
+        const totalW = barW + padding * 2;
+        const totalH = barH + padding * 2;
+        const boxX = x - padding;
+        const boxY = y - padding;
 
-        ctx.fillStyle = "rgba(0,0,0,0.6)";
-        ctx.fillRect(x - 2, y - 2, barW + 4, barH + 4);
+        // Тень
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(boxX + 3, boxY + 3, totalW, totalH);
 
-        ctx.fillStyle = "#444";
+        // Внешняя обводка (тёмная)
+        ctx.fillStyle = "#1a0a0a";
+        ctx.fillRect(boxX, boxY, totalW, totalH);
+
+        // Внутренняя рамка (бордовый)
+        ctx.fillStyle = "#4a1515";
+        ctx.fillRect(boxX + 2, boxY + 2, totalW - 4, totalH - 4);
+
+        // Фон полоски (тёмно-красный)
+        ctx.fillStyle = "#2a1010";
         ctx.fillRect(x, y, barW, barH);
 
-        ctx.fillStyle = "#ff3344";
-        ctx.fillRect(x, y, barW * ratio, barH);
+        // Градиент заполнения HP
+        const fillW = barW * ratio;
+        if (fillW > 0) {
+          const grd = ctx.createLinearGradient(x, 0, x + barW, 0);
+          grd.addColorStop(0, "#cc2244");
+          grd.addColorStop(0.5, "#ff4466");
+          grd.addColorStop(1, "#aa2233");
+          ctx.fillStyle = grd;
+          ctx.fillRect(x, y, fillW, barH);
+          // Лёгкий блик сверху
+          ctx.fillStyle = "rgba(255,255,255,0.15)";
+          ctx.fillRect(x, y, fillW, 3);
+        }
+
+        // Подпись "ЁМА" прямо на полоске
+        ctx.save();
+        ctx.font = "bold 14px \"Pixelify Sans\", sans-serif";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.strokeStyle = "#2a0810";
+        ctx.lineWidth = 2;
+        const labelBoss = "ЁМА";
+        const labelBossW = ctx.measureText(labelBoss).width;
+        const textX = (LOGIC_WIDTH - labelBossW) / 2;
+        const textY = y + barH / 2;
+        ctx.strokeText(labelBoss, textX, textY);
+        ctx.fillText(labelBoss, textX, textY);
+        ctx.restore();
       }
 
-      // Полоска HP игрока по центру снизу (только на босс-уровне)
+      // Полоска HP игрока по центру снизу — оформление (только на босс-уровне)
       if (typeof window.playerBossMaxHp !== "undefined" && window.playerBossMaxHp > 0) {
         const segments = window.playerBossMaxHp;
         const current = Math.max(0, Math.min(window.playerBossHp || 0, segments));
-        const barW = 140;
-        const barH = 10;
+        const barW = 180;
+        const barH = 18;
+        const gap = 4;
+        const segmentW = (barW - gap * (segments - 1)) / segments;
+        const padding = 6;
         const x = (LOGIC_WIDTH - barW) / 2;
-        const y = LOGIC_HEIGHT - barH - 20;
+        const y = LOGIC_HEIGHT - barH - 28;
+        const totalW = barW + padding * 2;
+        const totalH = barH + padding * 2;
+        const boxX = x - padding;
+        const boxY = y - padding;
 
-        ctx.fillStyle = "rgba(0,0,0,0.6)";
-        ctx.fillRect(x - 2, y - 2, barW + 4, barH + 4);
+        // Тень
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(boxX + 3, boxY + 3, totalW, totalH);
 
-        const segmentW = barW / segments;
+        // Внешняя обводка (тёмная)
+        ctx.fillStyle = "#0a1a0e";
+        ctx.fillRect(boxX, boxY, totalW, totalH);
+
+        // Внутренняя рамка (тёмно-зелёная)
+        ctx.fillStyle = "#153a20";
+        ctx.fillRect(boxX + 2, boxY + 2, totalW - 4, totalH - 4);
+
+        // Фон каждого сегмента и заполненные сегменты
         for (let i = 0; i < segments; i++) {
-          const sx = x + i * segmentW;
-          ctx.fillStyle = "#444";
-          ctx.fillRect(sx + 1, y, segmentW - 2, barH);
+          const sx = x + i * (segmentW + gap);
+          ctx.fillStyle = "#1a2a1e";
+          ctx.fillRect(sx, y, segmentW, barH);
           if (i < current) {
-            ctx.fillStyle = "#2fd06a";
-            ctx.fillRect(sx + 1, y, segmentW - 2, barH);
+            const grd = ctx.createLinearGradient(sx, 0, sx + segmentW, 0);
+            grd.addColorStop(0, "#2a8a4a");
+            grd.addColorStop(0.5, "#3fd06a");
+            grd.addColorStop(1, "#2a6a3a");
+            ctx.fillStyle = grd;
+            ctx.fillRect(sx, y, segmentW, barH);
+            ctx.fillStyle = "rgba(255,255,255,0.12)";
+            ctx.fillRect(sx, y, segmentW, 4);
           }
         }
       }
