@@ -523,6 +523,27 @@ function spawnBossDeathParticles(cx, cy) {
   }
 }
 
+// Зелёные партиклы появления миньона при респавне во время боя
+function spawnMinionSpawnParticles(cx, cy) {
+  const green = ["#2d8a2d", "#3cb371", "#228b22", "#32cd32"];
+  const count = 16 + Math.floor(Math.random() * 8);
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.8 + Math.random() * 1.5;
+    particles.push({
+      x: cx + (Math.random() - 0.5) * 12,
+      y: cy + (Math.random() - 0.5) * 12,
+      vx: Math.cos(angle) * speed,
+      vy: -Math.abs(Math.sin(angle)) * speed - 0.3,
+      life: 0,
+      maxLife: 30 + Math.floor(Math.random() * 10),
+      type: "minion_spawn",
+      size: 1.2 + Math.random() * 1.5,
+      color: green[Math.floor(Math.random() * green.length)]
+    });
+  }
+}
+
 // Коричневые партиклы появления платформ босса
 function spawnPlatformAppearParticles(x, y, w, h) {
   const count = 3 + Math.floor(Math.random() * 4);
@@ -631,6 +652,8 @@ function spawnBossMinionOnPlatform(platform, opts) {
     spawnDelay: options.spawnDelay || 0,   // задержка появления в тиках
     spawnTimer: 0,
     active: options.spawnDelay ? false : true,
+    spawnAnimProgress: 0,                 // 0..1 — анимация появления при респавне
+    spawnAnimDuration: 22,
     shootCooldownBase: adjustedShootCd, // базовый кулдаун выстрела
     shootCooldownTimer: adjustedShootCd
   };
@@ -1260,9 +1283,20 @@ window.updateEnemies = function() {
       );
       if (plat && plat.appearProgress !== undefined && plat.appearProgress >= 1) {
         enemy.active = true;
+        enemy.spawnAnimProgress = 0; // старт анимации появления
       } else {
         return;
       }
+    }
+    // Прогресс анимации спавна миньонов (респавн во время боя)
+    if (enemy.isBossMinion && enemy.active && (enemy.spawnAnimProgress || 0) < 1) {
+      const duration = enemy.spawnAnimDuration || 22;
+      if (enemy.spawnAnimProgress === 0) {
+        const cx = enemy.x + enemy.w / 2;
+        const cy = enemy.y + enemy.h / 2;
+        spawnMinionSpawnParticles(cx, cy);
+      }
+      enemy.spawnAnimProgress = Math.min(1, (enemy.spawnAnimProgress || 0) + 1 / duration);
     }
     enemy.x += enemy.dx * enemy.direction;
     
@@ -2511,6 +2545,32 @@ window.drawEnemies = function() {
         ctx.drawImage(imgEnemy, frameX, 0, frameW, frameH, drawX, drawY + fallY, enemy.w, enemy.h);
       }
       ctx.restore();
+      return;
+    }
+
+    // Анимация появления миньона при респавне во время боя (масштаб 0.3→1, появление)
+    const spawnProgress = enemy.isBossMinion ? (enemy.spawnAnimProgress || 0) : 1;
+    if (enemy.isBossMinion && spawnProgress < 1) {
+      const easeOut = 1 - Math.pow(1 - spawnProgress, 1.5);
+      const scale = 0.25 + 0.75 * easeOut;
+      const alpha = 0.4 + 0.6 * easeOut;
+      const w2 = enemy.w / 2;
+      const h2 = enemy.h / 2;
+      const cx = drawX + w2;
+      const cy = drawY + h2;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(cx, cy);
+      ctx.scale(scale, scale);
+      ctx.translate(-cx, -cy);
+      if (enemy.direction === -1) {
+        ctx.scale(-1, 1);
+        ctx.drawImage(imgEnemy, frameX, 0, frameW, frameH, -(drawX + enemy.w), drawY, enemy.w, enemy.h);
+      } else {
+        ctx.drawImage(imgEnemy, frameX, 0, frameW, frameH, drawX, drawY, enemy.w, enemy.h);
+      }
+      ctx.restore();
+      // Полоску HP не показываем во время анимации появления
       return;
     }
     
