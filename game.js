@@ -40,6 +40,10 @@ let lastTime = 0;
 let accumulator = 0;
 const fixedTimeStep = C.FIXED_TIMESTEP_MS;
 
+// Длительность анимации появления/исчезновения динамических платформ и дверей (в фиксированных тиках)
+const DYNAMIC_APPEAR_DISAPPEAR_FRAMES = 14;
+const DYNAMIC_APPEAR_STEP = 1 / DYNAMIC_APPEAR_DISAPPEAR_FRAMES;
+
 let currentLevel = 0;
 const STORAGE_KEY_LEVEL = 'love_game_unlocked_level';
 const STORAGE_KEY_STATS = 'love_game_level_stats';
@@ -2915,6 +2919,17 @@ function drawBackground() {
           if (anyPressed) door.open = true;
         }
       });
+      // Анимация появления/исчезновения дверей (динамических стен)
+      lvl.doors.forEach(door => {
+        if (door.appearProgress === undefined) { door.appearProgress = door.open ? 0 : 1; door.disappearProgress = door.open ? 1 : 0; }
+        if (door.open) {
+          door.disappearProgress = Math.min(1, (door.disappearProgress || 0) + DYNAMIC_APPEAR_STEP);
+          door.appearProgress = 0;
+        } else {
+          door.appearProgress = Math.min(1, (door.appearProgress || 0) + DYNAMIC_APPEAR_STEP);
+          door.disappearProgress = 0;
+        }
+      });
     }
   }
 
@@ -2943,6 +2958,23 @@ function drawBackground() {
           dp.distanceY = dp.distanceY || 0;
         } else if (dp.type === 'bouncy') {
           // Платформа-пружина уже готова
+        }
+        // Начальные значения для анимации появления/исчезновения (переключаемые платформы)
+        if (dp.group != null || (dp.type !== 'moving' && dp.type !== 'bouncy' && dp.open !== undefined)) {
+          dp.appearProgress = dp.open ? 1 : 0;
+          dp.disappearProgress = dp.open ? 0 : 1;
+        }
+      }
+
+      // Анимация появления/исчезновения для переключаемых динамических платформ
+      if (dp.group != null || (dp.type !== 'moving' && dp.type !== 'bouncy' && dp.open !== undefined)) {
+        if (dp.appearProgress === undefined) { dp.appearProgress = dp.open ? 1 : 0; dp.disappearProgress = dp.open ? 0 : 1; }
+        if (dp.open) {
+          dp.appearProgress = Math.min(1, (dp.appearProgress || 0) + DYNAMIC_APPEAR_STEP);
+          dp.disappearProgress = 0;
+        } else {
+          dp.disappearProgress = Math.min(1, (dp.disappearProgress || 0) + DYNAMIC_APPEAR_STEP);
+          dp.appearProgress = 0;
         }
       }
       

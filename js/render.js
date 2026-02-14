@@ -20,6 +20,9 @@
       const platformW = p.w;
       const platformH = p.h;
       const disappearProgress = (typeof p.disappearProgress !== "undefined" && p.disappearProgress != null) ? Math.min(1, p.disappearProgress) : 0;
+      const appearProgress = (typeof p.appearProgress !== "undefined" && p.appearProgress != null) ? Math.min(1, p.appearProgress) : 1;
+      const alpha = disappearProgress > 0 ? (1 - disappearProgress) : appearProgress;
+      const useAnim = alpha < 1 || disappearProgress > 0;
       
       let textureImg = imgPlatformGrass;
       if (p.type === "bouncy") textureImg = imgPlatformSlime;
@@ -36,8 +39,8 @@
       ctx.imageSmoothingEnabled = false;
       ctx.imageSmoothingQuality = 'high';
       
-      if (disappearProgress > 0) ctx.save();
-      if (disappearProgress > 0) ctx.globalAlpha = 1 - disappearProgress;
+      if (useAnim) ctx.save();
+      if (useAnim) ctx.globalAlpha = alpha;
       
       for (let x = 0; x < platformW; x += textureW) {
         for (let y = 0; y < platformH; y += textureH) {
@@ -52,8 +55,42 @@
         }
       }
       
-      if (disappearProgress > 0) ctx.restore();
+      if (useAnim) ctx.restore();
     });
+    // Исчезающие динамические платформы (уже убраны из списка коллизий, рисуем только анимацию)
+    if (lvl.dynamicPlatforms) {
+      lvl.dynamicPlatforms.forEach(dp => {
+        if (dp.open === true) return;
+        const disp = (dp.disappearProgress != null) ? Math.min(1, dp.disappearProgress) : 1;
+        if (disp >= 1) return;
+        const platformX = dp.x - cameraX;
+        const platformY = (typeof dp.effectiveY !== "undefined" && dp.effectiveY != null) ? dp.effectiveY : dp.y;
+        const platformW = dp.w;
+        const platformH = dp.h;
+        let textureImg = imgPlatformGrass;
+        if (dp.type === "bouncy") textureImg = imgPlatformSlime;
+        else if (dp.texture === "grass") textureImg = imgPlatformGrass;
+        else if (dp.texture === "stone") textureImg = imgPlatformStone;
+        else if (dp.texture === "stone2") textureImg = imgPlatformStone2;
+        else if (dp.texture === "wood") textureImg = imgPlatformWood;
+        else if (dp.texture === "house") textureImg = imgPlatformHouse;
+        else if (dp.texture === "danger_platform") textureImg = imgPlatformDanger;
+        const textureW = textureImg.width;
+        const textureH = textureImg.height;
+        ctx.save();
+        ctx.globalAlpha = 1 - disp;
+        ctx.imageSmoothingEnabled = false;
+        ctx.imageSmoothingQuality = 'high';
+        for (let x = 0; x < platformW; x += textureW) {
+          for (let y = 0; y < platformH; y += textureH) {
+            const drawW = Math.min(textureW, platformW - x);
+            const drawH = Math.min(textureH, platformH - y);
+            ctx.drawImage(textureImg, 0, 0, drawW, drawH, platformX + x, platformY + y, drawW, drawH);
+          }
+        }
+        ctx.restore();
+      });
+    }
     if (lvl.walls) {
       lvl.walls.forEach(w=>{
         const textureImg = w.texture === 'wood' ? imgPlatformWood : (w.texture === 'grass' ? imgPlatformGrass : imgPlatformStone);
@@ -70,10 +107,20 @@
     }
     if (lvl.doors) {
       lvl.doors.forEach(d=>{
-        if (d.open) return;
+        const isOpen = d.open;
+        const appearProgress = (d.appearProgress != null) ? Math.min(1, d.appearProgress) : (isOpen ? 0 : 1);
+        const disappearProgress = (d.disappearProgress != null) ? Math.min(1, d.disappearProgress) : (isOpen ? 1 : 0);
+        const drawWhenClosed = !isOpen && appearProgress > 0;
+        const drawWhenOpening = isOpen && disappearProgress < 1;
+        if (!drawWhenClosed && !drawWhenOpening) return;
+        const alpha = isOpen ? (1 - disappearProgress) : appearProgress;
         const textureImg = d.texture === 'wood' ? imgPlatformWood : (d.texture === 'grass' ? imgPlatformGrass : imgDoorDanger);
         const textureW = textureImg.width;
         const textureH = textureImg.height;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.imageSmoothingEnabled = false;
+        ctx.imageSmoothingQuality = 'high';
         for (let x = 0; x < d.w; x += textureW) {
           for (let y = 0; y < d.h; y += textureH) {
             const drawW = Math.min(textureW, d.w - x);
@@ -81,6 +128,7 @@
             ctx.drawImage(textureImg, 0, 0, drawW, drawH, d.x - cameraX + x, d.y + y, drawW, drawH);
           }
         }
+        ctx.restore();
       });
     }
     if (lvl.switches) {
