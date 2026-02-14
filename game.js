@@ -2413,6 +2413,7 @@ function drawArtifacts() {
   if (!lvl.artifacts || !isBossBeatenGlobally()) return;
   lvl.artifacts.forEach(art => {
     if (!art || art.collected) return;
+    if (isArtifactUnlockedGlobal(art.id)) return;
     const img = getArtifactImageById(art.id);
     if (!img) return;
     ctx.imageSmoothingEnabled = false;
