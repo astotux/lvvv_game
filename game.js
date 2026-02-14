@@ -2123,11 +2123,15 @@ function getGroundY() {
 
 function drawDecorations() {
   let lvl = levels[currentLevel];
-  
+  const bg = lvl && (lvl.background || "forest");
+  const isForest = bg === "forest";
+  const swayTypes = { grass1: true, bush: true, flower1: true, flower2: true, three: true };
+  const time = (typeof performance !== "undefined" ? performance.now() : Date.now()) * 0.001;
+
   if (lvl.decorations) {
     lvl.decorations.forEach(dec => {
       let img;
-      
+
       switch(dec.image) {
         case "flower1": img = imgFlower1; break;
         case "flower2": img = imgFlower2; break;
@@ -2164,24 +2168,45 @@ function drawDecorations() {
         case "vaz4": img = imgVaz4; break;
         case "table": img = imgTable; break;
       }
-      
+
       if (!img) return;
 
       ctx.imageSmoothingEnabled = false;
-      ctx.imageSmoothingQuality = 'high';
-      
-      ctx.drawImage(img, dec.x - cameraX, dec.y, dec.w, dec.h);
+      ctx.imageSmoothingQuality = "high";
+
+      const drawX = dec.x - cameraX;
+      const drawY = dec.y;
+
+      if (isForest && swayTypes[dec.image]) {
+        const phase = dec.x * 0.02 + dec.y * 0.01;
+        const swayX = Math.sin(time * 1.4 + phase) * 1.5;
+        const swayAngle = Math.sin(time * 1.1 + phase) * 0.025;
+        const cx = drawX + dec.w / 2;
+        const cy = drawY + dec.h;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(swayAngle);
+        ctx.translate(-cx, -cy);
+        ctx.drawImage(img, drawX + swayX, drawY, dec.w, dec.h);
+        ctx.restore();
+      } else {
+        ctx.drawImage(img, drawX, drawY, dec.w, dec.h);
+      }
     });
   }
 }
 
 function drawDecorationsUndo() {
   let lvl = levels[currentLevel];
-  
+  const bg = lvl && (lvl.background || "forest");
+  const isForest = bg === "forest";
+  const swayTypes = { grass1: true, bush: true, flower1: true, flower2: true, three: true };
+  const time = (typeof performance !== "undefined" ? performance.now() : Date.now()) * 0.001;
+
   if (lvl.decorationsUndo) {
     lvl.decorationsUndo.forEach(dec => {
       let img;
-      
+
       switch(dec.image) {
         case "flower1": img = imgFlower1; break;
         case "flower2": img = imgFlower2; break;
@@ -2217,26 +2242,46 @@ function drawDecorationsUndo() {
         case "vaz3": img = imgVaz3; break;
         case "vaz4": img = imgVaz4; break;
         case "table": img = imgTable; break;
-
       }
-      
+
       if (!img) return;
 
       ctx.imageSmoothingEnabled = false;
-      ctx.imageSmoothingQuality = 'high';
-      
-      ctx.drawImage(img, dec.x - cameraX, dec.y, dec.w, dec.h);
+      ctx.imageSmoothingQuality = "high";
+
+      const drawX = dec.x - cameraX;
+      const drawY = dec.y;
+
+      if (isForest && swayTypes[dec.image]) {
+        const phase = dec.x * 0.02 + dec.y * 0.01;
+        const swayX = Math.sin(time * 1.4 + phase) * 1.5;
+        const swayAngle = Math.sin(time * 1.1 + phase) * 0.025;
+        const cx = drawX + dec.w / 2;
+        const cy = drawY + dec.h;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(swayAngle);
+        ctx.translate(-cx, -cy);
+        ctx.drawImage(img, drawX + swayX, drawY, dec.w, dec.h);
+        ctx.restore();
+      } else {
+        ctx.drawImage(img, drawX, drawY, dec.w, dec.h);
+      }
     });
   }
 }
 
 function drawDecorationsUndoPlatform() {
   let lvl = levels[currentLevel];
-  
+  const bg = lvl && (lvl.background || "forest");
+  const isForest = bg === "forest";
+  const swayTypes = { grass1: true, bush: true, flower1: true, flower2: true, three: true };
+  const time = (typeof performance !== "undefined" ? performance.now() : Date.now()) * 0.001;
+
   if (lvl.decorationsUndoPlatform) {
     lvl.decorationsUndoPlatform.forEach(dec => {
       let img;
-      
+
       switch(dec.image) {
         case "flower1": img = imgFlower1; break;
         case "flower2": img = imgFlower2; break;
@@ -2272,15 +2317,31 @@ function drawDecorationsUndoPlatform() {
         case "vaz3": img = imgVaz3; break;
         case "vaz4": img = imgVaz4; break;
         case "table": img = imgTable; break;
-
       }
-      
+
       if (!img) return;
 
       ctx.imageSmoothingEnabled = false;
-      ctx.imageSmoothingQuality = 'high';
-      
-      ctx.drawImage(img, dec.x - cameraX, dec.y, dec.w, dec.h);
+      ctx.imageSmoothingQuality = "high";
+
+      const drawX = dec.x - cameraX;
+      const drawY = dec.y;
+
+      if (isForest && swayTypes[dec.image]) {
+        const phase = dec.x * 0.02 + dec.y * 0.01;
+        const swayX = Math.sin(time * 1.4 + phase) * 1.5;
+        const swayAngle = Math.sin(time * 1.1 + phase) * 0.025;
+        const cx = drawX + dec.w / 2;
+        const cy = drawY + dec.h;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(swayAngle);
+        ctx.translate(-cx, -cy);
+        ctx.drawImage(img, drawX + swayX, drawY, dec.w, dec.h);
+        ctx.restore();
+      } else {
+        ctx.drawImage(img, drawX, drawY, dec.w, dec.h);
+      }
     });
   }
 }
