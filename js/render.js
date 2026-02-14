@@ -42,6 +42,30 @@
       if (useAnim) ctx.save();
       if (useAnim) ctx.globalAlpha = alpha;
       
+      if (textureImg === imgPlatformGrass && imgDirt && imgDirt.width && imgDirt.height) {
+        const baseDirtH = Math.min(10, Math.floor(imgDirt.height * 0.6));
+        const dirtH = baseDirtH + ((p.x + p.y) % 7) + 1;
+        const dirtW = imgDirt.width;
+        const underY = platformY + platformH - 1;
+        const r = Math.min(5, Math.floor(dirtH / 2));
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(platformX, underY);
+        ctx.lineTo(platformX + platformW, underY);
+        ctx.lineTo(platformX + platformW, underY + dirtH - r);
+        ctx.arc(platformX + platformW - r, underY + dirtH - r, r, 0, Math.PI / 2);
+        ctx.lineTo(platformX + r, underY + dirtH);
+        ctx.arc(platformX + r, underY + dirtH - r, r, Math.PI / 2, Math.PI);
+        ctx.lineTo(platformX, underY);
+        ctx.closePath();
+        ctx.clip();
+        for (let x = 0; x < platformW; x += dirtW) {
+          const drawW = Math.min(dirtW, platformW - x);
+          ctx.drawImage(imgDirt, 0, 0, imgDirt.width, imgDirt.height, platformX + x, underY, drawW, dirtH);
+        }
+        ctx.restore();
+      }
+
       for (let x = 0; x < platformW; x += textureW) {
         for (let y = 0; y < platformH; y += textureH) {
           const drawW = Math.min(textureW, platformW - x);
