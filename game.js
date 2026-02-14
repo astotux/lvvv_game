@@ -431,8 +431,9 @@ function getArtifactDefById(id) {
   return ARTIFACT_DEFS[id] || null;
 }
 
-// --- Партиклы (ходьба, приземление) ---
+// --- Партиклы (ходьба, приземление, атмосфера) ---
 let particles = [];
+let ambientParticleTimer = 0;
 let prevPlayerOnGround = false;
 let prevCompanionOnGround = false;
 function spawnWalkParticle(x, y, dir) {
@@ -544,6 +545,42 @@ function spawnMinionSpawnParticles(cx, cy) {
   }
 }
 
+// Партиклы ветра для forest — по всему экрану, летят справа налево, немного
+function spawnWindParticles() {
+  const count = 2 + Math.floor(Math.random() * 2);
+  const colors = ["#b8c4ce", "#a0b0bc", "#d0dce4", "#e8eef2"];
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: cameraX + Math.random() * viewW,
+      y: Math.random() * viewH,
+      vx: -1.2 - Math.random() * 1.2,
+      vy: (Math.random() - 0.5) * 0.3,
+      life: 0,
+      maxLife: 60 + Math.floor(Math.random() * 40),
+      type: "wind",
+      size: 0.7 + Math.random() * 0.8,
+      color: colors[Math.floor(Math.random() * colors.length)]
+    });
+  }
+}
+
+// Партиклы света для house — по всей комнате
+function spawnLightParticles() {
+  if (Math.random() > 0.5) return;
+  const colors = ["#fff8dc", "#ffe4b5", "#fffacd", "#ffefd5", "#fff5e6"];
+  particles.push({
+    x: cameraX + Math.random() * viewW,
+    y: Math.random() * viewH,
+    vx: (Math.random() - 0.5) * 0.25,
+    vy: -0.12 - Math.random() * 0.2,
+    life: 0,
+    maxLife: 35 + Math.floor(Math.random() * 25),
+    type: "light",
+    size: 0.8 + Math.random() * 1,
+    color: colors[Math.floor(Math.random() * colors.length)]
+  });
+}
+
 // Коричневые партиклы появления платформ босса
 function spawnPlatformAppearParticles(x, y, w, h) {
   const count = 3 + Math.floor(Math.random() * 4);
@@ -564,11 +601,27 @@ function spawnPlatformAppearParticles(x, y, w, h) {
 }
 
 function updateParticles() {
+  const lvl = levels[currentLevel];
+  const bg = lvl && (lvl.background || "forest");
+  if (bg === "forest" || bg === "house" || bg === "home") {
+    ambientParticleTimer++;
+    if (bg === "forest") {
+      if (ambientParticleTimer >= 4) {
+        ambientParticleTimer = 0;
+        spawnWindParticles();
+      }
+    } else {
+      if (ambientParticleTimer >= 14) {
+        ambientParticleTimer = 0;
+        spawnLightParticles();
+      }
+    }
+  }
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
     p.x += p.vx;
     p.y += p.vy;
-    p.vy += 0.15;
+    if (p.type !== "wind" && p.type !== "light") p.vy += 0.15;
     p.life++;
     if (p.life >= p.maxLife) particles.splice(i, 1);
   }
@@ -2879,6 +2932,28 @@ function drawBackground() {
       const t = p.life / p.maxLife;
       const alpha = 1 - t;
       const sz = (p.size || 2) * (1 - t * 0.5);
+      const px = p.x - cameraX;
+      if (p.type === "wind") {
+        const hex = (p.color || "#b8c4ce").replace("#", "");
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        ctx.fillStyle = `rgba(${r},${g},${b},${alpha * 0.4})`;
+        const w = Math.max(2, sz * 2.2);
+        const h = Math.max(0.5, sz * 0.4);
+        ctx.fillRect(px - w / 2, p.y - h / 2, w, h);
+        return;
+      }
+      if (p.type === "light") {
+        const hex = (p.color || "#fff8dc").replace("#", "");
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        ctx.fillStyle = `rgba(${r},${g},${b},${alpha * 0.38})`;
+        const glow = sz * 1.1;
+        ctx.fillRect(px - glow, p.y - glow, glow * 2, glow * 2);
+        return;
+      }
       if (p.color) {
         const hex = p.color.replace("#", "");
         const r = parseInt(hex.substr(0, 2), 16);
@@ -2888,7 +2963,6 @@ function drawBackground() {
       } else {
         ctx.fillStyle = p.type === "land" ? `rgba(180,160,140,${alpha * 0.9})` : `rgba(200,180,160,${alpha * 0.8})`;
       }
-      const px = p.x - cameraX;
       ctx.fillRect(px - sz, p.y - sz, sz * 2, sz * 2);
     });
   }
