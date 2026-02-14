@@ -584,21 +584,22 @@ function spawnWindParticles() {
   }
 }
 
-// Партиклы света для house — по всей комнате
+// Партиклы света для house — по всей комнате (жёлтые, чаще)
 function spawnLightParticles() {
-  if (Math.random() > 0.5) return;
   const colors = ["#fff8dc", "#ffe4b5", "#fffacd", "#ffefd5", "#fff5e6"];
-  particles.push({
-    x: cameraX + Math.random() * viewW,
-    y: Math.random() * viewH,
-    vx: (Math.random() - 0.5) * 0.25,
-    vy: -0.12 - Math.random() * 0.2,
-    life: 0,
-    maxLife: 35 + Math.floor(Math.random() * 25),
-    type: "light",
-    size: 0.8 + Math.random() * 1,
-    color: colors[Math.floor(Math.random() * colors.length)]
-  });
+  for (let i = 0; i < 2; i++) {
+    particles.push({
+      x: cameraX + Math.random() * viewW,
+      y: Math.random() * viewH,
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: -0.12 - Math.random() * 0.2,
+      life: 0,
+      maxLife: 60 + Math.floor(Math.random() * 45),
+      type: "light",
+      size: 0.9 + Math.random() * 1.2,
+      color: colors[Math.floor(Math.random() * colors.length)]
+    });
+  }
 }
 
 // Коричневые партиклы появления платформ босса
