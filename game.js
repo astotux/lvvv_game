@@ -469,6 +469,22 @@ function spawnLandParticles(x, y, w) {
     });
   }
 }
+
+function spawnEnemyWalkParticles(x, y, w) {
+  const count = 2 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: x + Math.random() * w,
+      y: y,
+      vx: (Math.random() - 0.5) * 1.25,
+      vy: 0.5 - Math.random() * 0.3,
+      life: 0,
+      maxLife: 8 + Math.floor(Math.random() * 6),
+      type: "enemy_walk",
+      size: 1.3 + Math.random() * 0.75
+    });
+  }
+}
 function spawnEnemyHitParticles(x, y, w, h) {
   const count = 8 + Math.floor(Math.random() * 6);
   for (let i = 0; i < count; i++) {
@@ -625,7 +641,7 @@ function updateParticles() {
     const p = particles[i];
     p.x += p.vx;
     p.y += p.vy;
-    if (p.type !== "wind" && p.type !== "light") p.vy += 0.15;
+    if (p.type !== "wind" && p.type !== "light" && p.type !== "enemy_walk") p.vy += 0.15;
     p.life++;
     if (p.life >= p.maxLife) particles.splice(i, 1);
   }
@@ -1364,7 +1380,14 @@ window.updateEnemies = function() {
       enemy.x = enemy.platformX + enemy.platformW - enemy.w;
       enemy.direction = -1;
     }
-    
+
+    if (!enemy.deathAnim && !enemy.phaseOutAnim && (!enemy.isBossMinion || enemy.active)) {
+      enemy._walkParticleTick = (enemy._walkParticleTick || 0) + 1;
+      if (enemy._walkParticleTick >= 16) {
+        enemy._walkParticleTick = 0;
+        spawnEnemyWalkParticles(enemy.x + enemy.w/3, enemy.y + enemy.h, enemy.w/2);
+      }
+    }
 
     enemy.frameTick++;
     if (enemy.frameTick > 3) {
@@ -3055,7 +3078,7 @@ function drawBackground() {
         const b = parseInt(hex.substr(4, 2), 16);
         ctx.fillStyle = `rgba(${r},${g},${b},${alpha * 0.95})`;
       } else {
-        ctx.fillStyle = p.type === "land" ? `rgba(180,160,140,${alpha * 0.9})` : `rgba(200,180,160,${alpha * 0.8})`;
+        ctx.fillStyle = (p.type === "land" || p.type === "enemy_walk") ? `rgba(180,160,140,${alpha * 0.9})` : `rgba(200,180,160,${alpha * 0.8})`;
       }
       ctx.fillRect(px - sz, p.y - sz, sz * 2, sz * 2);
     });
