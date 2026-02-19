@@ -267,13 +267,13 @@ const BOSS_DIFFICULTY_CONFIG = {
   easy: {
     key: 'easy',
     label: 'Лёгкое',
-    playerHp: 5,
-    bossHpPhase2: 20,
-    bossHpPhase3: 25,
-    bossShootCooldownPhase2: 85,
-    bossShootCooldownPhase3: 75,
-    minionShootCooldownMultiplier: 1.4,
-    minionRespawnDelayMultiplier: 1.5
+    playerHp: 7,
+    bossHpPhase2: 15,
+    bossHpPhase3: 20,
+    bossShootCooldownPhase2: 100,
+    bossShootCooldownPhase3: 90,
+    minionShootCooldownMultiplier: 1.6,
+    minionRespawnDelayMultiplier: 1.8
   },
   normal: {
     key: 'normal',
