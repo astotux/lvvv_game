@@ -8409,19 +8409,9 @@ const levels = [
     ],
     "enemies": [
       {
-        "platformX": 880,
-        "platformY": 484,
-        "platformW": 265
-      },
-      {
         "platformX": 1144,
         "platformY": 484,
         "platformW": 225
-      },
-      {
-        "platformX": 1400,
-        "platformY": 484,
-        "platformW": 240
       },
       {
         "platformX": 1948,
@@ -8439,29 +8429,14 @@ const levels = [
         "platformW": 730
       },
       {
-        "platformX": 2440,
-        "platformY": 484,
-        "platformW": 720
-      },
-      {
         "platformX": 4244,
         "platformY": 244,
         "platformW": 328
       },
       {
-        "platformX": 4864,
-        "platformY": 484,
-        "platformW": 500
-      },
-      {
         "platformX": 6640,
         "platformY": 484,
         "platformW": 350
-      },
-      {
-        "platformX": 6984,
-        "platformY": 484,
-        "platformW": 265
       },
       {
         "platformX": 7244,
