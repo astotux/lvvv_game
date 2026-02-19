@@ -57,6 +57,10 @@
   const followBtn = document.getElementById("follow");
   const gameCanvas = document.getElementById("game");
 
+  function isBossActive() {
+    return window.isBossLevel && window.isBossLevel();
+  }
+
   // Показываем/скрываем джойстик стрельбы в зависимости от уровня
   function updateShootJoystickVisibility() {
     if (shootJoystick) {
@@ -255,6 +259,35 @@
     jumpBtn.onmousedown = ()=>{ window.jump(); };
     jumpBtn.ontouchstart = ()=>{ window.jump(); };
   }
+
+  // Дополнительная зона прыжка: правая нижняя четверть экрана (кроме боссфайта)
+  document.addEventListener('touchstart', function(e) {
+    if (!e.changedTouches || e.changedTouches.length === 0) return;
+
+    const touch = e.changedTouches[0];  
+    const x = touch.clientX;
+    const y = touch.clientY;
+    const w = window.innerWidth || document.documentElement.clientWidth;
+    const h = window.innerHeight || document.documentElement.clientHeight;
+
+    // правая нижняя четверть
+    if (x < w * 0.5 || y < h * 0.65) return;
+
+    // если тап по самим элементам управления — не перехватываем
+    const target = document.elementFromPoint(x, y);
+    if (target && (
+      target.closest('#jump') ||
+      target.closest('#shootJoystick') ||
+      target.closest('#joystick') ||
+      target.closest('#pauseBtn') ||
+      target.closest('#modal') ||
+      target.closest('#difficultyModal')
+    )) {
+      return;
+    }
+
+    window.jump();
+  }, { passive: false });
   if (switchBtn) {
     switchBtn.ontouchstart = ()=>{
       if (!window.isBossLevel || !window.isBossLevel()) {
