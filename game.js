@@ -267,7 +267,7 @@ const BOSS_DIFFICULTY_CONFIG = {
   easy: {
     key: 'easy',
     label: 'Лёгкое',
-    playerHp: 12,
+    playerHp: 10,
     bossHpPhase2: 10,
     bossHpPhase3: 15,
     bossShootCooldownPhase2: 170,
@@ -278,24 +278,24 @@ const BOSS_DIFFICULTY_CONFIG = {
   normal: {
     key: 'normal',
     label: 'Средне',
-    playerHp: 4,
-    bossHpPhase2: 25,
-    bossHpPhase3: 35,
-    bossShootCooldownPhase2: 80,
-    bossShootCooldownPhase3: 70,
-    minionShootCooldownMultiplier: 1.2,
-    minionRespawnDelayMultiplier: 1.2
+    playerHp: 7,
+    bossHpPhase2: 20,
+    bossHpPhase3: 30,
+    bossShootCooldownPhase2: 120,
+    bossShootCooldownPhase3: 100,
+    minionShootCooldownMultiplier: 1.4,
+    minionRespawnDelayMultiplier: 1.6
   },
   hard: {
     key: 'hard',
     label: 'Сложно',
-    playerHp: 3,
+    playerHp: 4,
     bossHpPhase2: 30,
     bossHpPhase3: 45,
-    bossShootCooldownPhase2: 70,
-    bossShootCooldownPhase3: 60,
-    minionShootCooldownMultiplier: 1.0,
-    minionRespawnDelayMultiplier: 1.1
+    bossShootCooldownPhase2: 100,
+    bossShootCooldownPhase3: 80,
+    minionShootCooldownMultiplier: 1.2,
+    minionRespawnDelayMultiplier: 1.4
   }
 };
 
