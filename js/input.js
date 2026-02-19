@@ -271,7 +271,7 @@
     const h = window.innerHeight || document.documentElement.clientHeight;
 
     // правая нижняя четверть
-    if (x < w * 0.5 || y < h * 0.65) return;
+    if (x < w * 0.5 || y < h * 0.5) return;
 
     // если тап по самим элементам управления — не перехватываем
     const target = document.elementFromPoint(x, y);
