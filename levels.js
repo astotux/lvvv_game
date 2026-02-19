@@ -3295,7 +3295,10 @@ const levels = [
   },
   {
     "width": 5000,
-
+    // Артефакт 4
+    "artifacts": [
+      { "id": 4, "x": 4508, "y": 140, "w": 46, "h": 70, "collected": false }
+    ],
     "background": "forest",
     "platforms": [
       {
@@ -4926,10 +4929,7 @@ const levels = [
     "width": 3800,
     "background": "house",
     
-    // Артефакт 4
-    "artifacts": [
-      { "id": 4, "x": 4508, "y": 140, "w": 46, "h": 70, "collected": false }
-    ],
+
     "platforms": [
       {
         "x": 232,
